@@ -1,5 +1,5 @@
-# Conpyro Script 0.11
-# Last updated: 2025/09/22
+# Conpyro Script 0.12
+# Last updated: 2025/09/23
 
 library(ggplot2)
 library(checkmate)
@@ -76,13 +76,12 @@ conpyro <- function(
     if (is.character(col)) tolower(col) else col
   })
   colnames(input) <- tolower(colnames(input))
-  # Assign inputs to vars
-  ws_seq    <- seq(ws[1], ws[2], 1)
-  mcffmc    <- fn_mcffmc(ffmc)
-  mcdmc     <- fn_mcdmc(dmc)
+  # Initialize data structures
   out       <- list()
   ggdata    <- data.frame()
+  # Loop through input rows (scenarios)
   for (i in 1:nrow(input)) {
+    # Assign inputs to vars
     id            <- input$id[i]
     season        <- input$season[i]
     density       <- input$density[i]
@@ -91,6 +90,23 @@ conpyro <- function(
     sfc           <- input$sfc[i]
     cbd           <- input$cbd[i]
     smooth_cfi    <- input$smooth_cfi[i]
+    ws_seq        <- if (
+      "ws_min" %in% names(input) & "ws_max" %in% names(input)
+    ) {
+      seq(input$ws_min[i], input$ws_max[i], 1)
+    } else {
+      seq(ws[1], ws[2], 1)
+    }
+    ffmc          <- if ("ffmc" %in% names(input)) {
+      input$ffmc[i]
+    } else {
+      ffmc
+    }
+    dmc           <- if ("dmc" %in% names(input)) {
+      input$dmc[i]
+    } else {
+      dmc
+    }
     model_conpyro <- if ("model_conpyro" %in% names(input)) {
       input$model_conpyro[i]
     } else {
@@ -106,6 +122,9 @@ conpyro <- function(
     } else {
       1
     }
+    # Do calculations
+    mcffmc        <- fn_mcffmc(ffmc)
+    mcdmc         <- fn_mcdmc(dmc)
     idx           <- fn_mcsa_idx(season, density, stand)
     mcsa          <- fn_mcsa(idx, mcffmc, mcdmc)
     mc            <- switch(
