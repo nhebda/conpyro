@@ -1,0 +1,4 @@
+id,season,density,stand,fsg,sfc,cbd,smooth_cfi
+1,summer,moderate,pine,6,2,0.16,FALSE
+2,summer,light,pine,6,2.2,0.09,FALSE
+3,summer,light,spruce,2,2,0.12,FALSE
