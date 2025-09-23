@@ -12,7 +12,7 @@ Authors@R: c(
       "Nicholas", "Hebda",
       email = "nicholas.hebda@nrcan-rncan.gc.ca",
       role = c("aut", "cre")
-    )
+    ),
     person(
       "Ceres", "Barros",
       email = "ceres.barros@nrcan-rncan.gc.ca",
