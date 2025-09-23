@@ -3,11 +3,16 @@ Type: Package
 Title: Canadian Conifer Pyrometrics Crown Fire Model
 Version: 0.1.0
 Authors@R: c(
-   ## TODO: FILL AUTHORS
+    ## TODO: FILL AUTHORS
     person(
       "Jane", "Doe",
       email = "jane@example.com",
       role = c("aut", "cre")
+    ),
+    person(
+      "Ceres", "Barros",
+      email = "ceres.barros@nrcan-rncan.gc.ca",
+      role = c("aut")
     )
   )
 Description: More about what it does (maybe more than one line).
