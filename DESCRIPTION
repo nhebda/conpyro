@@ -3,6 +3,7 @@ Type: Package
 Title: Canadian Conifer Pyrometrics Crown Fire Model
 Version: 0.1.0
 Authors@R: c(
+   ## TODO: FILL AUTHORS
     person(
       "Jane", "Doe",
       email = "jane@example.com",
