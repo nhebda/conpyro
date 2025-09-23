@@ -1,17 +1,26 @@
 Package: conpyro.pkg
 Type: Package
-Title: Canadian Conifer Pyrometrics Crown Fire Model
+Title: Canadian Conifer Pyrometrics Crown Fire Occurrence Model
 Version: 0.1.0
 Authors@R: c(
-   ## TODO: FILL AUTHORS
     person(
-      "Jane", "Doe",
-      email = "jane@example.com",
+      "Daniel", "Perrakis",
+      email = "daniel.perrakis@nrcan-rncan.gc.ca",
+      role = "aut"
+    )
+    person(
+      "Nicholas", "Hebda",
+      email = "nicholas.hebda@nrcan-rncan.gc.ca",
       role = c("aut", "cre")
+    ),
+    person(
+      "Ceres", "Barros",
+      email = "ceres.barros@nrcan-rncan.gc.ca",
+      role = c("aut")
     )
   )
-Description: More about what it does (maybe more than one line).
-    Continuation lines should be indented.
-License: What license is it under?
+Description: An R package implementation of the Canadian Conifer Pyrometrics 
+crown fire occurrence modelling system (Perrakis et al. 2023).
+License: TBD
 Encoding: UTF-8
 LazyData: true
