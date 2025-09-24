@@ -27,6 +27,8 @@ Imports:
   checkmate
 Suggests:
   ggplot2
+  cffdrs
 License: TBD
 Encoding: UTF-8
 LazyData: true
+RoxygenNote: 7.3.3
