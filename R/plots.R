@@ -43,6 +43,4 @@ fn_plot <- function(data, par, xlab, ylab) {
   } else {
     stop("Plotting is active, but 'ggplot2' cannot be found.\nPlease install 'ggplot2'")
   }
-
-
 }
