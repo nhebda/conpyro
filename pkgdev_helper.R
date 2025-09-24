@@ -5,7 +5,9 @@
 
 devtools::document()   ## creates/updates all the documentation files
 
-devtools::build()
+devtools::build(args = "--as-cran")   ## check with CRAN checks
+
+devtools::check()
 
 devtools::test()
 
