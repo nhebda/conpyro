@@ -24,10 +24,10 @@ Authors@R: c(
 Depends: 
     R (>= 3.5)
 Imports:
-  checkmate
-Suggests:
+  cffdrs,
+  checkmate,
   ggplot2
-  cffdrs
+Suggests:
 License: TBD
 Encoding: UTF-8
 LazyData: true
