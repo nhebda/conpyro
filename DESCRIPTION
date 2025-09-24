@@ -2,6 +2,8 @@ Package: conpyro.pkg
 Type: Package
 Title: Canadian Conifer Pyrometrics Crown Fire Occurrence Model
 Version: 0.1.0
+Description: An R package implementation of the Canadian Conifer Pyrometrics 
+    crown fire occurrence modelling system (Perrakis et al. 2023).
 Authors@R: c(
     person(
       "Daniel", "Perrakis",
@@ -19,8 +21,8 @@ Authors@R: c(
       role = c("aut")
     )
   )
-Description: An R package implementation of the Canadian Conifer Pyrometrics 
-crown fire occurrence modelling system (Perrakis et al. 2023).
+Depends: 
+    R (>= 3.5)
 Imports:
   checkmate
 Suggests:
