@@ -637,26 +637,7 @@ ladder_midstory_saplings <- function(
 
 # Internal functions ----
 # __General utility ----
-fn_prep_ggdata <- function(id, ws_seq, var) {
-  data.frame(
-    id  = rep(as.character(id), times = length(ws_seq)),
-    var = rep(deparse(substitute(var)), times = length(ws_seq)),
-    ws  = ws_seq,
-    val = var
-  )
-}
-fn_plot <- function(data, par, xlab, ylab) {
-  gginput <- subset(data, var == par)
-  p <- ggplot(
-    gginput,
-    aes(ws, val, color = id)
-  ) +
-    geom_line(linewidth = 1.5) +
-    labs(color = "Scenario") +
-    xlab(xlab) +
-    ylab(ylab) +
-    scale_color_viridis_d()
-}
+
 
 # __Fine fuel moisture content estimates (mcFFMC, mcSA) ----
 fn_mcffmc   <- function(ffmc) {147.27723 * (101 - ffmc) / (59.5 + ffmc)}
