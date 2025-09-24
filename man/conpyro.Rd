@@ -15,6 +15,11 @@ conpyro
 \examples{
 {
 ## TODO: examples.
+  library(conpyro.pkg) ## double check if need
+
+  data(input)
+
+  conpyro(input)
 }
 
 }
