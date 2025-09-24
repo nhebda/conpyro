@@ -21,6 +21,10 @@ Authors@R: c(
   )
 Description: An R package implementation of the Canadian Conifer Pyrometrics 
 crown fire occurrence modelling system (Perrakis et al. 2023).
+Imports:
+  checkmate
+Suggests:
+  ggplot2
 License: TBD
 Encoding: UTF-8
 LazyData: true
