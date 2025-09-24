@@ -11,6 +11,11 @@
 #'
 #' @examples {
 #' ## TODO: examples.
+#'   library(conpyro.pkg) ## double check if need
+#'
+#'   data(input)
+#'
+#'   conpyro(input)
 #' }
 #'
 #' @importFrom checkmate assert_data_frame assert_subset assert_integerish assert_number
