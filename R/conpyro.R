@@ -10,7 +10,6 @@ conpyro <- function(
     ws   = c(0, 40),
     ffmc = 91,
     dmc  = 70,
-    bui  = 85,
     plot = c(
       # "pcfo",
       # "sros",
@@ -55,7 +54,6 @@ conpyro <- function(
   )
   assert_number(ffmc, lower = 80, upper = 99)
   assert_number(dmc, lower = 5, upper = 200)
-  assert_number(bui, lower = 0, upper = 200)
   assert_subset(
     plot,
     c(
@@ -136,7 +134,7 @@ conpyro <- function(
     )
     pcfo          <- fn_pcfo(model_conpyro, ws_seq, fsg, sfc, mc)
     cf_ci         <- fn_cf_ci(ws_seq, pcfo)
-    sros          <- fn_sros(model_sros, ws_seq, mc, ffmc, bui, sfc)
+    sros          <- fn_sros(model_sros, ws_seq, mc, ffmc, sfc)
     cros_a        <- fn_cros_a(model_cros, mc, ws_seq, cbd)
     cac           <- fn_cac(cros_a, cbd)
     cros_p        <- fn_cros_p(cros_a, cac)
@@ -728,7 +726,7 @@ fn_cf_ci <- function(ws_seq, pcfo) {
 }
 
 # __Surface fire rate of spread (SROS) ----
-fn_sros <- function(model, ws_seq, mc, ffmc, bui, sfc) {
+fn_sros <- function(model, ws_seq, mc, ffmc, sfc) {
   if (model == 1) {
     # Aggregated FBPS surf. V4 (default)
     f_w <- exp(0.05039 * ws_seq)
@@ -751,7 +749,7 @@ fn_sros <- function(model, ws_seq, mc, ffmc, bui, sfc) {
       lat = rep(55, times = length(ws_seq)),
       long = rep(-120, times = length(ws_seq)),
       ffmc = rep(ffmc, times = length(ws_seq)),
-      bui = rep(bui, times = length(ws_seq)),
+      bui = rep(32, times = length(ws_seq)),
       ws = ws_seq,
       gs = rep(0, times = length(ws_seq)),
       dj = rep(180, times = length(ws_seq)),
@@ -759,10 +757,8 @@ fn_sros <- function(model, ws_seq, mc, ffmc, bui, sfc) {
     )
     cffdrs_out <- cffdrs::fbp(cffdrs_in,output = "Secondary")
     isi <- cffdrs_out$ISI
-    bui_d1 <- if (bui == "No ROS effect") 32 else bui
-    be_d1 <- exp(50 * log(0.9) * (1 / bui_d1 - 1 / 32))
     rsi_d1 <- 30 * (1 - exp(-0.0232 * isi))^1.6
-    sros <- rsi_d1 * be_d1
+    sros <- rsi_d1
     return(sros)
   } else if (model == 3) {
     # C-6 (surface only) FBPS
@@ -772,7 +768,7 @@ fn_sros <- function(model, ws_seq, mc, ffmc, bui, sfc) {
       lat = rep(55, times = length(ws_seq)),
       long = rep(-120, times = length(ws_seq)),
       ffmc = rep(ffmc, times = length(ws_seq)),
-      bui = rep(bui, times = length(ws_seq)),
+      bui = rep(62, times = length(ws_seq)),
       ws = ws_seq,
       gs = rep(0, times = length(ws_seq)),
       dj = rep(180, times = length(ws_seq)),
@@ -780,10 +776,8 @@ fn_sros <- function(model, ws_seq, mc, ffmc, bui, sfc) {
     )
     cffdrs_out <- cffdrs::fbp(cffdrs_in,output = "Secondary")
     isi <- cffdrs_out$ISI
-    bui_c6 <- if (bui == "No ROS effect") 62 else bui
-    be_c6 <- exp(50 * log(0.8) * (1 / bui_c6 - 1 / 62))
     rsi_c6 <- 30 * (1 - exp(-0.08 * isi))^3
-    sros <- rsi_c6 * be_c6
+    sros <- rsi_c6
     return(sros)
   } else if (model == 4) {
     # IsaSFC
