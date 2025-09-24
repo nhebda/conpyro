@@ -9,7 +9,7 @@ Authors@R: c(
       "Daniel", "Perrakis",
       email = "daniel.perrakis@nrcan-rncan.gc.ca",
       role = "aut"
-    )
+    ),
     person(
       "Nicholas", "Hebda",
       email = "nicholas.hebda@nrcan-rncan.gc.ca",
