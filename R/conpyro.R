@@ -1,10 +1,20 @@
-# Conpyro Script 0.12
-# Last updated: 2025/09/23
-
-library(ggplot2)
-library(checkmate)
-
-# Exported functions ----
+#' Title
+#'
+#' @param input
+#' @param ws
+#' @param ffmc
+#' @param dmc
+#' @param bui
+#' @param plot
+#'
+#' @returns
+#' @export
+#'
+#' @examples {
+#' ## TODO: examples.
+#' }
+#'
+#' @importFrom checkmate TODO -- what functions from checkmate are directly used here?
 conpyro <- function(
     input,
     ws   = c(0, 40),
