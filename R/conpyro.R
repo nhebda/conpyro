@@ -491,7 +491,7 @@ conpyro <- function(
   return(out)
 }
 
-# pCFO calculator
+## TODO: move to tools.R
 # mc calculator
 tool_mc <- function(
     ffmc    = 91.2,
@@ -525,6 +525,7 @@ tool_mc <- function(
   out
 }
 
+## TODO: move to tools.R
 tool_fmc <- function(lat = 48, long = 83.3, elv = 100, dj = 200) {
   assert_number(lat, lower = 42, upper = 70)
   assert_number(long, lower = 53, upper = 141)
@@ -535,6 +536,7 @@ tool_fmc <- function(lat = 48, long = 83.3, elv = 100, dj = 200) {
   out
 }
 
+## TODO: move to tools.R
 # FBP SFC calculator
 tool_sfc_fbp <- function(
     bui  = 85,
@@ -567,6 +569,7 @@ tool_sfc_fbp <- function(
   out
 }
 
+## TODO: move to tools.R
 # Degroot SFC calculator
 tool_sfc_degroot <- function(bui = 85, ffl = 3.5, fwfl = 0.3) {
   assert_number(bui, lower = 0, upper = 200)
