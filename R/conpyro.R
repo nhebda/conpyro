@@ -1,10 +1,9 @@
-#' Title
+#' conpyro
 #'
 #' @param input
 #' @param ws
 #' @param ffmc
 #' @param dmc
-#' @param bui
 #' @param plot
 #'
 #' @returns
@@ -14,7 +13,7 @@
 #' ## TODO: examples.
 #' }
 #'
-#' @importFrom checkmate TODO -- what functions from checkmate are directly used here?
+#' @importFrom checkmate assert_data_frame assert_subset assert_integerish assert_number
 conpyro <- function(
     input,
     ws   = c(0, 40),
