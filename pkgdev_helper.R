@@ -9,5 +9,5 @@ devtools::build()
 
 devtools::test()
 
-## Online documentation with pkgdown
+## Online documentation with pkgdown (funtion calls to come when apprpriate)
 # install.packages("pkgdown")
