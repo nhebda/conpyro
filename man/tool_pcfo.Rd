@@ -7,7 +7,15 @@
 tool_pcfo(model = 11, mc = 7.8, ws = 20, fsg = 9.5, sfc = 1.8)
 }
 \arguments{
-\item{sfc}{}
+\item{model}{TODO: description.}
+
+\item{mc}{TODO: description.}
+
+\item{ws}{TODO: description.}
+
+\item{fsg}{TODO: description.}
+
+\item{sfc}{TODO: description.}
 }
 \description{
 pCFO calculator

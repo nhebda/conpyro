@@ -2,13 +2,17 @@
 % Please edit documentation in R/plots.R
 \name{fn_prep_ggdata}
 \alias{fn_prep_ggdata}
-\title{Title}
+\title{Prep ggplot2 input data}
 \usage{
 fn_prep_ggdata(id, ws_seq, var)
 }
 \arguments{
-\item{var}{}
+\item{id}{TODO: description.}
+
+\item{ws_seq}{TODO: description.}
+
+\item{var}{TODO: description.}
 }
 \description{
-Title
+Prep ggplot2 input data
 }

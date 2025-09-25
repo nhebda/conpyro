@@ -13,7 +13,15 @@ tool_mc(
 )
 }
 \arguments{
-\item{stand}{}
+\item{ffmc}{TODO: description.}
+
+\item{dmc}{TODO: description.}
+
+\item{season}{TODO: description.}
+
+\item{density}{TODO: description.}
+
+\item{stand}{TODO: description.}
 }
 \description{
 MC calculator

@@ -2,24 +2,32 @@
 % Please edit documentation in R/conpyro.R
 \name{conpyro}
 \alias{conpyro}
-\title{conpyro}
+\title{Conifer Pyrometrics}
 \usage{
 conpyro(input, ws = c(0, 40), ffmc = 91, dmc = 70, plot = c())
 }
 \arguments{
-\item{plot}{}
+\item{input}{TODO: description.}
+
+\item{ws}{TODO: description.}
+
+\item{ffmc}{TODO: description.}
+
+\item{dmc}{TODO: description.}
+
+\item{plot}{TODO: description.}
 }
 \description{
-conpyro
+Main conpyro function
 }
 \examples{
 {
 ## TODO: examples.
-  library(conpyro.pkg) ## double check if need
+  ## library(conpyro.pkg) ## double check if need
 
-  data(input)
+  ## data(input)
 
-  conpyro(input)
+  ## conpyro(input)
 }
 
 }

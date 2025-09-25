@@ -14,7 +14,17 @@ ladder_midstory_saplings(
 )
 }
 \arguments{
-\item{actual_sfc}{}
+\item{hs}{TODO: description.}
+
+\item{zs}{TODO: description.}
+
+\item{zp}{TODO: description.}
+
+\item{lnfl}{TODO: description.}
+
+\item{sapling_fmc}{TODO: description.}
+
+\item{actual_sfc}{TODO: description.}
 }
 \description{
 Midstory saplings ladder fuel calculator

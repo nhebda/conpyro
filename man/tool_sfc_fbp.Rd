@@ -7,7 +7,11 @@
 tool_sfc_fbp(bui = 85, ffmc = 91, pc = 40)
 }
 \arguments{
-\item{pc}{}
+\item{bui}{TODO: description.}
+
+\item{ffmc}{TODO: description.}
+
+\item{pc}{TODO: description.}
 }
 \description{
 FBP SFC calculator

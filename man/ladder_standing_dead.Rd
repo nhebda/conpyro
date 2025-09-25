@@ -7,7 +7,11 @@
 ladder_standing_dead(consumption = 0.2, cl = 4, fsg = 6)
 }
 \arguments{
-\item{fsg}{}
+\item{consumption}{TODO: description.}
+
+\item{cl}{TODO: description.}
+
+\item{fsg}{TODO: description.}
 }
 \description{
 Standing dead ladder fuels calculator

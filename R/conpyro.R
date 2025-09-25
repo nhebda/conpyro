@@ -1,25 +1,28 @@
-#' conpyro
+#' Conifer Pyrometrics
 #'
-#' @param input
-#' @param ws
-#' @param ffmc
-#' @param dmc
-#' @param plot
+#' Main conpyro function
+#'
+#' @param input TODO: description.
+#' @param ws TODO: description.
+#' @param ffmc TODO: description.
+#' @param dmc TODO: description.
+#' @param plot TODO: description.
 #'
 #' @returns
 #' @export
 #'
 #' @examples {
 #' ## TODO: examples.
-#'   library(conpyro.pkg) ## double check if need
+#'   ## library(conpyro.pkg) ## double check if need
 #'
-#'   data(input)
+#'   ## data(input)
 #'
-#'   conpyro(input)
+#'   ## conpyro(input)
 #' }
 #'
-#' @importFrom checkmate assert_data_frame assert_subset assert_integerish assert_number
 #' @importFrom cffdrs fbp
+#' @importFrom checkmate assert_data_frame assert_subset assert_integerish assert_number
+#' @importFrom utils read.csv
 conpyro <- function(
     input,
     ws   = c(0, 40),
@@ -346,7 +349,7 @@ conpyro <- function(
       ggdata,
       "pcfo",
       "Wind Speed [km/h]",
-      "Probability of Crown Fire Occurrence [0–1]"
+      "Probability of Crown Fire Occurrence [0-1]"
     )
     print(fig_pcfo)
   }
@@ -373,7 +376,7 @@ conpyro <- function(
       ggdata,
       "cac",
       "Wind Speed [km/h]",
-      "Criterion for Active Crowning [0–1]"
+      "Criterion for Active Crowning [0-1]"
     )
     print(fig_cac)
   }
@@ -536,7 +539,7 @@ fn_mcsa_idx <- function(season, density, stand) {
   )
 }
 fn_mcsa <- function(idx, mcffmc, mcdmc) {
-  coefs <- read.csv("coefs_mcsa.csv")
+  coefs <- read.csv("R/coefs_mcsa.csv")
   c     <- 0.002232
   calc_mcsa <- function(idx, mcffmc, mcdmc) {
     a     <- coefs[which(coefs[1] == idx), 2]
@@ -556,7 +559,7 @@ fn_mcsa <- function(idx, mcffmc, mcdmc) {
 
 # __Probability of crown fire occurrenc (pCFO) ----
 fn_pcfo <- function(model, ws_seq, fsg, sfc, mc) {
-  coefs <- read.csv("coefs_pcfo.csv")
+  coefs <- read.csv("R/coefs_pcfo.csv")
   b0 <- coefs[which(coefs[1] == model), 2]
   b1 <- coefs[which(coefs[1] == model), 3]
   b2 <- coefs[which(coefs[1] == model), 4]

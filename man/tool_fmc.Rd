@@ -7,7 +7,13 @@
 tool_fmc(lat = 48, long = 83.3, elv = 100, dj = 200)
 }
 \arguments{
-\item{dj}{}
+\item{lat}{TODO: description.}
+
+\item{long}{TODO: description.}
+
+\item{elv}{TODO: description.}
+
+\item{dj}{TODO: description.}
 }
 \description{
 FMC calculator

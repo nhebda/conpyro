@@ -7,7 +7,11 @@
 tool_sfc_degroot(bui = 85, ffl = 3.5, fwfl = 0.3)
 }
 \arguments{
-\item{fwfl}{}
+\item{bui}{TODO: description.}
+
+\item{ffl}{TODO: description.}
+
+\item{fwfl}{TODO: description.}
 }
 \description{
 Degroot SFC calculator

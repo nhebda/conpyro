@@ -2,13 +2,19 @@
 % Please edit documentation in R/plots.R
 \name{fn_plot}
 \alias{fn_plot}
-\title{Title}
+\title{Plot data using ggplot2}
 \usage{
 fn_plot(data, par, xlab, ylab)
 }
 \arguments{
-\item{ylab}{}
+\item{data}{TODO: description.}
+
+\item{par}{TODO: description.}
+
+\item{xlab}{TODO: description.}
+
+\item{ylab}{TODO: description.}
 }
 \description{
-Title
+Plot data using ggplot2
 }

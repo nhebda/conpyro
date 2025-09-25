@@ -1,10 +1,10 @@
 #' pCFO calculator
 #'
-#' @param model
-#' @param mc
-#' @param ws
-#' @param fsg
-#' @param sfc
+#' @param model TODO: description.
+#' @param mc TODO: description.
+#' @param ws TODO: description.
+#' @param fsg TODO: description.
+#' @param sfc TODO: description.
 #'
 #' @returns
 #' @export
@@ -26,11 +26,11 @@ tool_pcfo <- function(model = 11, mc = 7.8, ws = 20, fsg = 9.5, sfc = 1.8) {
 
 #' MC calculator
 #'
-#' @param ffmc
-#' @param dmc
-#' @param season
-#' @param density
-#' @param stand
+#' @param ffmc TODO: description.
+#' @param dmc TODO: description.
+#' @param season TODO: description.
+#' @param density TODO: description.
+#' @param stand TODO: description.
 #'
 #' @returns
 #' @export
@@ -71,39 +71,35 @@ tool_mc <- function(
 
 #' FMC calculator
 #'
-#' @param lat
-#' @param long
-#' @param elv
-#' @param dj
+#' @param lat TODO: description.
+#' @param long TODO: description.
+#' @param elv TODO: description.
+#' @param dj TODO: description.
 #'
 #' @returns
 #' @export
 #'
 #' @examples
-#'
-#' @importFrom cffdrs foliar_moisture_content
 tool_fmc <- function(lat = 48, long = 83.3, elv = 100, dj = 200) {
   assert_number(lat, lower = 42, upper = 70)
   assert_number(long, lower = 53, upper = 141)
   assert_number(elv, lower = 0, upper = 2500)
   assert_number(dj, lower = 0, upper = 365)
-  fmc <- foliar_moisture_content(lat, long, elv, dj, 0)
+  fmc <- cffdrs:::foliar_moisture_content(lat, long, elv, dj, 0)
   out <- list("fmc" = fmc)
   out
 }
 
 #' FBP SFC calculator
 #'
-#' @param bui
-#' @param ffmc
-#' @param pc
+#' @param bui TODO: description.
+#' @param ffmc TODO: description.
+#' @param pc TODO: description.
 #'
 #' @returns
 #' @export
 #'
 #' @examples
-#'
-#' @importFrom cffdrs surface_fuel_consumption
 tool_sfc_fbp <- function(
     bui  = 85,
     ffmc = 91,
@@ -115,7 +111,7 @@ tool_sfc_fbp <- function(
   fueltypes <- c("C1", "C2", "C3", "C5", "C7", "D1", "M1", "S1", "S2", "S3")
   out <- lapply(
     fueltypes,
-    surface_fuel_consumption,
+    cffdrs:::surface_fuel_consumption,
     BUI  = bui,
     FFMC = ffmc,
     PC   = pc
@@ -137,9 +133,9 @@ tool_sfc_fbp <- function(
 
 #' Degroot SFC calculator
 #'
-#' @param bui
-#' @param ffl
-#' @param fwfl
+#' @param bui TODO: description.
+#' @param ffl TODO: description.
+#' @param fwfl TODO: description.
 #'
 #' @returns
 #' @export
@@ -157,9 +153,9 @@ tool_sfc_degroot <- function(bui = 85, ffl = 3.5, fwfl = 0.3) {
 
 #' Standing dead ladder fuels calculator
 #'
-#' @param consumption
-#' @param cl
-#' @param fsg
+#' @param consumption TODO: description.
+#' @param cl TODO: description.
+#' @param fsg TODO: description.
 #'
 #' @returns
 #' @export
@@ -174,19 +170,19 @@ ladder_standing_dead <- function(consumption = 0.2, cl = 4, fsg = 6) {
   scaled_sfc    <- (fsg / zl)^1.5 * consumption * 3.1
   out           <- list(
     "LFSG [m]" = zl,
-    "Scaled SFC contribution, small snags [kg/m²]" = scaled_sfc
+    "Scaled SFC contribution, small snags [kg/m^2]" = scaled_sfc
   )
   out
 }
 
 #' Midstory saplings ladder fuel calculator
 #'
-#' @param hs
-#' @param zs
-#' @param zp
-#' @param lnfl
-#' @param sapling_fmc
-#' @param actual_sfc
+#' @param hs TODO: description.
+#' @param zs TODO: description.
+#' @param zp TODO: description.
+#' @param lnfl TODO: description.
+#' @param sapling_fmc TODO: description.
+#' @param actual_sfc TODO: description.
 #'
 #' @returns
 #' @export

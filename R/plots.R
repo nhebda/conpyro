@@ -2,11 +2,11 @@
 ## TODO: documenting these functions is optional, but can be a good idea to
 ## make future development and transferring to other developers easier
 
-#' Title
+#' Prep ggplot2 input data
 #'
-#' @param id
-#' @param ws_seq
-#' @param var
+#' @param id TODO: description.
+#' @param ws_seq TODO: description.
+#' @param var TODO: description.
 #'
 #' @returns
 fn_prep_ggdata <- function(id, ws_seq, var) {
@@ -18,15 +18,15 @@ fn_prep_ggdata <- function(id, ws_seq, var) {
   )
 }
 
-#' Title
+#' Plot data using ggplot2
 #'
-#' @param data
-#' @param par
-#' @param xlab
-#' @param ylab
+#' @param data TODO: description.
+#' @param par TODO: description.
+#' @param xlab TODO: description.
+#' @param ylab TODO: description.
 #'
 #' @returns
-#' @importFrom ggplot2 ggplot geom_line labs xlab ylab scale_color_viridis_d aes
+#' @importFrom ggplot2 ggplot geom_line geom_point labs xlab ylab scale_color_viridis_d aes
 fn_plot <- function(data, par, xlab, ylab) {
   ## check for `ggplot2` and warn user if not installed
   if (requireNamespace("ggplot2", quietly = TRUE)) {
