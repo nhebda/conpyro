@@ -1,6 +1,6 @@
-#' Default/Example input data for `con.pyro`
+#' Default/Example input data for `conpyro()`
 #'
-#' TODO DESCRIPTION
+#' TODO A dataset containing default inputs for testing and examples.
 #'
 #' @format A `data.frame` with columns:
 #' \describe{
@@ -15,3 +15,4 @@
 #'   \item{XXX}{optional. TODO DESCRIPTION}
 #'   \item{XXX}{optional. TODO DESCRIPTION}
 #' }
+"input"
