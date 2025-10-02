@@ -2,23 +2,38 @@
 % Please edit documentation in R/tools.R
 \name{tool_pcfo}
 \alias{tool_pcfo}
-\title{pCFO calculator}
+\title{Calculate crown fire occurrence probability (pCFO)}
 \usage{
-tool_pcfo(model = 11, mc = 7.8, ws = 20, fsg = 9.5, sfc = 1.8)
+tool_pcfo(mc = 7.8, ws = 20, fsg = 9.5, sfc = 1.8, model = 11)
 }
 \arguments{
-\item{model}{TODO: description.}
+\item{mc}{A numeric value between 5 and 20 (inclusive). Fine fuel moisture
+content, either FFMC-based (mcFFMC) or stand-adjusted (mcSA). Calculate
+using [tool_mc()].}
 
-\item{mc}{TODO: description.}
+\item{ws}{A numeric value between 0 and 60 (inclusive). Wind speed in km/h.}
 
-\item{ws}{TODO: description.}
+\item{fsg}{A numeric value between 0.5 and 20 (inclusive). Fuel strata gap in
+metres. The vertical distance between the top of the surface fuels and the
+lower limit of the canopy fuels. Analogous to crown base height (CBH) in
+the absence of mid-story ladder fuels.}
 
-\item{fsg}{TODO: description.}
+\item{sfc}{A numeric value between 0.1 and 6 (inclusive). Surface fuel
+consumption. Estimate using [tool_sfc_fbp()] or [tool_sfc_degroot()].}
 
-\item{sfc}{TODO: description.}
+\item{model}{Choose one of `7`, `8`, `10`, or `11`. The ConPyro model form to
+use (see Perrakis et al., 2023). Models 7 and 10 assume that `mc` is
+FFMC-based (mcFFMC) while models 8 and 11 assume `mc` is stand-adjusted
+(mcSA).}
+}
+\value{
+A list of length 1 consisting of a numeric value named "pCFO".
 }
 \description{
-pCFO calculator
+`tool_pcfo()` calculates crown fire occurrence probability for a single set
+of fuel, wind speed, and stand structure observations using the Canadian
+Conifer Pyrometrics (ConPyro) model system. For more information, see
+Perrakis et al. (2023).
 }
 \examples{
 {

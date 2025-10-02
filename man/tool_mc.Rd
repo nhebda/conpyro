@@ -2,7 +2,7 @@
 % Please edit documentation in R/tools.R
 \name{tool_mc}
 \alias{tool_mc}
-\title{MC calculator}
+\title{Estimate fine dead litter moisture content (MC)}
 \usage{
 tool_mc(
   ffmc = 91.2,
@@ -13,16 +13,19 @@ tool_mc(
 )
 }
 \arguments{
-\item{ffmc}{TODO: description.}
+\item{ffmc}{A numeric value between 80 and 99 (inclusive). The Fine Fuel
+Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index System.}
 
-\item{dmc}{TODO: description.}
+\item{dmc}{A numeric value between 5 and 200 (inclusive). The Duff Moisture
+Code (DMC) as per the Canadian Forest Fire Weather Index System.}
 
-\item{season}{TODO: description.}
+\item{season}{One of "spring", "sp-su", "summer, or "fall".}
 
 \item{density}{TODO: description.}
 
 \item{stand}{TODO: description.}
 }
 \description{
-MC calculator
+`tool_mc` estimates fine dead surface litter moisture content (MC), both from
+the FFMC (mcFFMC) and using the stand-adjusted model (mcSA).
 }

@@ -178,12 +178,12 @@ conpyro <- function(
     ros_aio       <- c(sros_out, cros_p_out, cros_a_out)
     # Prepare output data
     results <- list(
-      "mcffmc"        = mcffmc,
+      "mcffmc"        = round(mcffmc, 2),
       # "mcdmc"         = mcdmc,
       # "mcsa_idx"      = idx,
-      "mcsa"          = mcsa,
+      "mcsa"          = round(mcsa, 2),
       "ws_seq"        = ws_seq,
-      "pcfo"          = pcfo,
+      "pcfo"          = round(pcfo, 2),
       # "sros"          = sros,
       # "cros_a"        = cros_a,
       # "cac"           = cac,
@@ -194,7 +194,7 @@ conpyro <- function(
       # "sros_out"      = sros_out,
       # "cros_p_out"    = cros_p_out,
       # "cros_a_out"    = cros_a_out,
-      "ros"           = ros_aio,
+      "ros"           = round(ros_aio, 2),
       "cf_ci"         = cf_ci,
       "cf_passive_ws" = if (length(sros_out) > 0 & length(cros_p_out > 0)) {
         ws_seq[length(sros_out) + 1]

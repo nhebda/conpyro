@@ -1,34 +1,56 @@
-#' pCFO calculator
+#' Calculate crown fire occurrence probability (pCFO)
 #'
-#' @param model TODO: description.
-#' @param mc TODO: description.
-#' @param ws TODO: description.
-#' @param fsg TODO: description.
-#' @param sfc TODO: description.
+#' `tool_pcfo()` calculates crown fire occurrence probability for a single set
+#' of fuel, wind speed, and stand structure observations using the Canadian
+#' Conifer Pyrometrics (ConPyro) model system. For more information, see
+#' Perrakis et al. (2023).
 #'
-#' @returns
+#' @param mc A numeric value between 5 and 20 (inclusive). Fine fuel moisture
+#'   content, either FFMC-based (mcFFMC) or stand-adjusted (mcSA). Calculate
+#'   using [tool_mc()].
+#' @param ws A numeric value between 0 and 60 (inclusive). Wind speed in km/h.
+#' @param fsg A numeric value between 0.5 and 20 (inclusive). Fuel strata gap in
+#'   metres. The vertical distance between the top of the surface fuels and the
+#'   lower limit of the canopy fuels. Analogous to crown base height (CBH) in
+#'   the absence of mid-story ladder fuels.
+#' @param sfc A numeric value between 0.1 and 6 (inclusive). Surface fuel
+#'   consumption. Estimate using [tool_sfc_fbp()] or [tool_sfc_degroot()].
+#' @param model Choose one of `7`, `8`, `10`, or `11`. The ConPyro model form to
+#'   use (see Perrakis et al., 2023). Models 7 and 10 assume that `mc` is
+#'   FFMC-based (mcFFMC) while models 8 and 11 assume `mc` is stand-adjusted
+#'   (mcSA).
+#'
+#' @returns A list of length 1 consisting of a numeric value named "pCFO".
 #' @export
 #'
 #' @examples {
 #' ## TODO
 #' }
 #' @importFrom checkmate assert_choice
-tool_pcfo <- function(model = 11, mc = 7.8, ws = 20, fsg = 9.5, sfc = 1.8) {
-  assert_choice(model, c(7, 8, 10, 11))
+tool_pcfo <- function(mc = 7.8, ws = 20, fsg = 9.5, sfc = 1.8, model = 11) {
+  # Check input validity
   assert_number(mc, lower = 5, upper = 20)
   assert_number(ws, lower = 0, upper = 60)
   assert_number(fsg, lower = 0.5, upper = 20)
   assert_number(sfc, lower = 0.1, upper = 6)
+  assert_choice(model, c(7, 8, 10, 11))
+  # Call pCFO function
   pcfo <- fn_pcfo(model, ws, fsg, sfc, mc)
-  out  <- list("pcfo" = pcfo)
-  out
+  # Output
+  out  <- list("pCFO" = pcfo)
+  return(out)
 }
 
-#' MC calculator
+#' Estimate fine dead litter moisture content (MC)
 #'
-#' @param ffmc TODO: description.
-#' @param dmc TODO: description.
-#' @param season TODO: description.
+#' `tool_mc` estimates fine dead surface litter moisture content (MC), both from
+#' the FFMC (mcFFMC) and using the stand-adjusted model (mcSA).
+#'
+#' @param ffmc A numeric value between 80 and 99 (inclusive). The Fine Fuel
+#'   Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index System.
+#' @param dmc A numeric value between 5 and 200 (inclusive). The Duff Moisture
+#'   Code (DMC) as per the Canadian Forest Fire Weather Index System.
+#' @param season One of "spring", "sp-su", "summer, or "fall".
 #' @param density TODO: description.
 #' @param stand TODO: description.
 #'
