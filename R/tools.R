@@ -1,9 +1,10 @@
-#' Calculate crown fire occurrence probability (pCFO)
+#' Calculate crown fire occurrence probability (pCFO) for a single set of
+#' observations
 #'
 #' `tool_pcfo()` calculates crown fire occurrence probability for a single set
 #' of fuel, wind speed, and stand structure observations using the Canadian
-#' Conifer Pyrometrics (ConPyro) model system. For more information, see
-#' Perrakis et al. (2023).
+#' Conifer Pyrometrics (ConPyro) model system. See Perrakis et al. (2023) for
+#' details.
 #'
 #' @param mc A numeric value between 5 and 20 (inclusive). Fine fuel moisture
 #'   content, either FFMC-based (mcFFMC) or stand-adjusted (mcSA). Calculate
@@ -14,11 +15,13 @@
 #'   lower limit of the canopy fuels. Analogous to crown base height (CBH) in
 #'   the absence of mid-story ladder fuels.
 #' @param sfc A numeric value between 0.1 and 6 (inclusive). Surface fuel
-#'   consumption. Estimate using [tool_sfc_fbp()] or [tool_sfc_degroot()].
+#'   consumption. May be estimated using [tool_sfc_fbp()] or
+#'   [tool_sfc_degroot()].
 #' @param model Choose one of `7`, `8`, `10`, or `11`. The ConPyro model form to
 #'   use (see Perrakis et al., 2023). Models 7 and 10 assume that `mc` is
 #'   FFMC-based (mcFFMC) while models 8 and 11 assume `mc` is stand-adjusted
 #'   (mcSA).
+#' @md
 #'
 #' @returns A list of length 1 consisting of a numeric value named "pCFO".
 #' @export
@@ -54,6 +57,7 @@ tool_pcfo <- function(mc = 7.8, ws = 20, fsg = 9.5, sfc = 1.8, model = 11) {
 #' @param density TODO: description.
 #' @param stand TODO: description.
 #'
+#' @md
 #' @returns
 #' @export
 #'

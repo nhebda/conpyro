@@ -26,6 +26,6 @@ Code (DMC) as per the Canadian Forest Fire Weather Index System.}
 \item{stand}{TODO: description.}
 }
 \description{
-`tool_mc` estimates fine dead surface litter moisture content (MC), both from
+\code{tool_mc} estimates fine dead surface litter moisture content (MC), both from
 the FFMC (mcFFMC) and using the stand-adjusted model (mcSA).
 }

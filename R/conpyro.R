@@ -1,14 +1,52 @@
-#' Conifer Pyrometrics
+#' Calculate crown fire occurrence probability (pCFO), crowning thresholds, and
+#' rate of spread (ROS)
 #'
-#' Main conpyro function
+#' `conpyro()` calculates crown fire occurrence probability, crowning
+#' thresholds, and rate of spread for any number of fuel, fire weather, and
+#' stand structure configurations using the Canadian Conifer Pyrometrics
+#' (ConPyro) model system. See Perrakis et al. (2023) for details.
 #'
-#' @param input TODO: description.
-#' @param ws TODO: description.
-#' @param ffmc TODO: description.
-#' @param dmc TODO: description.
-#' @param plot TODO: description.
+#' @param input A data frame of least 8 columns and 1 row. Each row defines a
+#'   ConPyro prediction for a single set of fuel and weather conditions (a
+#'   *scenario*). Inputs are case-insensitive. The required columns are:
+#'   * `ID`: Unique scenario identifier.
+#'   * `Season`: One of `spring`, `sp-su`, `summer`, or `fall`.
+#'   * `Density`: One of `light`, `moderate`, or `dense`.
+#'   * `Stand`: One of `pine`, `spruce`, `Douglas-fir`, `deciduous`, or
+#'   `mixedwood`.
+#'   * `FSG`: A numeric value between `0.5` and `20` (inclusive). Fuel strata
+#'   gap in metres. The vertical distance between the top of the surface fuels
+#'   and the lower limit of the canopy fuels. Analogous to crown base height
+#'   (CBH) in the absence of mid-story ladder fuels.
+#'   * `SFC`: A numeric value between `0.1` and `6` (inclusive). Surface fuel
+#'   consumption in kg/m^2. May be estimated using [tool_sfc_fbp()] or
+#'   [tool_sfc_degroot()].
+#'   * `CBD`: A numeric value between `0.01` and `0.8` (inclusive). Crown bulk
+#'   density in kg/m^3.
+#'   * `smooth_CFI`: Defines whether crown fire initiation is modeled as a
+#'   smooth transition (`TRUE`) or an instantaneous occurrence (`FALSE`).
+#' @param ws An integer vector of length `2`, with each element being between
+#'   `0` and `60` (inclusive). The first value defines the minimum wind speed
+#'   and the second defines the maximum, in km/h. Calculations are carried out
+#'   on the sequence of integer values from the minimum to the maximum
+#'   (inclusive).
+#' @param ffmc A numeric value between 80 and 99 (inclusive). The Fine Fuel
+#'   Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index System.
+#' @param dmc A numeric value between 5 and 200 (inclusive). The Duff Moisture
+#'   Code (DMC) as per the Canadian Forest Fire Weather Index (FWI) System.
+#' @param plot A character vector to control plotting of output. Choose any of
+#'   the following:
+#'   * `pcfo`: Crown fire occurrence probability.
+#'   * `sros`: Surface fire rate of spread.
+#'   * `cros_p`: Passive crown fire rate of spread.
+#'   * `cros_a`: Active crown fire rate of spread.
+#'   * `cac`: Criterion for active crowning.
+#'   * `ros_full`: Complete composite rate of spread plot with crowning
+#'   thresholds.
+#' @md
 #'
-#' @returns
+#' @returns A list of lists, with each sub-list containing outputs for a single
+#'   scenario (input row). Optionally plots output.
 #' @export
 #'
 #' @examples {
@@ -21,7 +59,8 @@
 #' }
 #'
 #' @importFrom cffdrs fbp
-#' @importFrom checkmate assert_data_frame assert_subset assert_integerish assert_number
+#' @importFrom checkmate assert_data_frame assert_subset assert_integerish
+#'   assert_number
 #' @importFrom utils read.csv
 conpyro <- function(
     input,
@@ -57,7 +96,8 @@ conpyro <- function(
         "stand",
         "fsg",
         "sfc",
-        "cbd"
+        "cbd",
+        "smooth_cfi"
       )
     ),
     tolower(colnames(input))

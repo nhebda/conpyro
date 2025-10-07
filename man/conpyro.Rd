@@ -2,23 +2,67 @@
 % Please edit documentation in R/conpyro.R
 \name{conpyro}
 \alias{conpyro}
-\title{Conifer Pyrometrics}
+\title{Calculate crown fire occurrence probability (pCFO), crowning thresholds, and
+rate of spread (ROS)}
 \usage{
 conpyro(input, ws = c(0, 40), ffmc = 91, dmc = 70, plot = c())
 }
 \arguments{
-\item{input}{TODO: description.}
+\item{input}{A data frame of least 8 columns and 1 row. Each row defines a
+ConPyro prediction for a single set of fuel and weather conditions (a
+\emph{scenario}). Inputs are case-insensitive. The required columns are:
+\itemize{
+\item \code{ID}: Unique scenario identifier.
+\item \code{Season}: One of \code{spring}, \code{sp-su}, \code{summer}, or \code{fall}.
+\item \code{Density}: One of \code{light}, \code{moderate}, or \code{dense}.
+\item \code{Stand}: One of \code{pine}, \code{spruce}, \code{Douglas-fir}, \code{deciduous}, or
+\code{mixedwood}.
+\item \code{FSG}: A numeric value between \code{0.5} and \code{20} (inclusive). Fuel strata
+gap in metres. The vertical distance between the top of the surface fuels
+and the lower limit of the canopy fuels. Analogous to crown base height
+(CBH) in the absence of mid-story ladder fuels.
+\item \code{SFC}: A numeric value between \code{0.1} and \code{6} (inclusive). Surface fuel
+consumption in kg/m^2. May be estimated using \code{\link[=tool_sfc_fbp]{tool_sfc_fbp()}} or
+\code{\link[=tool_sfc_degroot]{tool_sfc_degroot()}}.
+\item \code{CBD}: A numeric value between \code{0.01} and \code{0.8} (inclusive). Crown bulk
+density in kg/m^3.
+\item \code{smooth_CFI}: Defines whether crown fire initiation is modeled as a
+smooth transition (\code{TRUE}) or an instantaneous occurrence (\code{FALSE}).
+}}
 
-\item{ws}{TODO: description.}
+\item{ws}{An integer vector of length \code{2}, with each element being between
+\code{0} and \code{60} (inclusive). The first value defines the minimum wind speed
+and the second defines the maximum, in km/h. Calculations are carried out
+on the sequence of integer values from the minimum to the maximum
+(inclusive).}
 
-\item{ffmc}{TODO: description.}
+\item{ffmc}{A numeric value between 80 and 99 (inclusive). The Fine Fuel
+Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index System.}
 
-\item{dmc}{TODO: description.}
+\item{dmc}{A numeric value between 5 and 200 (inclusive). The Duff Moisture
+Code (DMC) as per the Canadian Forest Fire Weather Index (FWI) System.}
 
-\item{plot}{TODO: description.}
+\item{plot}{A character vector to control plotting of output. Choose any of
+the following:
+\itemize{
+\item \code{pcfo}: Crown fire occurrence probability.
+\item \code{sros}: Surface fire rate of spread.
+\item \code{cros_p}: Passive crown fire rate of spread.
+\item \code{cros_a}: Active crown fire rate of spread.
+\item \code{cac}: Criterion for active crowning.
+\item \code{ros_full}: Complete composite rate of spread plot with crowning
+thresholds.
+}}
+}
+\value{
+A list of lists, with each sub-list containing outputs for a single
+scenario (input row). Optionally plots output.
 }
 \description{
-Main conpyro function
+\code{conpyro()} calculates crown fire occurrence probability, crowning
+thresholds, and rate of spread for any number of fuel, fire weather, and
+stand structure configurations using the Canadian Conifer Pyrometrics
+(ConPyro) model system. See Perrakis et al. (2023) for details.
 }
 \examples{
 {
