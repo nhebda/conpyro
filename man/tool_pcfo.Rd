@@ -8,28 +8,29 @@ observations}
 tool_pcfo(mc = 7.8, ws = 20, fsg = 9.5, sfc = 1.8, model = 11)
 }
 \arguments{
-\item{mc}{A numeric value between 5 and 20 (inclusive). Fine fuel moisture
-content, either FFMC-based (mcFFMC) or stand-adjusted (mcSA). Calculate
-using \code{\link[=tool_mc]{tool_mc()}}.}
+\item{mc}{A numeric value between \code{5} and \code{20} (inclusive). Fine fuel
+moisture content, either FFMC-based (mcFFMC) or stand-adjusted (mcSA). May
+be estimated using \code{\link[=tool_mc]{tool_mc()}}.}
 
-\item{ws}{A numeric value between 0 and 60 (inclusive). Wind speed in km/h.}
+\item{ws}{A numeric value between \code{0} and \code{60} (inclusive). Wind speed in
+km/h.}
 
-\item{fsg}{A numeric value between 0.5 and 20 (inclusive). Fuel strata gap in
-metres. The vertical distance between the top of the surface fuels and the
-lower limit of the canopy fuels. Analogous to crown base height (CBH) in
-the absence of mid-story ladder fuels.}
+\item{fsg}{A numeric value between \code{0.5} and \code{20} (inclusive). Fuel strata
+gap in metres. The vertical distance between the top of the surface fuels
+and the lower limit of the canopy fuels. Analogous to crown base height
+(CBH) in the absence of mid-story ladder fuels.}
 
-\item{sfc}{A numeric value between 0.1 and 6 (inclusive). Surface fuel
-consumption. May be estimated using \code{\link[=tool_sfc_fbp]{tool_sfc_fbp()}} or
+\item{sfc}{A numeric value between \code{0.1} and \code{6} (inclusive). Surface fuel
+consumption in kg/m^2. May be estimated using \code{\link[=tool_sfc_fbp]{tool_sfc_fbp()}} or
 \code{\link[=tool_sfc_degroot]{tool_sfc_degroot()}}.}
 
-\item{model}{Choose one of \code{7}, \code{8}, \code{10}, or \code{11}. The ConPyro model form to
-use (see Perrakis et al., 2023). Models 7 and 10 assume that \code{mc} is
-FFMC-based (mcFFMC) while models 8 and 11 assume \code{mc} is stand-adjusted
-(mcSA).}
+\item{model}{Choose one of \code{7}, \code{8}, \code{10}, or \code{11}. The ConPyro model form
+used for calculations (see Perrakis et al., 2023). Models 7 and 10 assume
+that \code{mc} is FFMC-based (mcFFMC) while models 8 and 11 assume \code{mc} is
+stand-adjusted (mcSA).}
 }
 \value{
-A list of length 1 consisting of a numeric value named "pCFO".
+A list of length \code{1} consisting of a numeric value named \code{pCFO}.
 }
 \description{
 \code{tool_pcfo()} calculates crown fire occurrence probability for a single set
@@ -41,4 +42,5 @@ details.
 {
 ## TODO
 }
+
 }

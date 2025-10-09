@@ -2,17 +2,34 @@
 % Please edit documentation in R/tools.R
 \name{tool_sfc_degroot}
 \alias{tool_sfc_degroot}
-\title{Degroot SFC calculator}
+\title{Estimate surface fuel consumption (SFC) using the forest floor equation from
+De Groot et al. (2009)}
 \usage{
 tool_sfc_degroot(bui = 85, ffl = 3.5, fwfl = 0.3)
 }
 \arguments{
-\item{bui}{TODO: description.}
+\item{bui}{A numeric value between \code{80} and \code{200} (inclusive). The Buildup
+Index (BUI) as per the Canadian Forest Fire Weather Index System.}
 
-\item{ffl}{TODO: description.}
+\item{ffl}{A numeric value between \code{1} and \code{5} (inclusive). Forest floor load
+(litter + duff) in kg/m^2.}
 
-\item{fwfl}{TODO: description.}
+\item{fwfl}{A numeric value between \code{0} and \code{2} (inclusive). Fine woody fuel
+load (<7 cm diam.) in kg/m^2.}
+}
+\value{
+A list of length \code{2} consisting of one numeric value named
+\verb{Forest Floor Fuel Consumption} and one numeric value named \code{SFC}.
 }
 \description{
-Degroot SFC calculator
+\code{tool_sfc_degroot()} estimates SFC based on fuel load and Buildup Index (BUI)
+in experimental burns (R2 = 0.787). This equation may give nonsensical
+results (e.g., SFC > SFL) for cases of low surface fuel load (SFL) and high
+BUI. See De Groot et al. (2009) for details.
+}
+\examples{
+{
+## TODO
+}
+
 }

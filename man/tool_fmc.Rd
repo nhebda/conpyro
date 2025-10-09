@@ -2,19 +2,33 @@
 % Please edit documentation in R/tools.R
 \name{tool_fmc}
 \alias{tool_fmc}
-\title{FMC calculator}
+\title{Estimate foliar moisture content (FMC)}
 \usage{
 tool_fmc(lat = 48, long = 83.3, elv = 100, dj = 200)
 }
 \arguments{
-\item{lat}{TODO: description.}
+\item{lat}{A numeric value between \code{42} and \code{70} (inclusive). Latitude in
+decimal degrees.}
 
-\item{long}{TODO: description.}
+\item{long}{A numeric value between \code{53} and \code{141} (inclusive). Longitude in
+decimal degrees.}
 
-\item{elv}{TODO: description.}
+\item{elv}{A numeric value between \code{0} and \code{2500} (inclusive).Elevation in
+metres about sea level.}
 
-\item{dj}{TODO: description.}
+\item{dj}{A numeric value between \code{0} and \code{365} (inclusive). Julian day.}
+}
+\value{
+A list of length \code{1} consisting of a numeric value named \code{FMC}.
 }
 \description{
-FMC calculator
+\code{tool_fmc()} estimates foliar moisture content as per the Canadian Forest
+Fire Behavior Prediction System equations. A simple wrapper for
+\code{cffdrs:::foliar_moisture_content}.
+}
+\examples{
+{
+## TODO
+}
+
 }

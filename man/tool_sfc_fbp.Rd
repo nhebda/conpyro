@@ -2,17 +2,33 @@
 % Please edit documentation in R/tools.R
 \name{tool_sfc_fbp}
 \alias{tool_sfc_fbp}
-\title{FBP SFC calculator}
+\title{Estimate surface fuel consumption (SFC) using Canadian Forest Fire Behavior
+Prediction System (FBPS) equations}
 \usage{
 tool_sfc_fbp(bui = 85, ffmc = 91, pc = 40)
 }
 \arguments{
-\item{bui}{TODO: description.}
+\item{bui}{A numeric value between \code{80} and \code{200} (inclusive). The Buildup
+Index (BUI) as per the Canadian Forest Fire Weather Index System.}
 
-\item{ffmc}{TODO: description.}
+\item{ffmc}{A numeric value between \code{80} and \code{99} (inclusive). The Fine Fuel
+Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index System.}
 
-\item{pc}{TODO: description.}
+\item{pc}{A numeric value between \code{0} and \code{100} (inclusive). Percent conifer
+for M1/M2 fuel types.}
+}
+\value{
+A list of length \code{10} consisting of named numeric values
+corresponding to the major FBPS fuel types.
 }
 \description{
-FBP SFC calculator
+\code{tool_sfc_fbp()} estimates SFC for all major fuel types as per the FBPS
+equations. A simple wrapper for \code{cffdrs:::surface_fuel_consumption}. An
+alternative SFC calculation method is offered by \code{\link[=tool_sfc_degroot]{tool_sfc_degroot()}}.
+}
+\examples{
+{
+## TODO
+}
+
 }
