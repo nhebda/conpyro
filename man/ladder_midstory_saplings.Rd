@@ -28,9 +28,9 @@ ladder_midstory_saplings(
 \item{actual_sfc}{Actual SFC in kg/m^2.}
 }
 \value{
-A list of length \code{5} consisting numeric values named
+A list of length \code{5} consisting of numeric values named
 \verb{Sapling crown centroid [m]}, \code{FSG [m]}, \verb{Sapling false-SFC},
-\verb{SFC scaled to crown centroid}, and \verb{Total false-SFC}.
+\verb{SFC scaled to crown centroid}, and \verb{Total false-SFC}, respectively.
 }
 \description{
 \code{ladder_midstory_saplings()} estimates the "false-SFC" contribution of a
