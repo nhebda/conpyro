@@ -2,8 +2,8 @@
 % Please edit documentation in R/tools.R
 \name{tool_pcfo}
 \alias{tool_pcfo}
-\title{Calculate crown fire occurrence probability (pCFO) for a single set of
-observations}
+\title{Calculate probability of crown fire occurrence (pCFO) for a single set of
+conditions}
 \usage{
 tool_pcfo(mc = 7.8, ws = 20, fsg = 9.5, sfc = 1.8, model = 11)
 }

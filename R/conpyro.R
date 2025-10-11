@@ -1,14 +1,14 @@
-#' Calculate crown fire occurrence probability (pCFO), crowning thresholds, and
-#' rate of spread (ROS)
+#' Calculate probability of crown fire occurrence (pCFO), crowning thresholds,
+#' and rate of spread (ROS) for any number of scenarios
 #'
-#' `conpyro()` calculates crown fire occurrence probability, crowning
-#' thresholds, and rate of spread for any number of fuel, fire weather, and
-#' stand structure configurations using the Canadian Conifer Pyrometrics
+#' `conpyro()` calculates pCFO, crowning thresholds, and ROS for any number of
+#' fuel and fire weather configurations using the Canadian Conifer Pyrometrics
 #' (ConPyro) model system. See Perrakis et al. (2023) for details.
 #'
-#' @param input A data frame of least 8 columns and 1 row. Each row defines a
-#'   ConPyro prediction for a single set of fuel and weather conditions (a
-#'   *scenario*). Inputs are case-insensitive. The required columns are:
+#' @param input A data frame of least `8` columns and `1` row. Each row defines
+#'   a ConPyro prediction for a single set of fuel and fire weather conditions
+#'   (a *scenario*). Inputs are case-insensitive and columns may be in any
+#'   order. Required columns are:
 #'   * `ID`: Unique scenario identifier.
 #'   * `Season`: One of `spring`, `sp-su`, `summer`, or `fall`.
 #'   * `Density`: One of `light`, `moderate`, or `dense`.
@@ -59,8 +59,8 @@
 #' }
 #'
 #' @importFrom cffdrs fbp
-#' @importFrom checkmate assert_data_frame assert_subset assert_integerish
-#'   assert_number
+#' @importFrom checkmate assert_data_frame assert_subset assert_true
+#'   assert_integerish assert_number
 #' @importFrom utils read.csv
 conpyro <- function(
     input,
@@ -80,7 +80,12 @@ conpyro <- function(
       # "ros_full"
     )
 ) {
-  # Check input validity
+  # Coerce input data to all lowercase
+  input[] <- lapply(input, function(col) {
+    if (is.character(col)) tolower(col) else col
+  })
+  colnames(input) <- tolower(colnames(input))
+  # Validate user input
   assert_data_frame(
     input,
     any.missing = FALSE,
@@ -88,19 +93,39 @@ conpyro <- function(
     col.names   = "named"
   )
   assert_subset(
-    tolower(
-      c(
-        "id",
-        "season",
-        "density",
-        "stand",
-        "fsg",
-        "sfc",
-        "cbd",
-        "smooth_cfi"
-      )
+    c(
+      "id",
+      "season",
+      "density",
+      "stand",
+      "fsg",
+      "sfc",
+      "cbd",
+      "smooth_cfi"
     ),
-    tolower(colnames(input))
+    colnames(input)
+  )
+  assert_true(
+    length(input$id) == length(unique(input$id)),
+    .var.name = "Input IDs must be unique"
+  )
+  lapply(
+    input$season,
+    assert_choice,
+    choices = c("spring","sp-su", "summer", "fall"),
+    .var.name = "season"
+  )
+  lapply(
+    input$density,
+    assert_choice,
+    choices = c("light", "moderate", "dense"),
+    .var.name = "density"
+  )
+  lapply(
+    input$stand,
+    assert_choice,
+    choices = c("deciduous", "douglas-fir", "mixedwood", "pine", "spruce"),
+    .var.name = "stand"
   )
   assert_integerish(
     ws,
@@ -127,11 +152,7 @@ conpyro <- function(
       "ros_full"
     )
   )
-  # Coerce input data to all lowercase
-  input[] <- lapply(input, function(col) {
-    if (is.character(col)) tolower(col) else col
-  })
-  colnames(input) <- tolower(colnames(input))
+
   # Initialize data structures
   out       <- list()
   ggdata    <- data.frame()

@@ -1,5 +1,5 @@
-#' Calculate crown fire occurrence probability (pCFO) for a single set of
-#' observations
+#' Calculate probability of crown fire occurrence (pCFO) for a single set of
+#' conditions
 #'
 #' `tool_pcfo()` calculates crown fire occurrence probability for a single set
 #' of fuel, wind speed, and stand structure observations using the Canadian

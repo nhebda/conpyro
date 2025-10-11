@@ -2,15 +2,16 @@
 % Please edit documentation in R/conpyro.R
 \name{conpyro}
 \alias{conpyro}
-\title{Calculate crown fire occurrence probability (pCFO), crowning thresholds, and
-rate of spread (ROS)}
+\title{Calculate probability of crown fire occurrence (pCFO), crowning thresholds,
+and rate of spread (ROS) for any number of scenarios}
 \usage{
 conpyro(input, ws = c(0, 40), ffmc = 91, dmc = 70, plot = c())
 }
 \arguments{
-\item{input}{A data frame of least 8 columns and 1 row. Each row defines a
-ConPyro prediction for a single set of fuel and weather conditions (a
-\emph{scenario}). Inputs are case-insensitive. The required columns are:
+\item{input}{A data frame of least \code{8} columns and \code{1} row. Each row defines
+a ConPyro prediction for a single set of fuel and fire weather conditions
+(a \emph{scenario}). Inputs are case-insensitive and columns may be in any
+order. Required columns are:
 \itemize{
 \item \code{ID}: Unique scenario identifier.
 \item \code{Season}: One of \code{spring}, \code{sp-su}, \code{summer}, or \code{fall}.
@@ -59,9 +60,8 @@ A list of lists, with each sub-list containing outputs for a single
 scenario (input row). Optionally plots output.
 }
 \description{
-\code{conpyro()} calculates crown fire occurrence probability, crowning
-thresholds, and rate of spread for any number of fuel, fire weather, and
-stand structure configurations using the Canadian Conifer Pyrometrics
+\code{conpyro()} calculates pCFO, crowning thresholds, and ROS for any number of
+fuel and fire weather configurations using the Canadian Conifer Pyrometrics
 (ConPyro) model system. See Perrakis et al. (2023) for details.
 }
 \examples{
