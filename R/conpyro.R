@@ -8,7 +8,8 @@
 #' @param input A data frame of least `8` columns and `1` row. Each row defines
 #'   a ConPyro prediction for a single set of fuel and fire weather conditions
 #'   (a *scenario*). Inputs are case-insensitive and columns may be in any
-#'   order. Required columns are:
+#'   order. Missing values are not permitted and will produce an error.
+#'   Required columns are:
 #'   * `ID`: Unique scenario identifier.
 #'   * `Season`: One of `spring`, `sp-su`, `summer`, or `fall`.
 #'   * `Density`: One of `light`, `moderate`, or `dense`.
@@ -25,6 +26,24 @@
 #'   density in kg/m^3.
 #'   * `smooth_CFI`: Defines whether crown fire initiation is modeled as a
 #'   smooth transition (`TRUE`) or an instantaneous occurrence (`FALSE`).
+#'
+#'   Additionally, there are several optional columns:
+#'   * `WS_min`: A numeric value between `0` and `60` (inclusive). Minimum wind
+#'   speed in km/h. Allows wind speed to be specified on a per-scenario basis.
+#'   If this column *and* the `WS_max` column are present, they will override
+#'   the `ws` argument.
+#'   * `WS_max`: A numeric value between `0` and `60` (inclusive). Maximum wind
+#'   speed in km/h. Allows wind speed to be specified on a per-scenario basis.
+#'   If this column *and* the `WS_min` column are present, they will override
+#'   the `ws` argument.
+#'   * `FFMC`: A numeric value between 80 and 99 (inclusive). The Fine Fuel
+#'   Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index System.
+#'   Allows FFMC to be specified on a per-scenario basis. If this column is
+#'   present, it will override the `ffmc` argument.
+#'   * `DMC`: A numeric value between 80 and 99 (inclusive). The Duff Moisture
+#'   Code (DMC) as per the Canadian Forest Fire Weather Index (FWI) System.
+#'   Allows DMC to be specified on a per-scenario basis. If this column is
+#'   present, it will override the `dmc` argument.
 #' @param ws An integer vector of length `2`, with each element being between
 #'   `0` and `60` (inclusive). The first value defines the minimum wind speed
 #'   and the second defines the maximum, in km/h. Calculations are carried out
@@ -60,7 +79,7 @@
 #'
 #' @importFrom cffdrs fbp
 #' @importFrom checkmate assert_data_frame assert_subset assert_true
-#'   assert_integerish assert_number
+#'   assert_choice assert_number assert_logical assert_integerish
 #' @importFrom utils read.csv
 conpyro <- function(
     input,
@@ -127,6 +146,10 @@ conpyro <- function(
     choices = c("deciduous", "douglas-fir", "mixedwood", "pine", "spruce"),
     .var.name = "stand"
   )
+  lapply(input$fsg, assert_number, lower = 0.5, upper = 20, .var.name = "FSG")
+  lapply(input$sfc, assert_number, lower = 0.1, upper = 6, .var.name = "SFC")
+  lapply(input$cbd, assert_number, lower = 0.01, upper = 0.8, .var.name = "CBD")
+  lapply(input$smooth_cfi, assert_logical, .var.name = "smooth_cfi")
   assert_integerish(
     ws,
     lower  = 0,

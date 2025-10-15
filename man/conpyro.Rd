@@ -11,7 +11,8 @@ conpyro(input, ws = c(0, 40), ffmc = 91, dmc = 70, plot = c())
 \item{input}{A data frame of least \code{8} columns and \code{1} row. Each row defines
 a ConPyro prediction for a single set of fuel and fire weather conditions
 (a \emph{scenario}). Inputs are case-insensitive and columns may be in any
-order. Required columns are:
+order. Missing values are not permitted and will produce an error.
+Required columns are:
 \itemize{
 \item \code{ID}: Unique scenario identifier.
 \item \code{Season}: One of \code{spring}, \code{sp-su}, \code{summer}, or \code{fall}.
@@ -29,6 +30,26 @@ consumption in kg/m^2. May be estimated using \code{\link[=tool_sfc_fbp]{tool_sf
 density in kg/m^3.
 \item \code{smooth_CFI}: Defines whether crown fire initiation is modeled as a
 smooth transition (\code{TRUE}) or an instantaneous occurrence (\code{FALSE}).
+}
+
+Additionally, there are several optional columns:
+\itemize{
+\item \code{WS_min}: A numeric value between \code{0} and \code{60} (inclusive). Minimum wind
+speed in km/h. Allows wind speed to be specified on a per-scenario basis.
+If this column \emph{and} the \code{WS_max} column are present, they will override
+the \code{ws} argument.
+\item \code{WS_max}: A numeric value between \code{0} and \code{60} (inclusive). Maximum wind
+speed in km/h. Allows wind speed to be specified on a per-scenario basis.
+If this column \emph{and} the \code{WS_min} column are present, they will override
+the \code{ws} argument.
+\item \code{FFMC}: A numeric value between 80 and 99 (inclusive). The Fine Fuel
+Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index System.
+Allows FFMC to be specified on a per-scenario basis. If this column is
+present, it will override the \code{ffmc} argument.
+\item \code{DMC}: A numeric value between 80 and 99 (inclusive). The Duff Moisture
+Code (DMC) as per the Canadian Forest Fire Weather Index (FWI) System.
+Allows DMC to be specified on a per-scenario basis. If this column is
+present, it will override the \code{dmc} argument.
 }}
 
 \item{ws}{An integer vector of length \code{2}, with each element being between
