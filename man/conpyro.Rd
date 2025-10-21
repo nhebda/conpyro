@@ -2,15 +2,17 @@
 % Please edit documentation in R/conpyro.R
 \name{conpyro}
 \alias{conpyro}
-\title{Calculate crown fire occurrence probability (pCFO), crowning thresholds, and
-rate of spread (ROS)}
+\title{Calculate probability of crown fire occurrence (pCFO), crowning thresholds,
+and rate of spread (ROS) for one or more scenarios}
 \usage{
-conpyro(input, ws = c(0, 40), ffmc = 91, dmc = 70, plot = c())
+conpyro(input, ws = c(0, 40), ffmc = 91, dmc = 70, plot = NULL)
 }
 \arguments{
-\item{input}{A data frame of least 8 columns and 1 row. Each row defines a
-ConPyro prediction for a single set of fuel and weather conditions (a
-\emph{scenario}). Inputs are case-insensitive. The required columns are:
+\item{input}{A data frame of least \code{8} columns and \code{1} row. Each row defines
+a ConPyro prediction for a single set of fuel and fire weather conditions
+(a \emph{scenario}). Inputs are case-insensitive and columns may be in any
+order. Missing values are not permitted and will produce an error.
+Required columns are:
 \itemize{
 \item \code{ID}: Unique scenario identifier.
 \item \code{Season}: One of \code{spring}, \code{sp-su}, \code{summer}, or \code{fall}.
@@ -28,12 +30,50 @@ consumption in kg/m^2. May be estimated using \code{\link[=tool_sfc_fbp]{tool_sf
 density in kg/m^3.
 \item \code{smooth_CFI}: Defines whether crown fire initiation is modeled as a
 smooth transition (\code{TRUE}) or an instantaneous occurrence (\code{FALSE}).
+}
+
+Additionally, there are several optional columns:
+\itemize{
+\item \code{ws_min}: A numeric value between \code{0} and \code{60} (inclusive). Minimum wind
+speed in km/h. Allows wind speed to be specified on a per-scenario basis.
+If this column \emph{and} the \code{ws_max} column are present, they will override
+the \code{ws} argument.
+\item \code{ws_max}: A numeric value between \code{0} and \code{60} (inclusive). Maximum wind
+speed in km/h. Allows wind speed to be specified on a per-scenario basis.
+If this column \emph{and} the \code{ws_min} column are present, they will override
+the \code{ws} argument.
+\item \code{FFMC}: A numeric value between 80 and 99 (inclusive). The Fine Fuel
+Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index System.
+Allows FFMC to be specified on a per-scenario basis. If this column is
+present, it will override the \code{ffmc} argument.
+\item \code{DMC}: A numeric value between 80 and 99 (inclusive). The Duff Moisture
+Code (DMC) as per the Canadian Forest Fire Weather Index (FWI) System.
+Allows DMC to be specified on a per-scenario basis. If this column is
+present, it will override the \code{dmc} argument.
+\item \code{model_conpyro}: Choose one of \code{7}, \code{8}, \code{10}, or \code{11}. The ConPyro
+model form used for calculations (see Perrakis et al., 2023). Models \code{7}
+and \code{10} use FFMC-based fine fuel moisture content (mcFFMC) while models
+\code{8} and \code{11} use stand-adjusted moisture content (mcSA). Default is \code{11}.
+\item \code{model_sros}: Choose one of \code{1}, \code{2}, \code{3}, or \code{4}. The surface fire ROS
+model used for calculations.
+\itemize{
+\item \code{1}: Aggregated FBPS surf. V4 (default)
+\item \code{2}: D-1 FBPS
+\item \code{3}: C-6 (surface only) FBPS
+\item \code{4}: IsaSFC
+}
+\item \code{model_cros}: Choose one of \code{1} or \code{2}. The crown fire ROS model used
+for calculations.
+\itemize{
+\item \code{1}: Adapted Cruz, Alexander, & Wakimoto (2005): ws, mc, CBD (default)
+\item \code{2}: Adapted Cruz & Alexander (2019): ws only
+}
 }}
 
-\item{ws}{An integer vector of length \code{2}, with each element being between
-\code{0} and \code{60} (inclusive). The first value defines the minimum wind speed
-and the second defines the maximum, in km/h. Calculations are carried out
-on the sequence of integer values from the minimum to the maximum
+\item{ws}{An ordered integer vector of length \code{2}, with each element being
+between \code{0} and \code{60} (inclusive). The first value defines the minimum wind
+speed and the second defines the maximum, in km/h. Calculations are carried
+out on the sequence of integer values from the minimum to the maximum
 (inclusive).}
 
 \item{ffmc}{A numeric value between 80 and 99 (inclusive). The Fine Fuel
@@ -59,9 +99,8 @@ A list of lists, with each sub-list containing outputs for a single
 scenario (input row). Optionally plots output.
 }
 \description{
-\code{conpyro()} calculates crown fire occurrence probability, crowning
-thresholds, and rate of spread for any number of fuel, fire weather, and
-stand structure configurations using the Canadian Conifer Pyrometrics
+\code{conpyro()} calculates pCFO, crowning thresholds, and ROS for any number of
+fuel and fire weather configurations using the Canadian Conifer Pyrometrics
 (ConPyro) model system. See Perrakis et al. (2023) for details.
 }
 \examples{

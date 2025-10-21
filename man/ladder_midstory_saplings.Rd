@@ -2,7 +2,8 @@
 % Please edit documentation in R/tools.R
 \name{ladder_midstory_saplings}
 \alias{ladder_midstory_saplings}
-\title{Midstory saplings ladder fuel calculator}
+\title{Estimate surface fuel consumption (SFC) contribution from a midstory sapling
+cohort}
 \usage{
 ladder_midstory_saplings(
   hs = 5,
@@ -14,18 +15,34 @@ ladder_midstory_saplings(
 )
 }
 \arguments{
-\item{hs}{TODO: description.}
+\item{hs}{Sapling height in metres.}
 
-\item{zs}{TODO: description.}
+\item{zs}{Sapling LCBH in metres.}
 
-\item{zp}{TODO: description.}
+\item{zp}{Overstory LCBH in metres.}
 
-\item{lnfl}{TODO: description.}
+\item{lnfl}{Live needle fuel load in kg/m^2.}
 
-\item{sapling_fmc}{TODO: description.}
+\item{sapling_fmc}{Sapling foliar moisture content in percent.}
 
-\item{actual_sfc}{TODO: description.}
+\item{actual_sfc}{Actual SFC in kg/m^2.}
+}
+\value{
+A list of length \code{5} consisting of numeric values named
+\verb{Sapling crown centroid [m]}, \code{FSG [m]}, \verb{Sapling false-SFC},
+\verb{SFC scaled to crown centroid}, and \verb{Total false-SFC}, respectively.
 }
 \description{
-Midstory saplings ladder fuel calculator
+\code{ladder_midstory_saplings()} estimates the "false-SFC" contribution of a
+midstory sapling cohort (>1.5 m height), e.g., Jack pine overstory with
+midstory live black spruce saplings. These equations assume that the fuel
+strata gap (FSG) represents the distance from the sapling crown centroid to
+the overstory lower crown base height (LCBH). Calculate lower crowning
+probability to the sapling cohort separately. Caution: Experimental! These
+equations are under development and may contain errors.
+}
+\examples{
+{
+## TODO
+}
 }

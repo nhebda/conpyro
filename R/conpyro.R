@@ -1,14 +1,15 @@
-#' Calculate crown fire occurrence probability (pCFO), crowning thresholds, and
-#' rate of spread (ROS)
+#' Calculate probability of crown fire occurrence (pCFO), crowning thresholds,
+#' and rate of spread (ROS) for one or more scenarios
 #'
-#' `conpyro()` calculates crown fire occurrence probability, crowning
-#' thresholds, and rate of spread for any number of fuel, fire weather, and
-#' stand structure configurations using the Canadian Conifer Pyrometrics
+#' `conpyro()` calculates pCFO, crowning thresholds, and ROS for any number of
+#' fuel and fire weather configurations using the Canadian Conifer Pyrometrics
 #' (ConPyro) model system. See Perrakis et al. (2023) for details.
 #'
-#' @param input A data frame of least 8 columns and 1 row. Each row defines a
-#'   ConPyro prediction for a single set of fuel and weather conditions (a
-#'   *scenario*). Inputs are case-insensitive. The required columns are:
+#' @param input A data frame of least `8` columns and `1` row. Each row defines
+#'   a ConPyro prediction for a single set of fuel and fire weather conditions
+#'   (a *scenario*). Inputs are case-insensitive and columns may be in any
+#'   order. Missing values are not permitted and will produce an error.
+#'   Required columns are:
 #'   * `ID`: Unique scenario identifier.
 #'   * `Season`: One of `spring`, `sp-su`, `summer`, or `fall`.
 #'   * `Density`: One of `light`, `moderate`, or `dense`.
@@ -25,10 +26,42 @@
 #'   density in kg/m^3.
 #'   * `smooth_CFI`: Defines whether crown fire initiation is modeled as a
 #'   smooth transition (`TRUE`) or an instantaneous occurrence (`FALSE`).
-#' @param ws An integer vector of length `2`, with each element being between
-#'   `0` and `60` (inclusive). The first value defines the minimum wind speed
-#'   and the second defines the maximum, in km/h. Calculations are carried out
-#'   on the sequence of integer values from the minimum to the maximum
+#'
+#'   Additionally, there are several optional columns:
+#'   * `ws_min`: A numeric value between `0` and `60` (inclusive). Minimum wind
+#'   speed in km/h. Allows wind speed to be specified on a per-scenario basis.
+#'   If this column *and* the `ws_max` column are present, they will override
+#'   the `ws` argument.
+#'   * `ws_max`: A numeric value between `0` and `60` (inclusive). Maximum wind
+#'   speed in km/h. Allows wind speed to be specified on a per-scenario basis.
+#'   If this column *and* the `ws_min` column are present, they will override
+#'   the `ws` argument.
+#'   * `FFMC`: A numeric value between 80 and 99 (inclusive). The Fine Fuel
+#'   Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index System.
+#'   Allows FFMC to be specified on a per-scenario basis. If this column is
+#'   present, it will override the `ffmc` argument.
+#'   * `DMC`: A numeric value between 80 and 99 (inclusive). The Duff Moisture
+#'   Code (DMC) as per the Canadian Forest Fire Weather Index (FWI) System.
+#'   Allows DMC to be specified on a per-scenario basis. If this column is
+#'   present, it will override the `dmc` argument.
+#'   * `model_conpyro`: Choose one of `7`, `8`, `10`, or `11`. The ConPyro
+#'   model form used for calculations (see Perrakis et al., 2023). Models `7`
+#'   and `10` use FFMC-based fine fuel moisture content (mcFFMC) while models
+#'   `8` and `11` use stand-adjusted moisture content (mcSA). Default is `11`.
+#'   * `model_sros`: Choose one of `1`, `2`, `3`, or `4`. The surface fire ROS
+#'   model used for calculations.
+#'      * `1`: Aggregated FBPS surf. V4 (default)
+#'      * `2`: D-1 FBPS
+#'      * `3`: C-6 (surface only) FBPS
+#'      * `4`: IsaSFC
+#'   * `model_cros`: Choose one of `1` or `2`. The crown fire ROS model used
+#'   for calculations.
+#'      * `1`: Adapted Cruz, Alexander, & Wakimoto (2005): ws, mc, CBD (default)
+#'      * `2`: Adapted Cruz & Alexander (2019): ws only
+#' @param ws An ordered integer vector of length `2`, with each element being
+#'   between `0` and `60` (inclusive). The first value defines the minimum wind
+#'   speed and the second defines the maximum, in km/h. Calculations are carried
+#'   out on the sequence of integer values from the minimum to the maximum
 #'   (inclusive).
 #' @param ffmc A numeric value between 80 and 99 (inclusive). The Fine Fuel
 #'   Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index System.
@@ -43,7 +76,6 @@
 #'   * `cac`: Criterion for active crowning.
 #'   * `ros_full`: Complete composite rate of spread plot with crowning
 #'   thresholds.
-#' @md
 #'
 #' @returns A list of lists, with each sub-list containing outputs for a single
 #'   scenario (input row). Optionally plots output.
@@ -59,28 +91,22 @@
 #' }
 #'
 #' @importFrom cffdrs fbp
-#' @importFrom checkmate assert_data_frame assert_subset assert_integerish
-#'   assert_number
+#' @importFrom checkmate assert_data_frame assert_subset assert_true
+#'   assert_numeric assert_logical assert_integerish
 #' @importFrom utils read.csv
 conpyro <- function(
     input,
     ws   = c(0, 40),
     ffmc = 91,
     dmc  = 70,
-    plot = c(
-      # "pcfo",
-      # "sros",
-      # "cros_a",
-      # "cac",
-      # "cros_p",
-      # "sros_smooth",
-      # "cros_p_smooth",
-      # "cros_a_smooth",
-      # "ros_aio",
-      # "ros_full"
-    )
+    plot = NULL
 ) {
-  # Check input validity
+  # Coerce input data to all lowercase
+  input[] <- lapply(input, function(col) {
+    if (is.character(col)) tolower(col) else col
+  })
+  colnames(input) <- tolower(colnames(input))
+  # Validate user input
   assert_data_frame(
     input,
     any.missing = FALSE,
@@ -88,20 +114,53 @@ conpyro <- function(
     col.names   = "named"
   )
   assert_subset(
-    tolower(
-      c(
-        "id",
-        "season",
-        "density",
-        "stand",
-        "fsg",
-        "sfc",
-        "cbd",
-        "smooth_cfi"
-      )
+    c(
+      "id",
+      "season",
+      "density",
+      "stand",
+      "fsg",
+      "sfc",
+      "cbd",
+      "smooth_cfi"
     ),
-    tolower(colnames(input))
+    colnames(input)
   )
+  assert_true(
+    length(input$id) == length(unique(input$id)),
+    .var.name = "Input IDs must be unique"
+  )
+  assert_subset(
+    input$season,
+    choices = c("spring","sp-su", "summer", "fall"),
+    empty.ok = FALSE,
+    .var.name = "season"
+  )
+  assert_subset(
+    input$density,
+    choices = c("light", "moderate", "dense"),
+    empty.ok = FALSE,
+    .var.name = "density"
+  )
+  assert_subset(
+    input$stand,
+    choices = c("deciduous", "douglas-fir", "mixedwood", "pine", "spruce"),
+    empty.ok = FALSE,
+    .var.name = "stand"
+  )
+  assert_numeric(input$fsg, lower = 0.5, upper = 20, .var.name = "FSG")
+  assert_numeric(input$sfc, lower = 0.1, upper = 6, .var.name = "SFC")
+  assert_numeric(input$cbd, lower = 0.01, upper = 0.8, .var.name = "CBD")
+  assert_logical(input$smooth_cfi, .var.name = "smooth_cfi")
+  if ("ws_min" %in% names(input)) {
+    assert_integerish(input$ws_min, lower = 0, upper = 59, .var.name = "ws_min")
+  }
+  if ("ws_max" %in% names(input)) {
+    assert_integerish(input$ws_max, lower = 1, upper = 60, .var.name = "ws_max")
+  }
+  if ("ffmc" %in% names(input)) {
+    assert_numeric(input$ffmc, lower = 80, upper = 99, .var.name = "ffmc")
+  }
   assert_integerish(
     ws,
     lower  = 0,
@@ -117,21 +176,17 @@ conpyro <- function(
     c(
       "pcfo",
       "sros",
+      "cros_p",
       "cros_a",
       "cac",
-      "cros_p",
-      "sros_smooth",
-      "cros_p_smooth",
-      "cros_a_smooth",
-      "ros_aio",
+      # "sros_smooth",
+      # "cros_p_smooth",
+      # "cros_a_smooth",
+      # "ros_aio",
       "ros_full"
     )
   )
-  # Coerce input data to all lowercase
-  input[] <- lapply(input, function(col) {
-    if (is.character(col)) tolower(col) else col
-  })
-  colnames(input) <- tolower(colnames(input))
+
   # Initialize data structures
   out       <- list()
   ggdata    <- data.frame()

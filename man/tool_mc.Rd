@@ -13,19 +13,30 @@ tool_mc(
 )
 }
 \arguments{
-\item{ffmc}{A numeric value between 80 and 99 (inclusive). The Fine Fuel
+\item{ffmc}{A numeric value between \code{80} and \code{99} (inclusive). The Fine Fuel
 Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index System.}
 
-\item{dmc}{A numeric value between 5 and 200 (inclusive). The Duff Moisture
-Code (DMC) as per the Canadian Forest Fire Weather Index System.}
+\item{dmc}{A numeric value between \code{5} and \code{200} (inclusive). The Duff
+Moisture Code (DMC) as per the Canadian Forest Fire Weather Index System.}
 
-\item{season}{One of "spring", "sp-su", "summer, or "fall".}
+\item{season}{One of \code{spring}, \code{sp-su}, \code{summer}, or \code{fall}.}
 
-\item{density}{TODO: description.}
+\item{density}{One of \code{light}, \code{moderate}, or \code{dense}.}
 
-\item{stand}{TODO: description.}
+\item{stand}{One of \code{pine}, \code{spruce}, \code{Douglas-fir}, \code{deciduous}, or
+\code{mixedwood}.}
+}
+\value{
+A list of length \code{2} consisting of one numeric value named \code{mcFFMC}
+and one numeric value named \code{mcSA}.
 }
 \description{
-\code{tool_mc} estimates fine dead surface litter moisture content (MC), both from
-the FFMC (mcFFMC) and using the stand-adjusted model (mcSA).
+\code{tool_mc()} estimates fine dead surface litter moisture content (MC), both
+from the FFMC (mcFFMC) and using the stand-adjusted model (mcSA).
+}
+\examples{
+{
+## TODO
+}
+
 }
