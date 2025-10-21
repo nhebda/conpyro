@@ -19,9 +19,9 @@
 #'   consumption in kg/m^2. May be estimated using [tool_sfc_fbp()] or
 #'   [tool_sfc_degroot()].
 #' @param model Choose one of `7`, `8`, `10`, or `11`. The ConPyro model form
-#'   used for calculations (see Perrakis et al., 2023). Models 7 and 10 assume
-#'   that `mc` is FFMC-based (mcFFMC) while models 8 and 11 assume `mc` is
-#'   stand-adjusted (mcSA).
+#'   used for calculations (see Perrakis et al., 2023). Models `7` and `10`
+#'   assume that `mc` is FFMC-based (mcFFMC) while models `8` and `11` assume
+#'   `mc` is stand-adjusted (mcSA).
 #'
 #' @returns A list of length `1` consisting of a numeric value named `pCFO`.
 #' @export

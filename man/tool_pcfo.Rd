@@ -25,9 +25,9 @@ consumption in kg/m^2. May be estimated using \code{\link[=tool_sfc_fbp]{tool_sf
 \code{\link[=tool_sfc_degroot]{tool_sfc_degroot()}}.}
 
 \item{model}{Choose one of \code{7}, \code{8}, \code{10}, or \code{11}. The ConPyro model form
-used for calculations (see Perrakis et al., 2023). Models 7 and 10 assume
-that \code{mc} is FFMC-based (mcFFMC) while models 8 and 11 assume \code{mc} is
-stand-adjusted (mcSA).}
+used for calculations (see Perrakis et al., 2023). Models \code{7} and \code{10}
+assume that \code{mc} is FFMC-based (mcFFMC) while models \code{8} and \code{11} assume
+\code{mc} is stand-adjusted (mcSA).}
 }
 \value{
 A list of length \code{1} consisting of a numeric value named \code{pCFO}.

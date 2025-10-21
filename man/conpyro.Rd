@@ -34,13 +34,13 @@ smooth transition (\code{TRUE}) or an instantaneous occurrence (\code{FALSE}).
 
 Additionally, there are several optional columns:
 \itemize{
-\item \code{WS_min}: A numeric value between \code{0} and \code{60} (inclusive). Minimum wind
+\item \code{ws_min}: A numeric value between \code{0} and \code{60} (inclusive). Minimum wind
 speed in km/h. Allows wind speed to be specified on a per-scenario basis.
-If this column \emph{and} the \code{WS_max} column are present, they will override
+If this column \emph{and} the \code{ws_max} column are present, they will override
 the \code{ws} argument.
-\item \code{WS_max}: A numeric value between \code{0} and \code{60} (inclusive). Maximum wind
+\item \code{ws_max}: A numeric value between \code{0} and \code{60} (inclusive). Maximum wind
 speed in km/h. Allows wind speed to be specified on a per-scenario basis.
-If this column \emph{and} the \code{WS_min} column are present, they will override
+If this column \emph{and} the \code{ws_min} column are present, they will override
 the \code{ws} argument.
 \item \code{FFMC}: A numeric value between 80 and 99 (inclusive). The Fine Fuel
 Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index System.
@@ -50,6 +50,24 @@ present, it will override the \code{ffmc} argument.
 Code (DMC) as per the Canadian Forest Fire Weather Index (FWI) System.
 Allows DMC to be specified on a per-scenario basis. If this column is
 present, it will override the \code{dmc} argument.
+\item \code{model_conpyro}: Choose one of \code{7}, \code{8}, \code{10}, or \code{11}. The ConPyro
+model form used for calculations (see Perrakis et al., 2023). Models \code{7}
+and \code{10} use FFMC-based fine fuel moisture content (mcFFMC) while models
+\code{8} and \code{11} use stand-adjusted moisture content (mcSA). Default is \code{11}.
+\item \code{model_sros}: Choose one of \code{1}, \code{2}, \code{3}, or \code{4}. The surface fire ROS
+model used for calculations.
+\itemize{
+\item \code{1}: Aggregated FBPS surf. V4 (default)
+\item \code{2}: D-1 FBPS
+\item \code{3}: C-6 (surface only) FBPS
+\item \code{4}: IsaSFC
+}
+\item \code{model_cros}: Choose one of \code{1} or \code{2}. The crown fire ROS model used
+for calculations.
+\itemize{
+\item \code{1}: Adapted Cruz, Alexander, & Wakimoto (2005): ws, mc, CBD (default)
+\item \code{2}: Adapted Cruz & Alexander (2019): ws only
+}
 }}
 
 \item{ws}{An integer vector of length \code{2}, with each element being between
