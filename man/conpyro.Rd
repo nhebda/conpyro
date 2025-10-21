@@ -3,9 +3,9 @@
 \name{conpyro}
 \alias{conpyro}
 \title{Calculate probability of crown fire occurrence (pCFO), crowning thresholds,
-and rate of spread (ROS) for any number of scenarios}
+and rate of spread (ROS) for one or more scenarios}
 \usage{
-conpyro(input, ws = c(0, 40), ffmc = 91, dmc = 70, plot = c())
+conpyro(input, ws = c(0, 40), ffmc = 91, dmc = 70, plot = NULL)
 }
 \arguments{
 \item{input}{A data frame of least \code{8} columns and \code{1} row. Each row defines
@@ -70,10 +70,10 @@ for calculations.
 }
 }}
 
-\item{ws}{An integer vector of length \code{2}, with each element being between
-\code{0} and \code{60} (inclusive). The first value defines the minimum wind speed
-and the second defines the maximum, in km/h. Calculations are carried out
-on the sequence of integer values from the minimum to the maximum
+\item{ws}{An ordered integer vector of length \code{2}, with each element being
+between \code{0} and \code{60} (inclusive). The first value defines the minimum wind
+speed and the second defines the maximum, in km/h. Calculations are carried
+out on the sequence of integer values from the minimum to the maximum
 (inclusive).}
 
 \item{ffmc}{A numeric value between 80 and 99 (inclusive). The Fine Fuel

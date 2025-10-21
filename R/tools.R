@@ -31,7 +31,6 @@
 #' }
 #'
 #' @importFrom checkmate assert_choice
-#' @md
 tool_pcfo <- function(mc = 7.8, ws = 20, fsg = 9.5, sfc = 1.8, model = 11) {
   # Check input validity
   assert_number(mc, lower = 5, upper = 20)
@@ -69,7 +68,6 @@ tool_pcfo <- function(mc = 7.8, ws = 20, fsg = 9.5, sfc = 1.8, model = 11) {
 #' }
 #'
 #' @importFrom checkmate assert_number assert_choice
-#' @md
 tool_mc <- function(
     ffmc    = 91.2,
     dmc     = 75,
@@ -125,7 +123,6 @@ tool_mc <- function(
 #' }
 #'
 #' @importFrom checkmate assert_number
-#' @md
 tool_fmc <- function(lat = 48, long = 83.3, elv = 100, dj = 200) {
   assert_number(lat, lower = 42, upper = 70)
   assert_number(long, lower = 53, upper = 141)
@@ -158,7 +155,6 @@ tool_fmc <- function(lat = 48, long = 83.3, elv = 100, dj = 200) {
 #' }
 #'
 #' @importFrom checkmate assert_number
-#' @md
 tool_sfc_fbp <- function(
     bui  = 85,
     ffmc = 91,
@@ -214,7 +210,6 @@ tool_sfc_fbp <- function(
 #' }
 #'
 #' @importFrom checkmate assert_number
-#' @md
 tool_sfc_degroot <- function(bui = 85, ffl = 3.5, fwfl = 0.3) {
   assert_number(bui, lower = 0, upper = 200)
   assert_number(ffl, lower = 1, upper = 5)
@@ -250,7 +245,6 @@ tool_sfc_degroot <- function(bui = 85, ffl = 3.5, fwfl = 0.3) {
 #' }
 #'
 #' @importFrom checkmate assert_number
-#' @md
 ladder_standing_dead <- function(consumption = 0.2, cl = 4, fsg = 6) {
   assert_number(consumption, lower = 0.1, upper = 10)
   assert_number(cl, lower = 0.5, upper = 15)
@@ -292,7 +286,6 @@ ladder_standing_dead <- function(consumption = 0.2, cl = 4, fsg = 6) {
 #' ## TODO
 #' }
 #' @importFrom checkmate assert_number
-#' @md
 ladder_midstory_saplings <- function(
     hs          = 5,
     zs          = 1,

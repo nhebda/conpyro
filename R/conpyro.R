@@ -1,5 +1,5 @@
 #' Calculate probability of crown fire occurrence (pCFO), crowning thresholds,
-#' and rate of spread (ROS) for any number of scenarios
+#' and rate of spread (ROS) for one or more scenarios
 #'
 #' `conpyro()` calculates pCFO, crowning thresholds, and ROS for any number of
 #' fuel and fire weather configurations using the Canadian Conifer Pyrometrics
@@ -58,10 +58,10 @@
 #'   for calculations.
 #'      * `1`: Adapted Cruz, Alexander, & Wakimoto (2005): ws, mc, CBD (default)
 #'      * `2`: Adapted Cruz & Alexander (2019): ws only
-#' @param ws An integer vector of length `2`, with each element being between
-#'   `0` and `60` (inclusive). The first value defines the minimum wind speed
-#'   and the second defines the maximum, in km/h. Calculations are carried out
-#'   on the sequence of integer values from the minimum to the maximum
+#' @param ws An ordered integer vector of length `2`, with each element being
+#'   between `0` and `60` (inclusive). The first value defines the minimum wind
+#'   speed and the second defines the maximum, in km/h. Calculations are carried
+#'   out on the sequence of integer values from the minimum to the maximum
 #'   (inclusive).
 #' @param ffmc A numeric value between 80 and 99 (inclusive). The Fine Fuel
 #'   Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index System.
@@ -76,7 +76,6 @@
 #'   * `cac`: Criterion for active crowning.
 #'   * `ros_full`: Complete composite rate of spread plot with crowning
 #'   thresholds.
-#' @md
 #'
 #' @returns A list of lists, with each sub-list containing outputs for a single
 #'   scenario (input row). Optionally plots output.
@@ -93,25 +92,14 @@
 #'
 #' @importFrom cffdrs fbp
 #' @importFrom checkmate assert_data_frame assert_subset assert_true
-#'   assert_choice assert_number assert_logical assert_integerish assert_numeric
+#'   assert_numeric assert_logical assert_integerish
 #' @importFrom utils read.csv
 conpyro <- function(
     input,
     ws   = c(0, 40),
     ffmc = 91,
     dmc  = 70,
-    plot = c(
-      # "pcfo",
-      # "sros",
-      # "cros_a",
-      # "cac",
-      # "cros_p",
-      # "sros_smooth",
-      # "cros_p_smooth",
-      # "cros_a_smooth",
-      # "ros_aio",
-      # "ros_full"
-    )
+    plot = NULL
 ) {
   # Coerce input data to all lowercase
   input[] <- lapply(input, function(col) {
@@ -142,28 +130,28 @@ conpyro <- function(
     length(input$id) == length(unique(input$id)),
     .var.name = "Input IDs must be unique"
   )
-  lapply(
+  assert_subset(
     input$season,
-    assert_choice,
     choices = c("spring","sp-su", "summer", "fall"),
+    empty.ok = FALSE,
     .var.name = "season"
   )
-  lapply(
+  assert_subset(
     input$density,
-    assert_choice,
     choices = c("light", "moderate", "dense"),
+    empty.ok = FALSE,
     .var.name = "density"
   )
-  lapply(
+  assert_subset(
     input$stand,
-    assert_choice,
     choices = c("deciduous", "douglas-fir", "mixedwood", "pine", "spruce"),
+    empty.ok = FALSE,
     .var.name = "stand"
   )
-  lapply(input$fsg, assert_number, lower = 0.5, upper = 20, .var.name = "FSG")
-  lapply(input$sfc, assert_number, lower = 0.1, upper = 6, .var.name = "SFC")
-  lapply(input$cbd, assert_number, lower = 0.01, upper = 0.8, .var.name = "CBD")
-  lapply(input$smooth_cfi, assert_logical, .var.name = "smooth_cfi")
+  assert_numeric(input$fsg, lower = 0.5, upper = 20, .var.name = "FSG")
+  assert_numeric(input$sfc, lower = 0.1, upper = 6, .var.name = "SFC")
+  assert_numeric(input$cbd, lower = 0.01, upper = 0.8, .var.name = "CBD")
+  assert_logical(input$smooth_cfi, .var.name = "smooth_cfi")
   if ("ws_min" %in% names(input)) {
     assert_integerish(input$ws_min, lower = 0, upper = 59, .var.name = "ws_min")
   }
@@ -188,13 +176,13 @@ conpyro <- function(
     c(
       "pcfo",
       "sros",
+      "cros_p",
       "cros_a",
       "cac",
-      "cros_p",
-      "sros_smooth",
-      "cros_p_smooth",
-      "cros_a_smooth",
-      "ros_aio",
+      # "sros_smooth",
+      # "cros_p_smooth",
+      # "cros_a_smooth",
+      # "ros_aio",
       "ros_full"
     )
   )
