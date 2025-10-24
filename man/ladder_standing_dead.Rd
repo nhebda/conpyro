@@ -4,7 +4,7 @@
 \alias{ladder_standing_dead}
 \title{Estimate standing dead ladder fuels for midstory small snags <5 cm DBH}
 \usage{
-ladder_standing_dead(consumption = 0.2, cl = 4, fsg = 6)
+ladder_standing_dead(consumption = 0.2, cl = 4, FSG = 6)
 }
 \arguments{
 \item{consumption}{A numeric value between \code{0.1} and \code{10} (inclusive).
@@ -14,7 +14,7 @@ surface fuels.}
 \item{cl}{A numeric value between \code{0.5} and \code{15} (inclusive). Mean centroid
 height of ladder fuels in metres.}
 
-\item{fsg}{A numeric value between \code{0.5} and \code{20} (inclusive). Fuel strata
+\item{FSG}{A numeric value between \code{0.5} and \code{20} (inclusive). Fuel strata
 gap in metres. The vertical distance between the top of the surface fuels
 and the lower limit of the canopy fuels. Analogous to crown base height
 (CBH) in the absence of mid-story ladder fuels.}
