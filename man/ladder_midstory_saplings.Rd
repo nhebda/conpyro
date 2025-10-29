@@ -10,8 +10,8 @@ ladder_midstory_saplings(
   zs = 1,
   zp = 6,
   lnfl = 0.5,
-  sapling_fmc = 120,
-  actual_sfc = 2.7
+  sapling_FMC = 120,
+  actual_SFC = 2.7
 )
 }
 \arguments{
@@ -23,9 +23,9 @@ ladder_midstory_saplings(
 
 \item{lnfl}{Live needle fuel load in kg/m^2.}
 
-\item{sapling_fmc}{Sapling foliar moisture content in percent.}
+\item{sapling_FMC}{Sapling foliar moisture content in percent.}
 
-\item{actual_sfc}{Actual SFC in kg/m^2.}
+\item{actual_SFC}{Actual SFC in kg/m^2.}
 }
 \value{
 A list of length \code{5} consisting of numeric values named
