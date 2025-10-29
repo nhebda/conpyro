@@ -607,11 +607,13 @@ conpyro <- function(
 
 # Internal functions ----
 # __Fine fuel moisture content estimates (MCFFMC, MCSA) ----
-# fn_MCFFMC() is based on Eq. 2b in Van Wagner (1987), but with a more precise
-# multiplier which ensures a scale length closer to exactly 101. This differs
-# from ffmcCalc() in the CFFDRS package, which uses 147.2, as specified in
-# NOR-X-424 (2015).
-fn_MCFFMC   <- function(FFMC) {147.2772277228 * (101 - FFMC) / (59.5 + FFMC)}
+
+# fn_MCFFMC() is based on Eq. 2b in Van Wagner (1987). A more precise
+# multiplier (e.g., 147.2772277228) could be used to ensure a scale length
+# closer to exactly 101, but the commonly-used value of 147.2 is instead used
+# here, as specified in NOR-X-424 (2015), to ensure consistency with other
+# implementations.
+fn_MCFFMC   <- function(FFMC) {147.2 * (101 - FFMC) / (59.5 + FFMC)}
 fn_MCDMC    <- function(DMC) {20 + exp(-(DMC - 244.72) / 43.43)}
 fn_MCSA_idx <- function(season, density, stand) {
   as.numeric(
