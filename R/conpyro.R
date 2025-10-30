@@ -606,15 +606,17 @@ conpyro <- function(
 }
 
 # Internal functions ----
-# __Fine fuel moisture content estimates (MCFFMC, MCSA) ----
+# __Fuel moisture content estimates ----
 
-# fn_MCFFMC() is based on Eq. 2b in Van Wagner (1987). A more precise
-# multiplier (e.g., 147.2772277228) could be used to ensure a scale length
-# closer to exactly 101, but the commonly-used value of 147.2 is instead used
-# here, as specified in NOR-X-424 (2015), to ensure consistency with other
-# implementations.
+# Based on Eq. 2b in Van Wagner (1987). A more precise multiplier (e.g.,
+# 147.2772277228) could be used to ensure a scale length closer to exactly 250,
+# but the standard value of 147.2, as specified in NOR-X-424 (2015), is used
+# here to ensure consistency with other implementations, giving a scale length
+# of ~249.89
 fn_MCFFMC   <- function(FFMC) {147.2 * (101 - FFMC) / (59.5 + FFMC)}
+# Based on Eq. 16 in Van Wagner (1987)
 fn_MCDMC    <- function(DMC) {20 + exp(-(DMC - 244.72) / 43.43)}
+# Convert combinations of stand attributes to numeric codes
 fn_MCSA_idx <- function(season, density, stand) {
   as.numeric(
     paste0(
@@ -642,13 +644,14 @@ fn_MCSA_idx <- function(season, density, stand) {
     )
   )
 }
+# Calculate stand-adjusted moisture content
 fn_MCSA <- function(idx, MCFFMC, MCDMC) {
-  coefs <- read.csv("R/coefs_mcsa.csv")
+  coefs <- sysdata$coefs_MCSA
   c     <- 0.002232
   calc_MCSA <- function(idx, MCFFMC, MCDMC) {
-    a     <- coefs[which(coefs[1] == idx), 2]
-    b     <- coefs[which(coefs[1] == idx), 3]
-    MCSA  <- exp(a + b * log(MCFFMC) + c * MCDMC)
+    a    <- coefs[which(coefs[1] == idx), 2]
+    b    <- coefs[which(coefs[1] == idx), 3]
+    MCSA <- exp(a + b * log(MCFFMC) + c * MCDMC)
   }
   if (idx < 400) {
     MCSA <- calc_MCSA(idx, MCFFMC, MCDMC)
@@ -659,18 +662,19 @@ fn_MCSA <- function(idx, MCFFMC, MCDMC) {
     MCSA_su <- calc_MCSA(idx_su, MCFFMC, MCDMC)
     MCSA    <- mean(c(MCSA_sp, MCSA_su))
   }
+  return(MCSA)
 }
 
-# __Probability of crown fire occurrenc (pCFO) ----
+# __Probability of crown fire occurrence (pCFO) ----
 fn_pCFO <- function(model, WS_seq, FSG, SFC, MC) {
-  coefs <- read.csv("R/coefs_pcfo.csv")
-  b0 <- coefs[which(coefs[1] == model), 2]
-  b1 <- coefs[which(coefs[1] == model), 3]
-  b2 <- coefs[which(coefs[1] == model), 4]
-  b3 <- coefs[which(coefs[1] == model), 5]
-  b4 <- coefs[which(coefs[1] == model), 6]
-  gx     <- b0 + b1 * WS_seq + b2 * FSG^1.5 + b4 * log(SFC) + b3 * MC * WS_seq
-  pCFO   <- exp(gx) / (1 + exp(gx))
+  coefs <- sysdata$coefs_pCFO
+  b0    <- coefs[which(coefs[1] == model), 2]
+  b1    <- coefs[which(coefs[1] == model), 3]
+  b2    <- coefs[which(coefs[1] == model), 4]
+  b3    <- coefs[which(coefs[1] == model), 5]
+  b4    <- coefs[which(coefs[1] == model), 6]
+  gx    <- b0 + b1 * WS_seq + b2 * FSG^1.5 + b4 * log(SFC) + b3 * MC * WS_seq
+  pCFO  <- exp(gx) / (1 + exp(gx))
   return(pCFO)
 }
 
