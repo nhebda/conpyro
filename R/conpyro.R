@@ -249,7 +249,7 @@ conpyro <- function(
       "11" = MCSA
     )
     pCFO          <- fn_pCFO(model_conpyro, WS_seq, FSG, SFC, MC)
-    cf_ci         <- fn_cf_ci(WS_seq, pCFO)
+    CF_CI         <- fn_CF_CI(WS_seq, pCFO)
     SROS          <- fn_SROS(model_SROS, WS_seq, MC, FFMC, SFC)
     CROS_A        <- fn_CROS_A(model_CROS, MC, WS_seq, cbd)
     CAC           <- fn_cac(CROS_A, cbd)
@@ -293,7 +293,7 @@ conpyro <- function(
       # "CROS_P_out"    = CROS_P_out,
       # "CROS_A_out"    = CROS_A_out,
       "ROS"           = round(ros_aio, 2),
-      "CF_CI"         = cf_ci,
+      "CF_CI"         = CF_CI,
       "WS_CF_passive" = if (length(SROS_out) > 0 & length(CROS_P_out > 0)) {
         WS_seq[length(SROS_out) + 1]
       } else {
@@ -332,10 +332,10 @@ conpyro <- function(
       WS_seq[which(pCFO >= 0.5 & CAC > 1)],
       CROS_A_out
     )
-    ggdata_cf_ci         <- data.frame(
+    ggdata_CF_CI         <- data.frame(
       id  = rep(id, times = 2),
-      var = rep("cf_ci", times = 2),
-      WS  = cf_ci,
+      var = rep("CF_CI", times = 2),
+      WS  = CF_CI,
       val = if (length(CROS_P_out) > 0) {
         rep(CROS_P_out[1], times = 2)
       } else if (length(CROS_A_out) > 0) {
@@ -431,7 +431,7 @@ conpyro <- function(
       ggdata_SROS_out,
       ggdata_CROS_P_out,
       ggdata_CROS_A_out,
-      ggdata_cf_ci,
+      ggdata_CF_CI,
       ggdata_ros_aio,
       ggdata_SROS_CROS_P,
       ggdata_SROS_CROS_A,
@@ -565,7 +565,7 @@ conpyro <- function(
       ) +
       # CF confidence intervals
       geom_line(
-        data = subset(ggdata, var == "cf_ci"),
+        data = subset(ggdata, var == "CF_CI"),
         mapping = aes(WS, val, color = id),
         linewidth = 1,
         alpha = 0.5
@@ -679,10 +679,11 @@ fn_pCFO <- function(model, WS_seq, FSG, SFC, MC) {
 }
 
 # __Confidence intervals
-fn_cf_ci <- function(WS_seq, pCFO) {
+fn_CF_CI <- function(WS_seq, pCFO) {
   lower <- WS_seq[min(which(pCFO > (0.5 - (90 / 200))))]
   upper <- WS_seq[min(which(pCFO > (0.5 + (90 / 200))))]
   out   <- c(lower, upper)
+  return(out)
 }
 
 # __Surface fire rate of spread (SROS) ----
@@ -691,11 +692,11 @@ fn_SROS <- function(model, WS_seq, MC, FFMC, SFC) {
     # Aggregated FBPS surf. V4 (default)
     f_w <- exp(0.05039 * WS_seq)
     f_f <- 91.9 * (exp(-0.1386 * MC) * (1 + (MC^5.31 / (4.93 * 10^7))))
-    isi_MC <- 0.208 * f_w * f_f
-    SROS_under40 <- 25 * (1 - exp(-0.035177 * isi_MC))^1.9875
+    ISI_MC <- 0.208 * f_w * f_f
+    SROS_under40 <- 25 * (1 - exp(-0.035177 * ISI_MC))^1.9875
     f_w <- 1 - exp(-0.0818 * (WS_seq - 28))
-    isi_MC <- 0.208 * 12 * f_w * f_f
-    SROS_over40 <- 25 * (1 - exp(-0.035177 * isi_MC))^1.9875
+    ISI_MC <- 0.208 * 12 * f_w * f_f
+    SROS_over40 <- 25 * (1 - exp(-0.035177 * ISI_MC))^1.9875
     SROS <- c(
       SROS_under40[which(WS_seq <= 40)],
       SROS_over40[which(WS_seq > 40)]
@@ -716,8 +717,8 @@ fn_SROS <- function(model, WS_seq, MC, FFMC, SFC) {
       aspect = rep(0, times = length(WS_seq))
     )
     cffdrs_out <- cffdrs::fbp(cffdrs_in,output = "Secondary")
-    isi <- cffdrs_out$ISI
-    rsi_d1 <- 30 * (1 - exp(-0.0232 * isi))^1.6
+    ISI <- cffdrs_out$ISI
+    rsi_d1 <- 30 * (1 - exp(-0.0232 * ISI))^1.6
     SROS <- rsi_d1
     return(SROS)
   } else if (model == 3) {
@@ -735,8 +736,8 @@ fn_SROS <- function(model, WS_seq, MC, FFMC, SFC) {
       aspect = rep(0, times = length(WS_seq))
     )
     cffdrs_out <- cffdrs::fbp(cffdrs_in,output = "Secondary")
-    isi <- cffdrs_out$ISI
-    rsi_c6 <- 30 * (1 - exp(-0.08 * isi))^3
+    ISI <- cffdrs_out$ISI
+    rsi_c6 <- 30 * (1 - exp(-0.08 * ISI))^3
     SROS <- rsi_c6
     return(SROS)
   } else if (model == 4) {
@@ -745,11 +746,11 @@ fn_SROS <- function(model, WS_seq, MC, FFMC, SFC) {
     b2 <- 0.344379
     f_w <- exp(0.05039 * WS_seq)
     f_f <- 91.9 * (exp(-0.1386 * MC) * (1 + (MC^5.31 / (4.93 * 10^7))))
-    isi_MC <- 0.208 * f_w * f_f
-    SROS_under40 <- b1 * isi_MC^2 + b2 * SFC
+    ISI_MC <- 0.208 * f_w * f_f
+    SROS_under40 <- b1 * ISI_MC^2 + b2 * SFC
     f_w <- 1 - exp(-0.0818 * (WS_seq - 28))
-    isi_MC <- 0.208 * 12 * f_w * f_f
-    SROS_over40 <- b1 * isi_MC^2 + b2 * SFC
+    ISI_MC <- 0.208 * 12 * f_w * f_f
+    SROS_over40 <- b1 * ISI_MC^2 + b2 * SFC
     SROS <- c(
       SROS_under40[which(WS_seq <= 40)],
       SROS_over40[which(WS_seq > 40)]
