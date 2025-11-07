@@ -5,10 +5,17 @@
 \title{Calculate probability of crown fire occurrence (pCFO), crowning thresholds,
 and rate of spread (ROS) for one or more scenarios}
 \usage{
-conpyro(input, WS = c(0, 40), FFMC = 91, DMC = 70, plot = NULL)
+conpyro(
+  input,
+  WS = c(0, 40),
+  FFMC = 91,
+  DMC = 70,
+  smooth_CFO = FALSE,
+  plot = NULL
+)
 }
 \arguments{
-\item{input}{A data frame of least \code{8} columns and \code{1} row. Each row defines
+\item{input}{A data frame of least \code{7} columns and \code{1} row. Each row defines
 a ConPyro prediction for a single set of fuel and fire weather conditions
 (a \emph{scenario}). Inputs are case-insensitive and columns may be in any
 order. Missing values are not permitted and will produce an error.
@@ -28,12 +35,14 @@ consumption in kg/m^2. May be estimated using \code{\link[=tool_SFC_FBP]{tool_SF
 \code{\link[=tool_SFC_deGroot]{tool_SFC_deGroot()}}.
 \item \code{CBD}: A numeric value between \code{0.01} and \code{0.8} (inclusive). Crown bulk
 density in kg/m^3.
-\item \code{smooth_CFI}: Defines whether crown fire initiation is modeled as a
-smooth transition (\code{TRUE}) or an instantaneous occurrence (\code{FALSE}).
 }
 
 Additionally, there are several optional columns:
 \itemize{
+\item \code{smooth_CFO}: Defines whether crown fire initiation is modeled as a
+smooth transition (\code{TRUE}) or an instantaneous occurrence (\code{FALSE}). Allows
+this behaviour to be specified on a per-scenario basis. If this column is
+present, it will override the \code{smooth_CFI} argument.
 \item \code{WS_min}: A numeric value between \code{0} and \code{60} (inclusive). Minimum wind
 speed in km/h. Allows wind speed to be specified on a per-scenario basis.
 If this column \emph{and} the \code{WS_max} column are present, they will override
@@ -81,6 +90,9 @@ Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index System.}
 
 \item{DMC}{A numeric value between 5 and 200 (inclusive). The Duff Moisture
 Code (DMC) as per the Canadian Forest Fire Weather Index (FWI) System.}
+
+\item{smooth_CFO}{Defines whether crown fire initiation is modeled as a
+smooth transition (\code{TRUE}) or an instantaneous occurrence (\code{FALSE}).}
 
 \item{plot}{A character vector to control plotting of output. Choose any of
 the following:

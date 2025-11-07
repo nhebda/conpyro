@@ -5,7 +5,7 @@
 #' fuel and fire weather configurations using the Canadian Conifer Pyrometrics
 #' (ConPyro) model system. See Perrakis et al. (2023) for details.
 #'
-#' @param input A data frame of least `8` columns and `1` row. Each row defines
+#' @param input A data frame of least `7` columns and `1` row. Each row defines
 #'   a ConPyro prediction for a single set of fuel and fire weather conditions
 #'   (a *scenario*). Inputs are case-insensitive and columns may be in any
 #'   order. Missing values are not permitted and will produce an error.
@@ -24,10 +24,12 @@
 #'   [tool_SFC_deGroot()].
 #'   * `CBD`: A numeric value between `0.01` and `0.8` (inclusive). Crown bulk
 #'   density in kg/m^3.
-#'   * `smooth_CFI`: Defines whether crown fire initiation is modeled as a
-#'   smooth transition (`TRUE`) or an instantaneous occurrence (`FALSE`).
 #'
 #'   Additionally, there are several optional columns:
+#'   * `smooth_CFO`: Defines whether crown fire initiation is modeled as a
+#'   smooth transition (`TRUE`) or an instantaneous occurrence (`FALSE`). Allows
+#'   this behaviour to be specified on a per-scenario basis. If this column is
+#'   present, it will override the `smooth_CFI` argument.
 #'   * `WS_min`: A numeric value between `0` and `60` (inclusive). Minimum wind
 #'   speed in km/h. Allows wind speed to be specified on a per-scenario basis.
 #'   If this column *and* the `WS_max` column are present, they will override
@@ -67,6 +69,8 @@
 #'   Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index System.
 #' @param DMC A numeric value between 5 and 200 (inclusive). The Duff Moisture
 #'   Code (DMC) as per the Canadian Forest Fire Weather Index (FWI) System.
+#' @param smooth_CFO Defines whether crown fire initiation is modeled as a
+#'   smooth transition (`TRUE`) or an instantaneous occurrence (`FALSE`).
 #' @param plot A character vector to control plotting of output. Choose any of
 #'   the following:
 #'   * `pCFO`: Crown fire occurrence probability.
@@ -96,10 +100,11 @@
 #' @importFrom utils read.csv
 conpyro <- function(
     input,
-    WS   = c(0, 40),
-    FFMC = 91,
-    DMC  = 70,
-    plot = NULL
+    WS         = c(0, 40),
+    FFMC       = 91,
+    DMC        = 70,
+    smooth_CFO = FALSE,
+    plot       = NULL
 ) {
   # Coerce input data to all lowercase
   input[] <- lapply(input, function(col) {
@@ -121,8 +126,7 @@ conpyro <- function(
       "stand",
       "fsg",
       "sfc",
-      "cbd",
-      "smooth_cfi"
+      "cbd"
     ),
     colnames(input)
   )
@@ -151,7 +155,9 @@ conpyro <- function(
   assert_numeric(input$fsg, lower = 0.5, upper = 20, .var.name = "FSG")
   assert_numeric(input$sfc, lower = 0.1, upper = 6, .var.name = "SFC")
   assert_numeric(input$cbd, lower = 0.01, upper = 0.8, .var.name = "CBD")
-  assert_logical(input$smooth_cfi, .var.name = "smooth_cfi")
+  if ("smooth_cfo" %in% names(input)) {
+    assert_logical(input$smooth_cfo, .var.name = "smooth_CFO")
+  }
   if ("ws_min" %in% names(input)) {
     assert_integerish(input$ws_min, lower = 0, upper = 59, .var.name = "WS_min")
   }
@@ -185,7 +191,7 @@ conpyro <- function(
       # "SROS_smooth",
       # "CROS_P_smooth",
       # "CROS_A_smooth",
-      # "ros_aio",
+      # "ROS_AIO",
       "ROS_full"
     )
   )
@@ -196,14 +202,18 @@ conpyro <- function(
   # Loop through input rows (scenarios)
   for (i in 1:nrow(input)) {
     # Assign inputs to vars
-    id            <- input$id[i]
+    ID            <- input$id[i]
     season        <- input$season[i]
     density       <- input$density[i]
     stand         <- input$stand[i]
     FSG           <- input$fsg[i]
     SFC           <- input$sfc[i]
-    cbd           <- input$cbd[i]
-    smooth_cfi    <- input$smooth_cfi[i]
+    CBD           <- input$cbd[i]
+    smooth_CFO    <- if ("smooth_cfo" %in% names(input)) {
+      input$smooth_cfo[i]
+    } else {
+      smooth_CFO
+    }
     WS_seq        <- if (
       "ws_min" %in% names(input) & "ws_max" %in% names(input)
     ) {
@@ -251,29 +261,29 @@ conpyro <- function(
     pCFO          <- fn_pCFO(model_conpyro, WS_seq, FSG, SFC, MC)
     CF_CI         <- fn_CF_CI(WS_seq, pCFO)
     SROS          <- fn_SROS(model_SROS, WS_seq, MC, FFMC, SFC)
-    CROS_A        <- fn_CROS_A(model_CROS, MC, WS_seq, cbd)
-    CAC           <- fn_cac(CROS_A, cbd)
+    CROS_A        <- fn_CROS_A(model_CROS, MC, WS_seq, CBD)
+    CAC           <- fn_CAC(CROS_A, CBD)
     CROS_P        <- fn_CROS_P(CROS_A, CAC)
     SROS_smooth   <- fn_SROS_smooth(CROS_P, pCFO, CAC, SROS, CROS_A)
     CROS_P_smooth <- fn_CROS_P_smooth(SROS, pCFO, CROS_P)
     CROS_A_smooth <- fn_CROS_A_smooth(SROS, pCFO, CROS_A)
-    SROS_out      <- fn_SROS_out(pCFO, smooth_cfi, SROS_smooth, SROS)
+    SROS_out      <- fn_SROS_out(pCFO, smooth_CFO, SROS_smooth, SROS)
     CROS_P_out    <- fn_CROS_P_out(
       pCFO,
       CAC,
-      smooth_cfi,
+      smooth_CFO,
       CROS_P_smooth,
       CROS_P
     )
     CROS_A_out    <- fn_CROS_A_out(
       pCFO,
       CAC,
-      smooth_cfi,
+      smooth_CFO,
       CROS_P,
       CROS_A_smooth,
       CROS_A
     )
-    ros_aio       <- c(SROS_out, CROS_P_out, CROS_A_out)
+    ROS_AIO       <- c(SROS_out, CROS_P_out, CROS_A_out)
     # Prepare output data
     results <- list(
       "MCFFMC"        = round(MCFFMC, 2),
@@ -292,7 +302,7 @@ conpyro <- function(
       # "SROS_out"      = SROS_out,
       # "CROS_P_out"    = CROS_P_out,
       # "CROS_A_out"    = CROS_A_out,
-      "ROS"           = round(ros_aio, 2),
+      "ROS"           = round(ROS_AIO, 2),
       "CF_CI"         = CF_CI,
       "WS_CF_passive" = if (length(SROS_out) > 0 & length(CROS_P_out > 0)) {
         WS_seq[length(SROS_out) + 1]
@@ -309,31 +319,31 @@ conpyro <- function(
     )
     out[[i]] <- results
     # Prepare plotting data
-    ggdata_pCFO          <- fn_prep_ggdata(id, WS_seq, pCFO)
-    ggdata_SROS          <- fn_prep_ggdata(id, WS_seq, SROS)
-    ggdata_CROS_A        <- fn_prep_ggdata(id, WS_seq, CROS_A)
-    ggdata_cac           <- fn_prep_ggdata(id, WS_seq, CAC)
-    ggdata_CROS_P        <- fn_prep_ggdata(id, WS_seq, CROS_P)
-    ggdata_SROS_smooth   <- fn_prep_ggdata(id, WS_seq, SROS_smooth)
-    ggdata_CROS_P_smooth <- fn_prep_ggdata(id, WS_seq, CROS_P_smooth)
-    ggdata_CROS_A_smooth <- fn_prep_ggdata(id, WS_seq, CROS_A_smooth)
+    ggdata_pCFO          <- fn_prep_ggdata(ID, WS_seq, pCFO)
+    ggdata_SROS          <- fn_prep_ggdata(ID, WS_seq, SROS)
+    ggdata_CROS_A        <- fn_prep_ggdata(ID, WS_seq, CROS_A)
+    ggdata_CAC           <- fn_prep_ggdata(ID, WS_seq, CAC)
+    ggdata_CROS_P        <- fn_prep_ggdata(ID, WS_seq, CROS_P)
+    ggdata_SROS_smooth   <- fn_prep_ggdata(ID, WS_seq, SROS_smooth)
+    ggdata_CROS_P_smooth <- fn_prep_ggdata(ID, WS_seq, CROS_P_smooth)
+    ggdata_CROS_A_smooth <- fn_prep_ggdata(ID, WS_seq, CROS_A_smooth)
     ggdata_SROS_out      <- fn_prep_ggdata(
-      id,
+      ID,
       WS_seq[which(pCFO < 0.5)],
       SROS_out
     )
     ggdata_CROS_P_out    <- fn_prep_ggdata(
-      id,
+      ID,
       WS_seq[which(pCFO >= 0.5 & CAC < 1)],
       CROS_P_out
     )
     ggdata_CROS_A_out    <- fn_prep_ggdata(
-      id,
+      ID,
       WS_seq[which(pCFO >= 0.5 & CAC > 1)],
       CROS_A_out
     )
     ggdata_CF_CI         <- data.frame(
-      id  = rep(id, times = 2),
+      ID  = rep(ID, times = 2),
       var = rep("CF_CI", times = 2),
       WS  = CF_CI,
       val = if (length(CROS_P_out) > 0) {
@@ -342,12 +352,12 @@ conpyro <- function(
         rep(CROS_A_out[1], times = 2)
       } else NULL
     )
-    ggdata_ros_aio       <- fn_prep_ggdata(id, WS_seq, ros_aio)
+    ggdata_ROS_AIO       <- fn_prep_ggdata(ID, WS_seq, ROS_AIO)
     ggdata_SROS_CROS_P   <- if (
       length(SROS_out) > 0 & length(CROS_P_out) > 0
     ) {
       data.frame(
-        id  = rep(id, times = 2),
+        ID  = rep(ID, times = 2),
         var = rep("SROS_CROS_P", times = 2),
         WS  = WS_seq[c(length(SROS_out), length(SROS_out) + 1)],
         val = c(max(SROS_out), min(CROS_P_out))
@@ -359,7 +369,7 @@ conpyro <- function(
       length(SROS_out) > 0 & length(CROS_A_out) > 0 & length(CROS_P_out) == 0
     ) {
       data.frame(
-        id  = rep(id, times = 2),
+        ID  = rep(ID, times = 2),
         var = rep("SROS_CROS_A", times = 2),
         WS  = WS_seq[c(length(SROS_out), length(SROS_out) + 1)],
         val = c(max(SROS_out), min(CROS_A_out))
@@ -371,7 +381,7 @@ conpyro <- function(
       length(CROS_P_out) > 0 & length(CROS_A_out) > 0
     ) {
       data.frame(
-        id  = rep(id, times = 2),
+        ID  = rep(ID, times = 2),
         var = rep("CROS_P_CROS_A", times = 2),
         WS  = WS_seq[c(
           length(WS_seq) - length(CROS_A_out),
@@ -386,7 +396,7 @@ conpyro <- function(
       length(SROS_out) > 0 & length(CROS_P_out) > 0
     ) {
       data.frame(
-        id  = id,
+        ID  = ID,
         var = "cf_pt_scp",
         WS  = ggdata_SROS_CROS_P[2, 3],
         val = ggdata_SROS_CROS_P[2, 4]
@@ -398,7 +408,7 @@ conpyro <- function(
       length(SROS_out) > 0 & length(CROS_A_out) > 0 & length(CROS_P_out) == 0
     ) {
       data.frame(
-        id  = id,
+        ID  = ID,
         var = "cf_pt_sca",
         WS  = ggdata_SROS_CROS_A[2, 3],
         val = ggdata_SROS_CROS_A[2, 4]
@@ -410,7 +420,7 @@ conpyro <- function(
       length(CROS_P_out) > 0 & length(CROS_A_out) > 0
     ) {
       data.frame(
-        id  = id,
+        ID  = ID,
         var = "cf_pt_cpca",
         WS  = ggdata_CROS_P_CROS_A[2, 3],
         val = ggdata_CROS_P_CROS_A[2, 4]
@@ -423,7 +433,7 @@ conpyro <- function(
       ggdata_pCFO,
       ggdata_SROS,
       ggdata_CROS_A,
-      ggdata_cac,
+      ggdata_CAC,
       ggdata_CROS_P,
       ggdata_SROS_smooth,
       ggdata_CROS_P_smooth,
@@ -432,7 +442,7 @@ conpyro <- function(
       ggdata_CROS_P_out,
       ggdata_CROS_A_out,
       ggdata_CF_CI,
-      ggdata_ros_aio,
+      ggdata_ROS_AIO,
       ggdata_SROS_CROS_P,
       ggdata_SROS_CROS_A,
       ggdata_CROS_P_CROS_A,
@@ -470,13 +480,13 @@ conpyro <- function(
     print(fig_CROS_A)
   }
   if ("CAC" %in% plot) {
-    fig_cac <- fn_plot(
+    fig_CAC <- fn_plot(
       ggdata,
       "CAC",
       "Wind Speed [km/h]",
       "Criterion for Active Crowning [0-1]"
     )
-    print(fig_cac)
+    print(fig_CAC)
   }
   if ("CROS_P" %in% plot) {
     fig_CROS_P <- fn_plot(
@@ -514,14 +524,14 @@ conpyro <- function(
     )
     print(fig_CROS_A_smooth)
   }
-  if ("ros_aio" %in% plot) {
-    fig_ros_aio <- fn_plot(
+  if ("ROS_AIO" %in% plot) {
+    fig_ROS_AIO <- fn_plot(
       ggdata,
-      "ros_aio",
+      "ROS_AIO",
       "Wind Speed [km/h]",
       "Equilibrium Rate of Spread [m/min]"
     )
-    print(fig_ros_aio)
+    print(fig_ROS_AIO)
   }
   # Main ROS plot
   if ("ROS_full" %in% plot) {
@@ -529,44 +539,44 @@ conpyro <- function(
       # SROS
       geom_line(
         data = subset(ggdata, var == "SROS_out"),
-        mapping = aes(WS, val, color = id),
+        mapping = aes(WS, val, color = ID),
         linewidth = 1.5
       ) +
       # CROSp
       geom_line(
         data = subset(ggdata, var == "CROS_P_out"),
-        mapping = aes(WS, val, color = id),
+        mapping = aes(WS, val, color = ID),
         linewidth = 1.5
       ) +
       # CROSa
       geom_line(
         data = subset(ggdata, var == "CROS_A_out"),
-        mapping = aes(WS, val, color = id),
+        mapping = aes(WS, val, color = ID),
         linewidth = 1.5
       ) +
       # Transition lines
       geom_line(
         data = subset(ggdata, var == "SROS_CROS_P"),
-        mapping = aes(WS, val, color = id),
+        mapping = aes(WS, val, color = ID),
         linewidth = 1.5,
         linetype = "dotted"
       ) +
       geom_line(
         data = subset(ggdata, var == "SROS_CROS_A"),
-        mapping = aes(WS, val, color = id),
+        mapping = aes(WS, val, color = ID),
         linewidth = 1.5,
         linetype = "dotted"
       ) +
       geom_line(
         data = subset(ggdata, var == "CROS_P_CROS_A"),
-        mapping = aes(WS, val, color = id),
+        mapping = aes(WS, val, color = ID),
         linewidth = 1.5,
         linetype = "dotted"
       ) +
       # CF confidence intervals
       geom_line(
         data = subset(ggdata, var == "CF_CI"),
-        mapping = aes(WS, val, color = id),
+        mapping = aes(WS, val, color = ID),
         linewidth = 1,
         alpha = 0.5
       ) +
@@ -574,21 +584,21 @@ conpyro <- function(
       # Crown fire point SROS CROS_P
       geom_point(
         data = subset(ggdata, var == "cf_pt_scp"),
-        mapping = aes(WS, val, color = id),
+        mapping = aes(WS, val, color = ID),
         shape = 16,
         size = 4
       ) +
       # Crown fire point SROS CROS_A
       geom_point(
         data = subset(ggdata, var == "cf_pt_sca"),
-        mapping = aes(WS, val, color = id),
+        mapping = aes(WS, val, color = ID),
         shape = 15,
         size = 4
       ) +
       # Crown fire point CROS_P CROS_A
       geom_point(
         data = subset(ggdata, var == "cf_pt_cpca"),
-        mapping = aes(WS, val, color = id),
+        mapping = aes(WS, val, color = ID),
         shape = 15,
         size = 4
       ) +
@@ -601,7 +611,7 @@ conpyro <- function(
     print(fig_ROS_full)
   }
   # Output
-  names(out) <- input$id
+  names(out) <- input$ID
   return(out)
 }
 
@@ -761,17 +771,17 @@ fn_SROS <- function(model, WS_seq, MC, FFMC, SFC) {
 
 # __Crown fire rate of spread (CROS) ----
 # Active crown fire rate of spread (CROS_A)
-fn_CROS_A <- function(model, MC, WS, cbd) {
+fn_CROS_A <- function(model, MC, WS_seq, CBD) {
   if (model == 1) {
     effm_mod <- 0.0079 + 3.6059 * log(MC)
-    CROS_A <- 11.02 * (WS^0.9) * cbd^0.19 * exp(-0.17 * effm_mod)
+    CROS_A <- 11.02 * (WS_seq^0.9) * CBD^0.19 * exp(-0.17 * effm_mod)
   } else if (model == 2) {
-    CROS_A <- 0.084 * WS * 1000 / 60
+    CROS_A <- 0.084 * WS_seq * 1000 / 60
   }
   return(CROS_A)
 }
 # Criteria for active crowning (CAC)
-fn_cac <- function(CROS_A, cbd) {CROS_A / (3 / cbd)}
+fn_CAC <- function(CROS_A, CBD) {CROS_A / (3 / CBD)}
 # Passive crown fire rate of spread (CROS_P)
 fn_CROS_P <- function(CROS_A, CAC) {CROS_A * exp(-CAC)}
 
@@ -792,35 +802,38 @@ fn_CROS_A_smooth <- function(SROS, pCFO, CROS_A) {
 
 # __Final outputs ----
 # Output SROS when p(CFO) < 0.5
-fn_SROS_out <- function(pCFO, smooth_cfi, SROS_smooth, SROS) {
-  ROS = if (isTRUE(smooth_cfi)) {
+fn_SROS_out <- function(pCFO, smooth_CFO, SROS_smooth, SROS) {
+  ROS <- if (isTRUE(smooth_CFO)) {
     SROS_smooth[which(pCFO < 0.5)]
   } else {
     SROS[which(pCFO < 0.5)]
   }
+  return(ROS)
 }
 # Output CROS_P when p(CFO) >= 0.5 and CAC < 1
-fn_CROS_P_out <- function(pCFO, CAC, smooth_cfi, CROS_P_smooth, CROS_P) {
-  ROS = if (isTRUE(smooth_cfi)) {
+fn_CROS_P_out <- function(pCFO, CAC, smooth_CFO, CROS_P_smooth, CROS_P) {
+  ROS <- if (isTRUE(smooth_CFO)) {
     CROS_P_smooth[which(pCFO >= 0.5 & CAC < 1)]
   } else {
     CROS_P[which(pCFO >= 0.5 & CAC < 1)]
   }
+  return(ROS)
 }
 # Output CROS_A if p(CFO) >= 0.5 and CAC > 1
 fn_CROS_A_out <- function(
     pCFO,
     CAC,
-    smooth_cfi,
+    smooth_CFO,
     CROS_P,
     CROS_A_smooth,
     CROS_A
 ) {
-  ROS = if (
-    isTRUE(smooth_cfi) & sum(CROS_P[which(pCFO >= 0.5 & CAC < 1)]) == 0
+  ROS <- if (
+    isTRUE(smooth_CFO) & sum(CROS_P[which(pCFO >= 0.5 & CAC < 1)]) == 0
   ) {
     CROS_A_smooth[which(pCFO >= 0.5 & CAC > 1)]
   } else {
     CROS_A[which(pCFO >= 0.5 & CAC > 1)]
   }
+  return(ROS)
 }
