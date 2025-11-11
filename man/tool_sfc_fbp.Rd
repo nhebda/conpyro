@@ -27,8 +27,6 @@ equations. A simple wrapper for \code{cffdrs:::surface_fuel_consumption}. An
 alternative SFC calculation method is offered by \code{\link[=tool_SFC_deGroot]{tool_SFC_deGroot()}}.
 }
 \examples{
-{
-## TODO
-}
+tool_SFC_FBP(BUI = 81, FFMC = 92, PC = 55)
 
 }

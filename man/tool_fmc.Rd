@@ -27,8 +27,6 @@ Fire Behavior Prediction System equations. A simple wrapper for
 \code{cffdrs:::foliar_moisture_content}.
 }
 \examples{
-{
-## TODO
-}
+tool_FMC(LAT = 54.13, LONG = 116.89, ELV = 1000, Dj = 178)
 
 }

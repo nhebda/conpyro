@@ -26,9 +26,11 @@
 #' @returns A list of length `1` consisting of a numeric value named `pCFO`.
 #' @export
 #'
-#' @examples {
-#' ## TODO
-#' }
+#' @examples
+#' # Using `model = 11` (default), MC is assumed to be stand-adjusted (MCSA)
+#' tool_pCFO(MC = 8.3, WS = 15.2, FSG = 6.8, SFC = 1.6, model = 11)
+#' # Using `model = 10`, MC is assumed to be only FFMC-based (MCFFMC)
+#' tool_pCFO(MC = 8.3, WS = 15.2, FSG = 6.8, SFC = 1.6, model = 10)
 #'
 #' @importFrom checkmate assert_choice
 tool_pCFO <- function(MC = 7.8, WS = 20, FSG = 9.5, SFC = 1.8, model = 11) {
@@ -63,9 +65,9 @@ tool_pCFO <- function(MC = 7.8, WS = 20, FSG = 9.5, SFC = 1.8, model = 11) {
 #'   and one numeric value named `MCSA`.
 #' @export
 #'
-#' @examples {
-#' ## TODO
-#' }
+#' @examples
+#' tool_MC(FFMC = 93, DMC = 70, season = "summer", density = "dense", stand =
+#' "spruce")
 #'
 #' @importFrom checkmate assert_number assert_choice
 tool_MC <- function(
@@ -118,9 +120,8 @@ tool_MC <- function(
 #' @returns A list of length `1` consisting of a numeric value named `FMC`.
 #' @export
 #'
-#' @examples {
-#' ## TODO
-#' }
+#' @examples
+#' tool_FMC(LAT = 54.13, LONG = 116.89, ELV = 1000, Dj = 178)
 #'
 #' @importFrom checkmate assert_number
 tool_FMC <- function(LAT = 48, LONG = 83.3, ELV = 100, Dj = 200) {
@@ -150,16 +151,11 @@ tool_FMC <- function(LAT = 48, LONG = 83.3, ELV = 100, Dj = 200) {
 #'   corresponding to the major FBPS fuel types.
 #' @export
 #'
-#' @examples {
-#' ## TODO
-#' }
+#' @examples
+#' tool_SFC_FBP(BUI = 81, FFMC = 92, PC = 55)
 #'
 #' @importFrom checkmate assert_number
-tool_SFC_FBP <- function(
-    BUI  = 85,
-    FFMC = 91,
-    PC   = 40
-) {
+tool_SFC_FBP <- function(BUI = 85, FFMC = 91, PC = 40) {
   assert_number(BUI, lower = 0, upper = 200)
   assert_number(FFMC, lower = 80, upper = 99)
   assert_number(PC, lower = 0, upper = 100)
@@ -205,9 +201,8 @@ tool_SFC_FBP <- function(
 #'   `Forest Floor Fuel Consumption` and one numeric value named `SFC`.
 #' @export
 #'
-#' @examples {
-#' ## TODO
-#' }
+#' @examples
+#' tool_SFC_deGroot(BUI = 78, FFL = 2.8, FWFL = 0.4)
 #'
 #' @importFrom checkmate assert_number
 tool_SFC_deGroot <- function(BUI = 85, FFL = 3.5, FWFL = 0.3) {
@@ -240,9 +235,8 @@ tool_SFC_deGroot <- function(BUI = 85, FFL = 3.5, FWFL = 0.3) {
 #'   `Scaled SFC contribution, small snags [kg/m^2]`
 #' @export
 #'
-#' @examples {
-#' ## TODO
-#' }
+#' @examples
+#' ladder_standing_dead(consumption = 1.1, cl = 5.1, FSG = 6.3)
 #'
 #' @importFrom checkmate assert_number
 ladder_standing_dead <- function(consumption = 0.2, cl = 4, FSG = 6) {
@@ -282,9 +276,10 @@ ladder_standing_dead <- function(consumption = 0.2, cl = 4, FSG = 6) {
 #'   `SFC scaled to crown centroid`, and `Total false-SFC`, respectively.
 #' @export
 #'
-#' @examples {
-#' ## TODO
-#' }
+#' @examples
+#' ladder_midstory_saplings(hs = 4.5, zs = 1.3, zp = 7, lnfl = 0.4, sapling_FMC
+#' = 120, actual_SFC  = 2.8)
+#'
 #' @importFrom checkmate assert_number
 ladder_midstory_saplings <- function(
     hs          = 5,

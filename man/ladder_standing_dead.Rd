@@ -31,8 +31,6 @@ pine ladder fuels. Caution: Experimental! These equations are under
 development and may contain errors.
 }
 \examples{
-{
-## TODO
-}
+ladder_standing_dead(consumption = 1.1, cl = 5.1, FSG = 6.3)
 
 }

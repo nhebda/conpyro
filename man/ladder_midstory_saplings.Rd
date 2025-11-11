@@ -42,7 +42,7 @@ probability to the sapling cohort separately. Caution: Experimental! These
 equations are under development and may contain errors.
 }
 \examples{
-{
-## TODO
-}
+ladder_midstory_saplings(hs = 4.5, zs = 1.3, zp = 7, lnfl = 0.4, sapling_FMC
+= 120, actual_SFC  = 2.8)
+
 }

@@ -85,14 +85,34 @@
 #'   scenario (input row). Optionally plots output.
 #' @export
 #'
-#' @examples {
-#' ## TODO: examples.
-#'   ## library(conpyro.pkg) ## double check if need
-#'
-#'   ## data(input)
-#'
-#'   ## conpyro(input)
-#' }
+#' @examples
+#' # Basic usage
+#' data(input)
+#' conpyro(input)
+#' # Smooth CFO for all scenarios
+#' data(input)
+#' conpyro(input, smooth_CFO = TRUE)
+#' # Per-scenario smooth CFO with plotting
+#' data(input)
+#' input <- cbind(input, smooth_CFO = c(TRUE, FALSE, TRUE))
+#' conpyro(input, plot = "ROS_full")
+#' # Per-scenario wind speed
+#' data(input)
+#' input <- cbind(input, WS_min = c(0, 10, 15), WS_max = c(30, 40, 50))
+#' conpyro(input)
+#' # Per-scenario FFMC
+#' data(input)
+#' input <- cbind(input, FFMC = c(89, 95, 91.4))
+#' conpyro(input)
+#' # Per-scenario ConPyro, SROS, and CROS models
+#' data(input)
+#' input <- cbind(
+#'   input,
+#'   model_conpyro = c(11, 10, 8),
+#'   model_SROS = c(1, 2, 4),
+#'   model_CROS = c(1, 1, 2)
+#' )
+#' conpyro(input)
 #'
 #' @importFrom cffdrs fbp
 #' @importFrom checkmate assert_data_frame assert_subset assert_true
