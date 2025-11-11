@@ -39,8 +39,9 @@ Conifer Pyrometrics (ConPyro) model system. See Perrakis et al. (2023) for
 details.
 }
 \examples{
-{
-## TODO
-}
+# Using `model = 11` (default), MC is assumed to be stand-adjusted (MCSA)
+tool_pCFO(MC = 8.3, WS = 15.2, FSG = 6.8, SFC = 1.6, model = 11)
+# Using `model = 10`, MC is assumed to be only FFMC-based (MCFFMC)
+tool_pCFO(MC = 8.3, WS = 15.2, FSG = 6.8, SFC = 1.6, model = 10)
 
 }

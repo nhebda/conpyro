@@ -28,8 +28,6 @@ results (e.g., SFC > SFL) for cases of low surface fuel load (SFL) and high
 BUI. See De Groot et al. (2009) for details.
 }
 \examples{
-{
-## TODO
-}
+tool_SFC_deGroot(BUI = 78, FFL = 2.8, FWFL = 0.4)
 
 }

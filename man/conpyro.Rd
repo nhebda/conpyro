@@ -5,10 +5,17 @@
 \title{Calculate probability of crown fire occurrence (pCFO), crowning thresholds,
 and rate of spread (ROS) for one or more scenarios}
 \usage{
-conpyro(input, WS = c(0, 40), FFMC = 91, DMC = 70, plot = NULL)
+conpyro(
+  input,
+  WS = c(0, 40),
+  FFMC = 91,
+  DMC = 70,
+  smooth_CFO = FALSE,
+  plot = NULL
+)
 }
 \arguments{
-\item{input}{A data frame of least \code{8} columns and \code{1} row. Each row defines
+\item{input}{A data frame of least \code{7} columns and \code{1} row. Each row defines
 a ConPyro prediction for a single set of fuel and fire weather conditions
 (a \emph{scenario}). Inputs are case-insensitive and columns may be in any
 order. Missing values are not permitted and will produce an error.
@@ -28,12 +35,14 @@ consumption in kg/m^2. May be estimated using \code{\link[=tool_SFC_FBP]{tool_SF
 \code{\link[=tool_SFC_deGroot]{tool_SFC_deGroot()}}.
 \item \code{CBD}: A numeric value between \code{0.01} and \code{0.8} (inclusive). Crown bulk
 density in kg/m^3.
-\item \code{smooth_CFI}: Defines whether crown fire initiation is modeled as a
-smooth transition (\code{TRUE}) or an instantaneous occurrence (\code{FALSE}).
 }
 
 Additionally, there are several optional columns:
 \itemize{
+\item \code{smooth_CFO}: Defines whether crown fire initiation is modeled as a
+smooth transition (\code{TRUE}) or an instantaneous occurrence (\code{FALSE}). Allows
+this behaviour to be specified on a per-scenario basis. If this column is
+present, it will override the \code{smooth_CFI} argument.
 \item \code{WS_min}: A numeric value between \code{0} and \code{60} (inclusive). Minimum wind
 speed in km/h. Allows wind speed to be specified on a per-scenario basis.
 If this column \emph{and} the \code{WS_max} column are present, they will override
@@ -82,6 +91,9 @@ Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index System.}
 \item{DMC}{A numeric value between 5 and 200 (inclusive). The Duff Moisture
 Code (DMC) as per the Canadian Forest Fire Weather Index (FWI) System.}
 
+\item{smooth_CFO}{Defines whether crown fire initiation is modeled as a
+smooth transition (\code{TRUE}) or an instantaneous occurrence (\code{FALSE}).}
+
 \item{plot}{A character vector to control plotting of output. Choose any of
 the following:
 \itemize{
@@ -104,13 +116,32 @@ fuel and fire weather configurations using the Canadian Conifer Pyrometrics
 (ConPyro) model system. See Perrakis et al. (2023) for details.
 }
 \examples{
-{
-## TODO: examples.
-  ## library(conpyro.pkg) ## double check if need
-
-  ## data(input)
-
-  ## conpyro(input)
-}
+# Basic usage
+data(input)
+conpyro(input)
+# Smooth CFO for all scenarios
+data(input)
+conpyro(input, smooth_CFO = TRUE)
+# Per-scenario smooth CFO with plotting
+data(input)
+input <- cbind(input, smooth_CFO = c(TRUE, FALSE, TRUE))
+conpyro(input, plot = "ROS_full")
+# Per-scenario wind speed
+data(input)
+input <- cbind(input, WS_min = c(0, 10, 15), WS_max = c(30, 40, 50))
+conpyro(input)
+# Per-scenario FFMC
+data(input)
+input <- cbind(input, FFMC = c(89, 95, 91.4))
+conpyro(input)
+# Per-scenario ConPyro, SROS, and CROS models
+data(input)
+input <- cbind(
+  input,
+  model_conpyro = c(11, 10, 8),
+  model_SROS = c(1, 2, 4),
+  model_CROS = c(1, 1, 2)
+)
+conpyro(input)
 
 }

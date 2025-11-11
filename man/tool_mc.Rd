@@ -35,8 +35,7 @@ and one numeric value named \code{MCSA}.
 from the FFMC (MCFFMC) and using the stand-adjusted model (MCSA).
 }
 \examples{
-{
-## TODO
-}
+tool_MC(FFMC = 93, DMC = 70, season = "summer", density = "dense", stand =
+"spruce")
 
 }
