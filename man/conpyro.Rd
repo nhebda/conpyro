@@ -11,6 +11,7 @@ conpyro(
   FFMC = 91,
   DMC = 70,
   smooth_CFO = FALSE,
+  CF_thresh = 0.5,
   plot = NULL
 )
 }
@@ -94,6 +95,9 @@ Code (DMC) as per the Canadian Forest Fire Weather Index (FWI) System.}
 \item{smooth_CFO}{Defines whether crown fire initiation is modeled as a
 smooth transition (\code{TRUE}) or an instantaneous occurrence (\code{FALSE}).}
 
+\item{CF_thresh}{A numeric value between \code{0} and \code{1}. Defines the pCFO
+threshold at which crown fire occurs.}
+
 \item{plot}{A character vector to control plotting of output. Choose any of
 the following:
 \itemize{
@@ -117,31 +121,35 @@ fuel and fire weather configurations using the Canadian Conifer Pyrometrics
 }
 \examples{
 # Basic usage
-data(input)
-conpyro(input)
+data(default_input)
+conpyro(default_input)
 # Smooth CFO for all scenarios
-data(input)
-conpyro(input, smooth_CFO = TRUE)
+data(default_input)
+conpyro(default_input, smooth_CFO = TRUE)
 # Per-scenario smooth CFO with plotting
-data(input)
-input <- cbind(input, smooth_CFO = c(TRUE, FALSE, TRUE))
-conpyro(input, plot = "ROS_full")
+data(default_input)
+new_input <- cbind(default_input, smooth_CFO = c(TRUE, FALSE, TRUE))
+conpyro(new_input, plot = "ROS_full")
 # Per-scenario wind speed
-data(input)
-input <- cbind(input, WS_min = c(0, 10, 15), WS_max = c(30, 40, 50))
-conpyro(input)
+data(default_input)
+new_input <- cbind(
+  default_input,
+  WS_min = c(0, 10, 15),
+  WS_max = c(30, 40, 50)
+)
+conpyro(new_input)
 # Per-scenario FFMC
-data(input)
-input <- cbind(input, FFMC = c(89, 95, 91.4))
-conpyro(input)
+data(default_input)
+new_input <- cbind(default_input, FFMC = c(89, 95, 91.4))
+conpyro(new_input)
 # Per-scenario ConPyro, SROS, and CROS models
-data(input)
-input <- cbind(
-  input,
+data(default_input)
+new_input <- cbind(
+  default_input,
   model_conpyro = c(11, 10, 8),
   model_SROS = c(1, 2, 4),
   model_CROS = c(1, 1, 2)
 )
-conpyro(input)
+conpyro(new_input)
 
 }

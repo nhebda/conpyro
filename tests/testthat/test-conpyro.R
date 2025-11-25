@@ -1,7 +1,7 @@
 test_that("conpyro() works", {
-  data("input")
-  expect_snapshot(conpyro(input))
-  rm(input, envir = .GlobalEnv)
+  data("default_input")
+  expect_snapshot(conpyro(default_input))
+  rm(default_input, envir = .GlobalEnv)
 })
 
 test_that("fn_MCFFMC() works", {
@@ -257,6 +257,7 @@ test_that("CFO smoothing functions work", {
         fn_CAC(fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12), 0.12)
       ),
       fn_pCFO(7, seq(0, 60, 1), 9.5, 1.8, 7.8),
+      CF_thresh = 0.5,
       fn_CAC(fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12), 0.12),
       fn_SROS(1, seq(0, 60, 1), 7.8, 91, 1.8),
       fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12)
@@ -320,19 +321,21 @@ test_that("final ROS outputs work", {
   expect_equal(
     tolerance = 0.001,
     fn_SROS_out(
-      fn_pCFO(7, seq(0, 60, 1), 9.5, 1.8, 7.8),
-      TRUE,
-      fn_SROS_smooth(
-        fn_CROS_P(
+      pCFO        = fn_pCFO(7, seq(0, 60, 1), 9.5, 1.8, 7.8),
+      smooth_CFO  = TRUE,
+      CF_thresh   = 0.5,
+      SROS_smooth = fn_SROS_smooth(
+        CROS_P    = fn_CROS_P(
           fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12),
           fn_CAC(fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12), 0.12)
         ),
-        fn_pCFO(7, seq(0, 60, 1), 9.5, 1.8, 7.8),
-        fn_CAC(fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12), 0.12),
-        fn_SROS(1, seq(0, 60, 1), 7.8, 91, 1.8),
-        fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12)
+        pCFO      = fn_pCFO(7, seq(0, 60, 1), 9.5, 1.8, 7.8),
+        CF_thresh = 0.5,
+        CAC       = fn_CAC(fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12), 0.12),
+        SROS      = fn_SROS(1, seq(0, 60, 1), 7.8, 91, 1.8),
+        CROS_A    = fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12)
       ),
-      fn_SROS(1, seq(0, 60, 1), 7.8, 91, 1.8)
+      SROS        = fn_SROS(1, seq(0, 60, 1), 7.8, 91, 1.8)
     ),
     c(
       1.062918, 1.161722, 1.269017, 1.38545, 1.511735, 1.648707, 1.797435,
@@ -343,52 +346,46 @@ test_that("final ROS outputs work", {
   expect_equal(
     tolerance = 0.001,
     fn_CROS_P_out(
-      fn_pCFO(7, seq(0, 60, 1), 9.5, 1.8, 7.8),
-      fn_CAC(fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12), 0.12),
-      TRUE,
-      fn_CROS_P_smooth(
-        fn_SROS(1, seq(0, 60, 1), 7.8, 91, 1.8),
-        fn_pCFO(7, seq(0, 60, 1), 9.5, 1.8, 7.8),
-        fn_CROS_P(
+      pCFO          = fn_pCFO(7, seq(0, 60, 1), 9.5, 1.8, 7.8),
+      CAC           = fn_CAC(fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12), 0.12),
+      smooth_CFO    = TRUE,
+      CF_thresh     = 0.5,
+      CROS_P_smooth = fn_CROS_P_smooth(
+        SROS   = fn_SROS(1, seq(0, 60, 1), 7.8, 91, 1.8),
+        pCFO   = fn_pCFO(7, seq(0, 60, 1), 9.5, 1.8, 7.8),
+        CROS_P = fn_CROS_P(
           fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12),
           fn_CAC(fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12), 0.12)
         )
       ),
-      fn_CROS_P(
+      CROS_P        = fn_CROS_P(
         fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12),
         fn_CAC(fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12), 0.12)
       )
     ),
     numeric(0)
   )
-  expect_equal(
-    tolerance = 0.001,
+  expect_snapshot(
     fn_CROS_A_out(
-      fn_pCFO(7, seq(0, 60, 1), 9.5, 1.8, 7.8),
-      fn_CAC(fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12), 0.12),
-      TRUE,
-      fn_CROS_P(
+      pCFO          = fn_pCFO(7, seq(0, 60, 1), 9.5, 1.8, 7.8),
+      CAC           = fn_CAC(fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12), 0.12),
+      smooth_CFO    = TRUE,
+      CF_thresh     = 0.5,
+      CROS_P        = fn_CROS_P(
         fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12),
         fn_CAC(fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12), 0.12)
       ),
-      fn_CROS_P_smooth(
-        fn_SROS(1, seq(0, 60, 1), 7.8, 91, 1.8),
-        fn_pCFO(7, seq(0, 60, 1), 9.5, 1.8, 7.8),
-        fn_CROS_P(
-          fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12),
-          fn_CAC(fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12), 0.12)
+      CROS_A_smooth = fn_CROS_A_smooth(
+        SROS   = fn_SROS(1, seq(0, 60, 1), 7.8, 91, 1.8),
+        pCFO   = fn_pCFO(7, seq(0, 60, 1), 9.5, 1.8, 7.8),
+        CROS_A = fn_CROS_A(
+          model  = 1,
+          MC     = 7.8,
+          WS_seq = seq(0, 60, 1),
+          CBD    = 0.12
         )
       ),
-      fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12)
-    ),
-    c(
-      7.412263, 8.13817, 8.534757, 8.679454, 8.675056, 8.592557, 8.470376,
-      8.327238, 8.172016, 8.00906, 7.84072, 7.668466, 7.493365, 7.316277,
-      7.137944, 6.959014, 6.780065, 6.601609, 6.424099, 6.247935, 6.073468,
-      5.901006, 5.730814, 5.563124, 5.398132, 5.236005, 5.076886, 4.920889,
-      4.76811, 4.618624, 4.472488, 4.329745, 4.190423, 4.054535, 3.922087,
-      3.793072, 3.667476, 3.545274, 3.426439, 3.310934, 3.198718, 3.089745,
-      2.983966
+      CROS_A        = fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12)
     )
   )
 })

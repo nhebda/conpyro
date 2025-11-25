@@ -1,5 +1,5 @@
 ## read-in raw data
-input <- read.csv("inst/extdata/input_default.csv", header = TRUE)
+default_input <- read.csv("inst/extdata/default_input.csv", header = TRUE)
 
 ## export the dataset
-usethis::use_data(input, overwrite = TRUE, internal = FALSE)
+usethis::use_data(default_input, overwrite = TRUE, internal = FALSE)

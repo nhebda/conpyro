@@ -15,4 +15,4 @@
 #'   \item{XXX}{optional. TODO DESCRIPTION}
 #'   \item{XXX}{optional. TODO DESCRIPTION}
 #' }
-"input"
+"default_input"
