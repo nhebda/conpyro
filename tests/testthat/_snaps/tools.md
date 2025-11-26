@@ -1,3 +1,21 @@
+# tool_ROS() works
+
+    Code
+      tool_ROS()
+    Output
+      $MCFFMC
+      [1] 9.78
+      
+      $MCSA
+      [1] 9.1
+      
+      $`Crown Fire Occurrence Probability (pCFO)`
+      [1] 1
+      
+      $`Integrated Rate of Spread (m/min)`
+      [1] 29.75
+      
+
 # tool_SFC_FBP() works
 
     Code

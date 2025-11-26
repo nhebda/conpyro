@@ -71,8 +71,14 @@
 #'   Code (DMC) as per the Canadian Forest Fire Weather Index (FWI) System.
 #' @param smooth_CFO Defines whether crown fire initiation is modeled as a
 #'   smooth transition (`TRUE`) or an instantaneous occurrence (`FALSE`).
-#' @param CF_thresh A numeric value between `0` and `1`. Defines the pCFO
-#'   threshold at which crown fire occurs.
+#' @param CF_thresh A numeric value between `0` and `1` (inclusive). Defines the
+#'   pCFO threshold at which crown fire occurs.
+#' @param ROS_output A character vector to control ROS output. Choose any of the
+#'   following:
+#'   * `SROS`: Surface fire rate of spread.
+#'   * `CROS_P`: Passive crown fire rate of spread.
+#'   * `CROS_A`: Active crown fire rate of spread.
+#'   * `integrated`: Complete composite rate of spread.
 #' @param plot A character vector to control plotting of output. Choose any of
 #'   the following:
 #'   * `pCFO`: Crown fire occurrence probability.
@@ -80,7 +86,7 @@
 #'   * `CROS_P`: Passive crown fire rate of spread.
 #'   * `CROS_A`: Active crown fire rate of spread.
 #'   * `CAC`: Criterion for active crowning.
-#'   * `ROS_full`: Complete composite rate of spread plot with crowning
+#'   * `ROS_integrated`: Complete composite rate of spread plot with crowning
 #'   thresholds.
 #'
 #' @returns A list of lists, with each sub-list containing outputs for a single
@@ -97,7 +103,7 @@
 #' # Per-scenario smooth CFO with plotting
 #' data(default_input)
 #' new_input <- cbind(default_input, smooth_CFO = c(TRUE, FALSE, TRUE))
-#' conpyro(new_input, plot = "ROS_full")
+#' conpyro(new_input, plot = "ROS_integrated")
 #' # Per-scenario wind speed
 #' data(default_input)
 #' new_input <- cbind(
@@ -134,10 +140,13 @@ conpyro <- function(
     ROS_output = "integrated",
     plot       = NULL
 ) {
-  # Coerce input data to all lowercase
-  input[] <- lapply(input, function(col) {
-    if (is.character(col)) tolower(col) else col
-  })
+  # Coerce input data (except scenario names) to lowercase
+  input[] <- cbind(
+    input[1],
+    lapply(input[-1], function(col) {
+      if (is.character(col)) tolower(col) else col
+    })
+  )
   colnames(input) <- tolower(colnames(input))
   # Validate user input
   assert_data_frame(
@@ -198,15 +207,32 @@ conpyro <- function(
   if ("dmc" %in% names(input)) {
     assert_numeric(input$ffmc, lower = 5, upper = 200, .var.name = "DMC")
   }
-  assert_integerish(
-    WS,
-    lower  = 0,
-    upper  = 60,
-    len    = 2,
-    sorted = TRUE
-  )
+  if ("model_conpyro" %in% names(input)) {
+    assert_subset(input$model_conpyro, choices = c(7, 8, 10, 11))
+  }
+  if ("model_sros" %in% names(input)) {
+    assert_subset(input$model_sros, choices = c(1, 2, 3, 4))
+  }
+  if ("model_cros" %in% names(input)) {
+    assert_subset(input$model_cros, choices = c(1, 2))
+  }
+  if (length(WS) == 1) {
+    assert_integerish(WS, lower = 0, upper = 60)
+  } else if (length(WS) > 1) {
+    assert_integerish(
+      WS,
+      lower  = 0,
+      upper  = 60,
+      unique = TRUE,
+      len    = 2,
+      sorted = TRUE
+    )
+  }
   assert_number(FFMC, lower = 80, upper = 99)
   assert_number(DMC, lower = 5, upper = 200)
+  assert_logical(smooth_CFO, .var.name = "smooth_CFO")
+  assert_number(CF_thresh, lower = 0, upper = 1)
+  assert_subset(ROS_output, c("SROS", "CROS_P", "CROS_A", "integrated"))
   assert_subset(
     plot,
     c(
@@ -219,7 +245,7 @@ conpyro <- function(
       # "CROS_P_smooth",
       # "CROS_A_smooth",
       # "ROS_AIO",
-      "ROS_full"
+      "ROS_integrated"
     )
   )
 
@@ -246,7 +272,11 @@ conpyro <- function(
     ) {
       seq(input$ws_min[i], input$ws_max[i], 1)
     } else {
-      seq(WS[1], WS[2], 1)
+      if (length(WS) == 1) {
+        WS
+      } else {
+        seq(WS[1], WS[2], 1)
+      }
     }
     FFMC          <- if ("ffmc" %in% names(input)) {
       input$ffmc[i]
@@ -315,37 +345,41 @@ conpyro <- function(
     ROS_AIO       <- c(SROS_out, CROS_P_out, CROS_A_out)
     # Prepare output data
     results <- list(
-      "MCFFMC"        = round(MCFFMC, 2),
-      # "MCDMC"         = MCDMC,
-      # "MCSA_idx"      = idx,
-      "MCSA"          = round(MCSA, 2),
-      "WS_seq"        = WS_seq,
-      "pCFO"          = round(pCFO, 2),
-      if ("SROS" %in% ROS_output)   "SROS"   = round(SROS, 2),
-      if ("CROS_P" %in% ROS_output) "CROS_P" = round(CROS_P, 2),
-      if ("CROS_A" %in% ROS_output) "CROS_A" = round(CROS_A, 2),
-      # "CAC"           = CAC,
-      # "SROS_smooth"   = SROS_smooth,
-      # "CROS_P_smooth" = CROS_P_smooth,
-      # "CROS_A_smooth" = CROS_A_smooth,
-      # "SROS_out"      = SROS_out,
-      # "CROS_P_out"    = CROS_P_out,
-      # "CROS_A_out"    = CROS_A_out,
-      if ("integrated" %in% ROS_output) "ROS_integrated" = round(ROS_AIO, 2),
-      "CF_CI"         = CF_CI,
-      "WS_CF_passive" = if (length(SROS_out) > 0 & length(CROS_P_out > 0)) {
-        WS_seq[length(SROS_out) + 1]
-      } else {
-        NULL
-      },
-      "WS_CF_active"  = if (
-        (length(SROS_out) > 0 | length(CROS_P_out)) > 0 & length(CROS_A_out) > 0
-      ) {
-        WS_seq[length(WS_seq) - length(CROS_A_out) + 1]
-      } else {
-        NULL
-      }
+      "MCFFMC" = round(MCFFMC, 2),
+      "MCSA" = round(MCSA, 2),
+      "Wind Speed (km/h)" = WS_seq,
+      "Crown Fire Occurrence Probability (pCFO)" = round(pCFO, 2)
     )
+    if ("SROS" %in% ROS_output) {
+      results[["Surface Fire Rate of Spread (m/min)"]] = round(SROS, 2)
+    }
+    if ("CROS_P" %in% ROS_output) {
+      results[["Crown Fire (Passive) Rate of Spread (m/min)"]] =
+        round(CROS_P, 2)
+    }
+    if ("CROS_A" %in% ROS_output) {
+      results[["Crown Fire (Active) Rate of Spread (m/min)"]] =
+        round(CROS_A, 2)
+    }
+    if ("integrated" %in% ROS_output) {
+      results[["Integrated Rate of Spread (m/min)"]] = round(ROS_AIO, 2)
+    }
+    if (length(SROS_out) > 0 & length(CROS_P_out > 0)) {
+      results[["Crown Fire (Passive) Wind Speed Threshold (km/h)"]] =
+        WS_seq[length(SROS_out) + 1]
+    }
+    if (
+      (length(SROS_out) > 0 | length(CROS_P_out > 0)) & length(CROS_A_out) > 0
+    ) {
+      results[["Crown Fire (Active) Wind Speed Threshold (km/h)"]] =
+        WS_seq[length(WS_seq) - length(CROS_A_out) + 1]
+    }
+    if (!is.na(CF_CI[1]) & length(WS) > 1) {
+      results[["Crown Fire Wind Speed Threshold Lower Bound (km/h)"]] = CF_CI[1]
+    }
+    if (!is.na(CF_CI[2]) & length(WS) > 1) {
+      results[["Crown Fire Wind Speed Threshold Upper Bound (km/h)"]] = CF_CI[2]
+    }
     out[[i]] <- results
     # Prepare plotting data
     if (!is.null(plot)) {
@@ -567,8 +601,8 @@ conpyro <- function(
     print(fig_ROS_AIO)
   }
   # Main ROS plot
-  if ("ROS_full" %in% plot) {
-    fig_ROS_full <- ggplot() +
+  if ("ROS_integrated" %in% plot) {
+    fig_ROS_integrated <- ggplot() +
       # SROS
       geom_line(
         data = subset(ggdata, var == "SROS_out"),
@@ -641,10 +675,10 @@ conpyro <- function(
       xlab("Wind Speed [km/h]") +
       ylab("Equilibrium Rate of Spread [m/min]") +
       scale_color_viridis_d()
-    print(fig_ROS_full)
+    print(fig_ROS_integrated)
   }
   # Output
-  names(out) <- input$ID
+  names(out) <- input$id
   return(out)
 }
 

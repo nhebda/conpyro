@@ -12,6 +12,7 @@ conpyro(
   DMC = 70,
   smooth_CFO = FALSE,
   CF_thresh = 0.5,
+  ROS_output = "integrated",
   plot = NULL
 )
 }
@@ -95,8 +96,17 @@ Code (DMC) as per the Canadian Forest Fire Weather Index (FWI) System.}
 \item{smooth_CFO}{Defines whether crown fire initiation is modeled as a
 smooth transition (\code{TRUE}) or an instantaneous occurrence (\code{FALSE}).}
 
-\item{CF_thresh}{A numeric value between \code{0} and \code{1}. Defines the pCFO
-threshold at which crown fire occurs.}
+\item{CF_thresh}{A numeric value between \code{0} and \code{1} (inclusive). Defines the
+pCFO threshold at which crown fire occurs.}
+
+\item{ROS_output}{A character vector to control ROS output. Choose any of the
+following:
+\itemize{
+\item \code{SROS}: Surface fire rate of spread.
+\item \code{CROS_P}: Passive crown fire rate of spread.
+\item \code{CROS_A}: Active crown fire rate of spread.
+\item \code{integrated}: Complete composite rate of spread.
+}}
 
 \item{plot}{A character vector to control plotting of output. Choose any of
 the following:
@@ -106,7 +116,7 @@ the following:
 \item \code{CROS_P}: Passive crown fire rate of spread.
 \item \code{CROS_A}: Active crown fire rate of spread.
 \item \code{CAC}: Criterion for active crowning.
-\item \code{ROS_full}: Complete composite rate of spread plot with crowning
+\item \code{ROS_integrated}: Complete composite rate of spread plot with crowning
 thresholds.
 }}
 }
@@ -129,7 +139,7 @@ conpyro(default_input, smooth_CFO = TRUE)
 # Per-scenario smooth CFO with plotting
 data(default_input)
 new_input <- cbind(default_input, smooth_CFO = c(TRUE, FALSE, TRUE))
-conpyro(new_input, plot = "ROS_full")
+conpyro(new_input, plot = "ROS_integrated")
 # Per-scenario wind speed
 data(default_input)
 new_input <- cbind(

@@ -1,3 +1,105 @@
+#' Calculate rate of spread (ROS) for a single set of conditions
+#'
+#' `tool_ROS()` calculates rate of spread for a single set of fuel, wind speed,
+#' and stand structure observations using the Canadian Conifer Pyrometrics
+#' (ConPyro) model system. See Perrakis et al. (2023) for details.
+#'
+#' @param season One of `spring`, `sp-su`, `summer`, or `fall`.
+#' @param density One of `light`, `moderate`, or `dense`.
+#' @param stand One of `pine`, `spruce`, `Douglas-fir`, `deciduous`, or
+#'   `mixedwood`.
+#' @param FSG A numeric value between `0.5` and `20` (inclusive). Fuel strata
+#'   gap in metres. The vertical distance between the top of the surface fuels
+#'   and the lower limit of the canopy fuels. Analogous to crown base height
+#'   (CBH) in the absence of mid-story ladder fuels.
+#' @param SFC A numeric value between `0.1` and `6` (inclusive). Surface fuel
+#'   consumption in kg/m^2. May be estimated using [tool_SFC_FBP()] or
+#'   [tool_SFC_deGroot()].
+#' @param CBD A numeric value between `0.01` and `0.8` (inclusive). Crown bulk
+#'   density in kg/m^3.
+#' @param smooth_CFO Defines whether crown fire initiation is modeled as a
+#'   smooth transition (`TRUE`) or an instantaneous occurrence (`FALSE`).
+#' @param model_conpyro Choose one of `7`, `8`, `10`, or `11`. The ConPyro model
+#'   form used for calculations (see Perrakis et al., 2023). Models `7` and `10`
+#'   use FFMC-based fine fuel moisture content (MCFFMC) while models `8` and
+#'   `11` use stand-adjusted moisture content (MCSA). Default is `11`.
+#' @param model_SROS Choose one of `1`, `2`, `3`, or `4`. The surface fire ROS
+#'   model used for calculations.
+#'      * `1`: Aggregated FBPS surf. V4 (default)
+#'      * `2`: D-1 FBPS
+#'      * `3`: C-6 (surface only) FBPS
+#'      * `4`: IsaSFC
+#' @param model_CROS Choose one of `1` or `2`. The crown fire ROS model used for
+#'   calculations.
+#'      * `1`: Adapted Cruz, Alexander, & Wakimoto (2005): WS, MC, CBD (default)
+#'      * `2`: Adapted Cruz & Alexander (2019): WS only
+#' @param WS A single integer between `0` and `60` (inclusive). Wind speed in
+#'   km/h
+#' @param FFMC A numeric value between 80 and 99 (inclusive). The Fine Fuel
+#'   Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index System.
+#' @param DMC A numeric value between 5 and 200 (inclusive). The Duff Moisture
+#'   Code (DMC) as per the Canadian Forest Fire Weather Index (FWI) System.
+#' @param CF_thresh A numeric value between `0` and `1` (inclusive). Defines the
+#'   pCFO threshold at which crown fire occurs.
+#' @param ROS_output A character vector to control ROS output. Choose any of the
+#'   following:
+#'   * `SROS`: Surface fire rate of spread.
+#'   * `CROS_P`: Passive crown fire rate of spread.
+#'   * `CROS_A`: Active crown fire rate of spread.
+#'   * `integrated`: Complete composite rate of spread.
+#'
+#' @returns A list of length 4 consisting of numeric values named:
+#'   * `MCFFMC`
+#'   * `MCSA`
+#'   * `Crown Fire Occurrence Probability (pCFO)`
+#'   * `Integrated Rate of Spread (m/min)`
+#' @export
+#'
+#' @examples
+#' # TODO
+tool_ROS <- function(
+    season = "summer",
+    density = "moderate",
+    stand = "pine",
+    FSG = 6,
+    SFC = 2,
+    CBD = 0.16,
+    smooth_CFO = FALSE,
+    model_conpyro = 11,
+    model_SROS = 1,
+    model_CROS = 1,
+    WS = 20,
+    FFMC = 91,
+    DMC = 70,
+    CF_thresh = 0.5,
+    ROS_output = "integrated"
+) {
+  input <- data.frame(
+    id = "",
+    season = season,
+    density = density,
+    stand = stand,
+    FSG = FSG,
+    SFC = SFC,
+    CBD = CBD,
+    smooth_CFO = smooth_CFO,
+    model_conpyro = model_conpyro,
+    model_SROS = model_SROS,
+    model_CROS = model_CROS
+  )
+  output <- conpyro(
+    input = input,
+    WS = WS,
+    FFMC = FFMC,
+    DMC = DMC,
+    CF_thresh = CF_thresh,
+    ROS_output = ROS_output
+  )
+  output <- unlist(output, recursive = FALSE)
+  output <- output[-3]
+  return(output)
+}
+
 #' Calculate probability of crown fire occurrence (pCFO) for a single set of
 #' conditions
 #'

@@ -1,3 +1,7 @@
+test_that("tool_ROS() works", {
+  expect_snapshot(tool_ROS())
+})
+
 test_that("tool_pCFO() works", {
   expect_identical(tool_pCFO(), list(pCFO = 0.55))
   expect_error(tool_pCFO(MC = 4))
