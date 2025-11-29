@@ -93,10 +93,47 @@ A list of length 4 consisting of numeric values named:
 }
 }
 \description{
-\code{tool_ROS()} calculates rate of spread for a single set of fuel, wind speed,
-and stand structure observations using the Canadian Conifer Pyrometrics
-(ConPyro) model system. See Perrakis et al. (2023) for details.
+\code{tool_ROS()} calculates rate of spread for a single set of fuel and fire
+weather conditions using the Canadian Conifer Pyrometrics (ConPyro) model
+system. See Perrakis et al. (2023) for details. Provides a more convenient
+single-scenario calculation than using the main \code{\link[=conpyro]{conpyro()}} function. If you
+want want to run multiple scenarios or plot output, use \code{\link[=conpyro]{conpyro()}} instead.
 }
 \examples{
-# TODO
+# Calculate integrated ROS for a low-density pine stand at WS = 12.
+tool_ROS(
+  season = "summer",
+  density = "light",
+  stand = "pine",
+  FSG = 6,
+  SFC = 2.2,
+  CBD = 0.09,
+  smooth_CFO = FALSE,
+  model_conpyro = 11,
+  model_SROS = 1,
+  model_CROS = 1,
+  WS = 12,
+  FFMC = 91,
+  DMC = 70,
+  CF_thresh = 0.5,
+  ROS_output = "integrated"
+)
+# Calculate SROS for a moderate-density pine stand at WS = 11.
+tool_ROS(
+  season = "sp-su",
+  density = "moderate",
+  stand = "pine",
+  FSG = 6.5,
+  SFC = 2,
+  CBD = 0.12,
+  smooth_CFO = FALSE,
+  model_conpyro = 11,
+  model_SROS = 1,
+  model_CROS = 1,
+  WS = 11,
+  FFMC = 90,
+  DMC = 65,
+  CF_thresh = 0.5,
+  ROS_output = "SROS"
+)
 }
