@@ -5,9 +5,13 @@
 
 devtools::document()   ## creates/updates all the documentation files
 
-devtools::build()
+devtools::build(args = "--as-cran")   ## check with CRAN checks
+
+devtools::check()
 
 devtools::test()
 
-## Online documentation with pkgdown
+devtools::load_all() ## useful to load your package wihtout installing (basically sources all your funcitons, including internal ones)
+
+## Online documentation with pkgdown (funtion calls to come when apprpriate)
 # install.packages("pkgdown")
