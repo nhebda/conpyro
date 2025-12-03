@@ -12,12 +12,13 @@ An R package implementation of the Canadian Conifer Pyrometrics crown fire occur
 Available functions (click for details):
 \itemize{
 \item \code{\link[=conpyro]{conpyro()}}
-\item \code{\link[=tool_ROS]{tool_ROS()}}
-\item \code{\link[=tool_MC]{tool_MC()}}
-\item \code{\link[=tool_pCFO]{tool_pCFO()}}
-\item \code{\link[=tool_FMC]{tool_FMC()}}
-\item \code{\link[=tool_SFC_FBP]{tool_SFC_FBP()}}
-\item \code{\link[=tool_SFC_deGroot]{tool_SFC_deGroot()}}
+\item \code{\link[=t_mcsa]{t_mcsa()}}
+\item \code{\link[=t_mcF]{t_mcF()}}
+\item \code{\link[=t_pCFO]{t_pCFO()}}
+\item \code{\link[=t_ROS]{t_ROS()}}
+\item \code{\link[=t_FMC]{t_FMC()}}
+\item \code{\link[=t_SFC_FBP]{t_SFC_FBP()}}
+\item \code{\link[=t_SFC_deGroot]{t_SFC_deGroot()}}
 \item \code{\link[=ladder_standing_dead]{ladder_standing_dead()}}
 \item \code{\link[=ladder_midstory_saplings]{ladder_midstory_saplings()}}
 }

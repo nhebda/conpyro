@@ -20,8 +20,8 @@
 #'   and the lower limit of the canopy fuels. Analogous to crown base height
 #'   (CBH) in the absence of mid-story ladder fuels.
 #'   * `SFC`: A numeric value between `0.1` and `6` (inclusive). Surface fuel
-#'   consumption in kg/m^2. May be estimated using [tool_SFC_FBP()] or
-#'   [tool_SFC_deGroot()].
+#'   consumption in kg/m^2. May be estimated using [t_SFC_FBP()] or
+#'   [t_SFC_deGroot()].
 #'   * `CBD`: A numeric value between `0.01` and `0.8` (inclusive). Crown bulk
 #'   density in kg/m^3.
 #'
@@ -65,10 +65,12 @@
 #'   speed and the second defines the maximum, in km/h. Calculations are carried
 #'   out on the sequence of integer values from the minimum to the maximum
 #'   (inclusive).
-#' @param FFMC A numeric value between 80 and 99 (inclusive). The Fine Fuel
-#'   Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index System.
-#' @param DMC A numeric value between 5 and 200 (inclusive). The Duff Moisture
-#'   Code (DMC) as per the Canadian Forest Fire Weather Index (FWI) System.
+#' @param FFMC A numeric value between `80` and `99` (inclusive). The Fine Fuel
+#'   Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index (FWI)
+#'   System.
+#' @param DMC A numeric value between `5` and `200` (inclusive). The Duff
+#'   Moisture Code (DMC) as per the Canadian Forest Fire Weather Index (FWI)
+#'   System.
 #' @param smooth_CFO Defines whether crown fire initiation is modeled as a
 #'   smooth transition (`TRUE`) or an instantaneous occurrence (`FALSE`).
 #' @param CF_thresh A numeric value between `0` and `1` (inclusive). Defines the
@@ -697,27 +699,18 @@ fn_MCDMC    <- function(DMC) {20 + exp(-(DMC - 244.72) / 43.43)}
 fn_MCSA_idx <- function(season, density, stand) {
   as.numeric(
     paste0(
-      switch(
-        season,
-        "spring" = 1,
-        "summer" = 2,
-        "fall"   = 3,
-        "sp-su"  = 4
-      ),
-      switch(
-        density,
-        "light"    = 1,
-        "moderate" = 2,
-        "dense"    = 3
-      ),
-      switch(
-        stand,
-        "deciduous"   = 1,
-        "douglas-fir" = 2,
-        "mixedwood"   = 3,
-        "pine"        = 4,
-        "spruce"      = 5
-      )
+      if (season == "spring" | season == 1)   1,
+      if (season == "summer" | season == 2)   2,
+      if (season == "fall"   | season == 3)   3,
+      if (season == "sp-su"  | season == 1.5) 4,
+      if (density == "light"    | density == 1) 1,
+      if (density == "moderate" | density == 2) 2,
+      if (density == "dense"    | density == 3) 3,
+      if (stand == "deciduous"   | stand == "d")  1,
+      if (stand == "douglas-fir" | stand == "df") 2,
+      if (stand == "mixedwood"   | stand == "m")  3,
+      if (stand == "pine"        | stand == "p")  4,
+      if (stand == "spruce"      | stand == "s")  5
     )
   )
 }

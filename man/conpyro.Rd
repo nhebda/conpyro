@@ -33,8 +33,8 @@ gap in metres. The vertical distance between the top of the surface fuels
 and the lower limit of the canopy fuels. Analogous to crown base height
 (CBH) in the absence of mid-story ladder fuels.
 \item \code{SFC}: A numeric value between \code{0.1} and \code{6} (inclusive). Surface fuel
-consumption in kg/m^2. May be estimated using \code{\link[=tool_SFC_FBP]{tool_SFC_FBP()}} or
-\code{\link[=tool_SFC_deGroot]{tool_SFC_deGroot()}}.
+consumption in kg/m^2. May be estimated using \code{\link[=t_SFC_FBP]{t_SFC_FBP()}} or
+\code{\link[=t_SFC_deGroot]{t_SFC_deGroot()}}.
 \item \code{CBD}: A numeric value between \code{0.01} and \code{0.8} (inclusive). Crown bulk
 density in kg/m^3.
 }
@@ -87,11 +87,13 @@ speed and the second defines the maximum, in km/h. Calculations are carried
 out on the sequence of integer values from the minimum to the maximum
 (inclusive).}
 
-\item{FFMC}{A numeric value between 80 and 99 (inclusive). The Fine Fuel
-Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index System.}
+\item{FFMC}{A numeric value between \code{80} and \code{99} (inclusive). The Fine Fuel
+Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index (FWI)
+System.}
 
-\item{DMC}{A numeric value between 5 and 200 (inclusive). The Duff Moisture
-Code (DMC) as per the Canadian Forest Fire Weather Index (FWI) System.}
+\item{DMC}{A numeric value between \code{5} and \code{200} (inclusive). The Duff
+Moisture Code (DMC) as per the Canadian Forest Fire Weather Index (FWI)
+System.}
 
 \item{smooth_CFO}{Defines whether crown fire initiation is modeled as a
 smooth transition (\code{TRUE}) or an instantaneous occurrence (\code{FALSE}).}
