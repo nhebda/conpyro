@@ -1,7 +1,7 @@
-# tool_ROS() works
+# t_ROS() works
 
     Code
-      tool_ROS()
+      t_ROS()
     Output
       $MCFFMC
       [1] 9.78
@@ -16,10 +16,10 @@
       [1] 29.75
       
 
-# tool_SFC_FBP() works
+# t_SFC_FBP() works
 
     Code
-      tool_SFC_FBP()
+      t_SFC_FBP()
     Output
       $C1
       [1] 1.42
