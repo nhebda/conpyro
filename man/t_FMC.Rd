@@ -23,7 +23,7 @@ A list of length \code{1} consisting of a numeric value named \code{FMC}.
 }
 \description{
 \code{t_FMC()} estimates foliar moisture content as per the Canadian Forest
-Fire Behavior Prediction System equations. A simple wrapper for
+Fire Behavior Prediction System (FBPS) equations. A simple wrapper for
 \code{cffdrs:::foliar_moisture_content}.
 }
 \examples{

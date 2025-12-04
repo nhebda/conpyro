@@ -114,7 +114,7 @@
       CROS_P = fn_CROS_P(fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12), fn_CAC(fn_CROS_A(1,
         7.8, seq(0, 60, 1), 0.12), 0.12)), CROS_A_smooth = fn_CROS_A_smooth(SROS = fn_SROS(
         1, seq(0, 60, 1), 7.8, 91, 1.8), pCFO = fn_pCFO(7, seq(0, 60, 1), 9.5, 1.8,
-      7.8), CROS_A = fn_CROS_A(model = 1, MC = 7.8, WS_seq = seq(0, 60, 1), CBD = 0.12)),
+      7.8), CROS_A = fn_CROS_A(model = 1, MC = 7.8, ws_seq = seq(0, 60, 1), CBD = 0.12)),
       CROS_A = fn_CROS_A(1, 7.8, seq(0, 60, 1), 0.12))
     Output
        [1] 19.03588 23.88519 27.76718 30.66512 32.87411 34.67857 36.26445 37.73603

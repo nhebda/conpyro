@@ -7,7 +7,7 @@ and rate of spread (ROS) for one or more scenarios}
 \usage{
 conpyro(
   input,
-  WS = c(0, 40),
+  ws = c(0, 40),
   FFMC = 91,
   DMC = 70,
   smooth_CFO = FALSE,
@@ -20,8 +20,8 @@ conpyro(
 \item{input}{A data frame of least \code{7} columns and \code{1} row. Each row defines
 a ConPyro prediction for a single set of fuel and fire weather conditions
 (a \emph{scenario}). Inputs are case-insensitive and columns may be in any
-order. Missing values are not permitted and will produce an error.
-Required columns are:
+order. Missing values are not permitted and will produce an error. Required
+columns are:
 \itemize{
 \item \code{ID}: Unique scenario identifier.
 \item \code{Season}: One of \code{spring}, \code{sp-su}, \code{summer}, or \code{fall}, or the numeric
@@ -48,22 +48,22 @@ Additionally, there are several optional columns:
 smooth transition (\code{TRUE}) or an instantaneous occurrence (\code{FALSE}). Allows
 this behaviour to be specified on a per-scenario basis. If this column is
 present, it will override the \code{smooth_CFI} argument.
-\item \code{WS_min}: A numeric value between \code{0} and \code{60} (inclusive). Minimum wind
+\item \code{ws_min}: A numeric value between \code{0} and \code{60} (inclusive). Minimum wind
 speed in km/h. Allows wind speed to be specified on a per-scenario basis.
-If this column \emph{and} the \code{WS_max} column are present, they will override
-the \code{WS} argument.
-\item \code{WS_max}: A numeric value between \code{0} and \code{60} (inclusive). Maximum wind
+If this column \emph{and} the \code{ws_max} column are present, they will override
+the \code{ws} argument.
+\item \code{ws_max}: A numeric value between \code{0} and \code{60} (inclusive). Maximum wind
 speed in km/h. Allows wind speed to be specified on a per-scenario basis.
-If this column \emph{and} the \code{WS_min} column are present, they will override
-the \code{WS} argument.
-\item \code{FFMC}: A numeric value between 80 and 99 (inclusive). The Fine Fuel
-Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index System.
-Allows FFMC to be specified on a per-scenario basis. If this column is
-present, it will override the \code{FFMC} argument.
-\item \code{DMC}: A numeric value between 80 and 99 (inclusive). The Duff Moisture
-Code (DMC) as per the Canadian Forest Fire Weather Index (FWI) System.
-Allows DMC to be specified on a per-scenario basis. If this column is
-present, it will override the \code{DMC} argument.
+If this column \emph{and} the \code{ws_min} column are present, they will override
+the \code{ws} argument.
+\item \code{FFMC}: A numeric value between \code{80} and \code{99} (inclusive). The Fine Fuel
+Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index (FWI)
+System. Allows FFMC to be specified on a per-scenario basis. If this
+column is present, it will override the \code{FFMC} argument.
+\item \code{DMC}: A numeric value between \code{5} and \code{250} (inclusive). The Duff
+Moisture Code (DMC) as per the Canadian Forest Fire Weather Index (FWI)
+System. Allows DMC to be specified on a per-scenario basis. If this column
+is present, it will override the \code{DMC} argument.
 \item \code{model_conpyro}: Choose one of \code{7}, \code{8}, \code{10}, or \code{11}. The ConPyro
 model form used for calculations (see Perrakis et al., 2023). Models \code{7}
 and \code{10} use FFMC-based fine fuel moisture content (MCFFMC) while models
@@ -79,12 +79,12 @@ model used for calculations.
 \item \code{model_CROS}: Choose one of \code{1} or \code{2}. The crown fire ROS model used
 for calculations.
 \itemize{
-\item \code{1}: Adapted Cruz, Alexander, & Wakimoto (2005): WS, MC, CBD (default)
-\item \code{2}: Adapted Cruz & Alexander (2019): WS only
+\item \code{1}: Adapted Cruz, Alexander, & Wakimoto (2005): ws, MC, CBD (default)
+\item \code{2}: Adapted Cruz & Alexander (2019): ws only
 }
 }}
 
-\item{WS}{An ordered integer vector of length \code{2}, with each element being
+\item{ws}{An ordered integer vector of length \code{2}, with each element being
 between \code{0} and \code{60} (inclusive). The first value defines the minimum wind
 speed and the second defines the maximum, in km/h. Calculations are carried
 out on the sequence of integer values from the minimum to the maximum
@@ -94,7 +94,7 @@ out on the sequence of integer values from the minimum to the maximum
 Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index (FWI)
 System.}
 
-\item{DMC}{A numeric value between \code{5} and \code{200} (inclusive). The Duff
+\item{DMC}{A numeric value between \code{5} and \code{250} (inclusive). The Duff
 Moisture Code (DMC) as per the Canadian Forest Fire Weather Index (FWI)
 System.}
 
@@ -131,8 +131,8 @@ scenario (input row). Optionally plots output.
 }
 \description{
 \code{conpyro()} calculates pCFO, crowning thresholds, and ROS for any number of
-fuel and fire weather configurations using the Canadian Conifer Pyrometrics
-(ConPyro) model system. See Perrakis et al. (2023) for details.
+fuel and fire weather configurations using the Conifer Pyrometrics (ConPyro)
+fire behaviour modelling system. See Perrakis et al. (2023) for details.
 }
 \examples{
 # Basic usage
@@ -149,8 +149,8 @@ conpyro(new_input, plot = "ROS_integrated")
 data(default_input)
 new_input <- cbind(
   default_input,
-  WS_min = c(0, 10, 15),
-  WS_max = c(30, 40, 50)
+  ws_min = c(0, 10, 15),
+  ws_max = c(30, 40, 50)
 )
 conpyro(new_input)
 # Per-scenario FFMC

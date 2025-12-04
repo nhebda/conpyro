@@ -8,12 +8,12 @@ conditions}
 t_pCFO(mcsa = 10, mcF = NULL, FSG = 6, SFC = 2, ws = 12)
 }
 \arguments{
-\item{mcsa}{A numeric value between \code{5} and \code{20} (inclusive). Fine dead
+\item{mcsa}{A numeric value between \code{3} and \code{20} (inclusive). Fine dead
 surface litter moisture content calculated using the stand-adjusted model
 (mcsa). May be estimated using \code{\link[=t_mcsa]{t_mcsa()}}. If \code{mcF} is anything other than
 NULL, it will override \code{mcsa}.}
 
-\item{mcF}{A numeric value between \code{5} and \code{20} (inclusive). Fine dead
+\item{mcF}{A numeric value between \code{3} and \code{20} (inclusive). Fine dead
 surface litter moisture content calculated using the Fine Fuel Moisture
 Code (FFMC). May be estimated using \code{\link[=t_mcF]{t_mcF()}}. If NULL, \code{mcsa} will be used
 instead.}
@@ -35,8 +35,8 @@ A single numeric value.
 }
 \description{
 \code{t_pCFO()} calculates crown fire occurrence probability for a single set of
-fuel and fire weather conditions using the Canadian Conifer Pyrometrics
-(ConPyro) model system. See Perrakis et al. (2023) for details.
+fuel and fire weather conditions using the Conifer Pyrometrics (ConPyro) fire
+behaviour modelling system. See Perrakis et al. (2023) for details.
 }
 \examples{
 # TODO

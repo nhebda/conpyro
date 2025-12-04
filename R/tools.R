@@ -48,6 +48,31 @@ t_mcSeason <- function(month = 7, day = 1) {
   return(season)
 }
 
+#' Estimate fine dead litter moisture content (mcF)
+#'
+#' `t_mcF()` estimates fine dead surface litter moisture content from the
+#' Fine Fuel Moisture Code (FFMC).
+#'
+#' @inheritParams conpyro
+#'
+#' @returns A single numeric value.
+#' @export
+#'
+#' @examples
+#' # TODO
+#'
+#' @importFrom checkmate assert_number
+#'
+t_mcF <- function(FFMC = 90) {
+  # Check input
+  assert_number(FFMC, lower = 80, upper = 99)
+  # Calculate
+  mcF <- fn_MCFFMC(FFMC)
+  # Output
+  out <- round(mcF, 2)
+  return(out)
+}
+
 #' Estimate fine dead litter moisture content (mcsa)
 #'
 #' `t_mcsa()` estimates fine dead surface litter moisture content using the
@@ -79,7 +104,7 @@ t_mcsa <- function(
 ) {
   # Check input
   assert_number(FFMC, lower = 80, upper = 99)
-  assert_number(DMC, lower = 5, upper = 200)
+  assert_number(DMC, lower = 5, upper = 250)
   assert_choice(
     tolower(season),
     c("spring","sp-su", "summer", "fall", 1, 1.5, 2, 3),
@@ -116,43 +141,18 @@ t_mcsa <- function(
   return(out)
 }
 
-#' Estimate fine dead litter moisture content (mcF)
-#'
-#' `t_mcF()` estimates fine dead surface litter moisture content from the
-#' Fine Fuel Moisture Code (FFMC).
-#'
-#' @inheritParams conpyro
-#'
-#' @returns A single numeric value.
-#' @export
-#'
-#' @examples
-#' # TODO
-#'
-#' @importFrom checkmate assert_number
-#'
-t_mcF <- function(FFMC = 90) {
-  # Check input
-  assert_number(FFMC, lower = 80, upper = 99)
-  # Calculate
-  mcF <- fn_MCFFMC(FFMC)
-  # Output
-  out <- round(mcF, 2)
-  return(out)
-}
-
 #' Calculate probability of crown fire occurrence (pCFO) for a single set of
 #' conditions
 #'
 #' `t_pCFO()` calculates crown fire occurrence probability for a single set of
-#' fuel and fire weather conditions using the Canadian Conifer Pyrometrics
-#' (ConPyro) model system. See Perrakis et al. (2023) for details.
+#' fuel and fire weather conditions using the Conifer Pyrometrics (ConPyro) fire
+#' behaviour modelling system. See Perrakis et al. (2023) for details.
 #'
-#' @param mcsa A numeric value between `5` and `20` (inclusive). Fine dead
+#' @param mcsa A numeric value between `3` and `20` (inclusive). Fine dead
 #'   surface litter moisture content calculated using the stand-adjusted model
 #'   (mcsa). May be estimated using [t_mcsa()]. If `mcF` is anything other than
 #'   NULL, it will override `mcsa`.
-#' @param mcF A numeric value between `5` and `20` (inclusive). Fine dead
+#' @param mcF A numeric value between `3` and `20` (inclusive). Fine dead
 #'   surface litter moisture content calculated using the Fine Fuel Moisture
 #'   Code (FFMC). May be estimated using [t_mcF()]. If NULL, `mcsa` will be used
 #'   instead.
@@ -176,8 +176,8 @@ t_mcF <- function(FFMC = 90) {
 #'
 t_pCFO <- function(mcsa = 10, mcF = NULL, FSG = 6, SFC = 2, ws = 12) {
   # Check input
-  assert_number(mcsa, lower = 5, upper = 20, null.ok = TRUE)
-  assert_number(mcF, lower = 5, upper = 20, null.ok = TRUE)
+  assert_number(mcsa, lower = 3, upper = 20, null.ok = TRUE)
+  assert_number(mcF, lower = 3, upper = 20, null.ok = TRUE)
   assert_number(FSG, lower = 0.5, upper = 20)
   assert_number(SFC, lower = 0.1, upper = 6)
   assert_number(ws, lower = 0, upper = 60)
@@ -192,8 +192,8 @@ t_pCFO <- function(mcsa = 10, mcF = NULL, FSG = 6, SFC = 2, ws = 12) {
 
 #' Calculate fire type
 #'
-#' `t_FT()` calculates fire type from a single set of fuel and fire
-#' weather conditions using the Canadian Conifer Pyrometrics (ConPyro) model
+#' `t_FT()` calculates fire type from a single set of fuel and fire weather
+#' conditions using the Conifer Pyrometrics (ConPyro) fire behaviour modelling
 #' system. See Perrakis et al. (2023) for details.
 #'
 #' @inheritParams t_pCFO
@@ -221,8 +221,8 @@ t_FT <- function(
     CF_thresh = 0.5
 ) {
   # Check input
-  assert_number(mcsa, lower = 5, upper = 20, null.ok = TRUE)
-  assert_number(mcF, lower = 5, upper = 20, null.ok = TRUE)
+  assert_number(mcsa, lower = 3, upper = 20, null.ok = TRUE)
+  assert_number(mcF, lower = 3, upper = 20, null.ok = TRUE)
   assert_number(FSG, lower = 0.5, upper = 20)
   assert_number(SFC, lower = 0.1, upper = 6)
   assert_numeric(CBD, lower = 0.01, upper = 0.8)
@@ -246,8 +246,8 @@ t_FT <- function(
 
 #' Calculate rate of spread (ROS) for a single set of conditions
 #'
-#' `t_ROS()` calculates rate of spread for a single set of fuel and fire
-#' weather conditions using the Canadian Conifer Pyrometrics (ConPyro) model
+#' `t_ROS()` calculates rate of spread for a single set of fuel and fire weather
+#' conditions using the Conifer Pyrometrics (ConPyro) fire behaviour modelling
 #' system. See Perrakis et al. (2023) for details. Provides a more convenient
 #' single-scenario calculation than using the main [conpyro()] function. If you
 #' want want to run multiple scenarios or plot output, use [conpyro()] instead.
@@ -278,8 +278,8 @@ t_ROS <- function(
     CF_thresh = 0.5
 ) {
   # Check input
-  assert_number(mcsa, lower = 5, upper = 20, null.ok = TRUE)
-  assert_number(mcF, lower = 5, upper = 20, null.ok = TRUE)
+  assert_number(mcsa, lower = 3, upper = 20, null.ok = TRUE)
+  assert_number(mcF, lower = 3, upper = 20, null.ok = TRUE)
   assert_number(FSG, lower = 0.5, upper = 20)
   assert_number(SFC, lower = 0.1, upper = 6)
   assert_numeric(CBD, lower = 0.01, upper = 0.8)
@@ -318,7 +318,7 @@ t_ROS <- function(
 #' Estimate foliar moisture content (FMC)
 #'
 #' `t_FMC()` estimates foliar moisture content as per the Canadian Forest
-#' Fire Behavior Prediction System equations. A simple wrapper for
+#' Fire Behavior Prediction System (FBPS) equations. A simple wrapper for
 #' `cffdrs:::foliar_moisture_content`.
 #'
 #' @param LAT A numeric value between `42` and `70` (inclusive). Latitude in
@@ -355,7 +355,7 @@ t_FMC <- function(LAT = 48, LONG = 83.3, ELV = 100, Dj = 200) {
 #'
 #' @inheritParams conpyro
 #' @param BUI A numeric value between `80` and `200` (inclusive). The Buildup
-#'   Index (BUI) as per the Canadian Forest Fire Weather Index System.
+#'   Index (BUI) as per the Canadian Forest Fire Weather Index (FWI) System.
 #' @param PC A numeric value between `0` and `100` (inclusive). Percent conifer
 #'   for M1/M2 fuel types.
 #'

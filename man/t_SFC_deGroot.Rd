@@ -9,7 +9,7 @@ t_SFC_deGroot(BUI = 85, FFL = 3.5, FWFL = 0.3)
 }
 \arguments{
 \item{BUI}{A numeric value between \code{80} and \code{200} (inclusive). The Buildup
-Index (BUI) as per the Canadian Forest Fire Weather Index System.}
+Index (BUI) as per the Canadian Forest Fire Weather Index (FWI) System.}
 
 \item{FFL}{A numeric value between \code{1} and \code{5} (inclusive). Forest floor load
 (litter + duff) in kg/m^2.}

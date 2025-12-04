@@ -1,10 +1,10 @@
 #' @importFrom ggplot2 ggplot geom_line aes geom_point labs xlab ylab
 #'   scale_color_viridis_d
-fn_prep_ggdata <- function(ID, WS_seq, var) {
+fn_prep_ggdata <- function(ID, ws_seq, var) {
   data.frame(
-    ID  = rep(as.character(ID), times = length(WS_seq)),
-    var = rep(deparse(substitute(var)), times = length(WS_seq)),
-    WS  = WS_seq,
+    ID  = rep(as.character(ID), times = length(ws_seq)),
+    var = rep(deparse(substitute(var)), times = length(ws_seq)),
+    ws  = ws_seq,
     val = var
   )
 }
@@ -15,7 +15,7 @@ fn_plot <- function(data, par, xlab, ylab) {
     gginput <- subset(data, var == par)
     p <- ggplot(
       gginput,
-      aes(WS, val, color = ID)
+      aes(ws, val, color = ID)
     ) +
       geom_line(linewidth = 1.5) +
       labs(color = "Scenario") +

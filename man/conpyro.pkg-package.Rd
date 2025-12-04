@@ -4,17 +4,17 @@
 \name{conpyro.pkg-package}
 \alias{conpyro.pkg}
 \alias{conpyro.pkg-package}
-\title{conpyro.pkg: Canadian Conifer Pyrometrics Crown Fire Occurrence Model}
+\title{conpyro.pkg: Conifer Pyrometrics Fire Behaviour Modelling System}
 \description{
-An R package implementation of the Canadian Conifer Pyrometrics crown fire occurrence modelling system (Perrakis et al. 2023).
+An R package implementation of the Conifer Pyrometrics (ConPyro) fire behaviour modelling system. See Perrakis et al. (2023) for details.
 }
 \details{
 Available functions (click for details):
 \itemize{
 \item \code{\link[=conpyro]{conpyro()}}
 \item \code{\link[=t_mcSeason]{t_mcSeason()}}
-\item \code{\link[=t_mcsa]{t_mcsa()}}
 \item \code{\link[=t_mcF]{t_mcF()}}
+\item \code{\link[=t_mcsa]{t_mcsa()}}
 \item \code{\link[=t_pCFO]{t_pCFO()}}
 \item \code{\link[=t_FT]{t_FT()}}
 \item \code{\link[=t_ROS]{t_ROS()}}

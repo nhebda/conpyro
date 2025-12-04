@@ -381,7 +381,7 @@ test_that("final ROS outputs work", {
         CROS_A = fn_CROS_A(
           model  = 1,
           MC     = 7.8,
-          WS_seq = seq(0, 60, 1),
+          ws_seq = seq(0, 60, 1),
           CBD    = 0.12
         )
       ),

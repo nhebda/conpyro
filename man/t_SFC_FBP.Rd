@@ -9,7 +9,7 @@ t_SFC_FBP(BUI = 85, FFMC = 91, PC = 40)
 }
 \arguments{
 \item{BUI}{A numeric value between \code{80} and \code{200} (inclusive). The Buildup
-Index (BUI) as per the Canadian Forest Fire Weather Index System.}
+Index (BUI) as per the Canadian Forest Fire Weather Index (FWI) System.}
 
 \item{FFMC}{A numeric value between \code{80} and \code{99} (inclusive). The Fine Fuel
 Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index (FWI)

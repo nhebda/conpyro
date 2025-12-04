@@ -2,14 +2,14 @@
 #' and rate of spread (ROS) for one or more scenarios
 #'
 #' `conpyro()` calculates pCFO, crowning thresholds, and ROS for any number of
-#' fuel and fire weather configurations using the Canadian Conifer Pyrometrics
-#' (ConPyro) model system. See Perrakis et al. (2023) for details.
+#' fuel and fire weather configurations using the Conifer Pyrometrics (ConPyro)
+#' fire behaviour modelling system. See Perrakis et al. (2023) for details.
 #'
 #' @param input A data frame of least `7` columns and `1` row. Each row defines
 #'   a ConPyro prediction for a single set of fuel and fire weather conditions
 #'   (a *scenario*). Inputs are case-insensitive and columns may be in any
-#'   order. Missing values are not permitted and will produce an error.
-#'   Required columns are:
+#'   order. Missing values are not permitted and will produce an error. Required
+#'   columns are:
 #'   * `ID`: Unique scenario identifier.
 #'   * `Season`: One of `spring`, `sp-su`, `summer`, or `fall`, or the numeric
 #'   equivalents `1`, `1.5`, `2`, or `3`, respectively.
@@ -33,22 +33,22 @@
 #'   smooth transition (`TRUE`) or an instantaneous occurrence (`FALSE`). Allows
 #'   this behaviour to be specified on a per-scenario basis. If this column is
 #'   present, it will override the `smooth_CFI` argument.
-#'   * `WS_min`: A numeric value between `0` and `60` (inclusive). Minimum wind
+#'   * `ws_min`: A numeric value between `0` and `60` (inclusive). Minimum wind
 #'   speed in km/h. Allows wind speed to be specified on a per-scenario basis.
-#'   If this column *and* the `WS_max` column are present, they will override
-#'   the `WS` argument.
-#'   * `WS_max`: A numeric value between `0` and `60` (inclusive). Maximum wind
+#'   If this column *and* the `ws_max` column are present, they will override
+#'   the `ws` argument.
+#'   * `ws_max`: A numeric value between `0` and `60` (inclusive). Maximum wind
 #'   speed in km/h. Allows wind speed to be specified on a per-scenario basis.
-#'   If this column *and* the `WS_min` column are present, they will override
-#'   the `WS` argument.
-#'   * `FFMC`: A numeric value between 80 and 99 (inclusive). The Fine Fuel
-#'   Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index System.
-#'   Allows FFMC to be specified on a per-scenario basis. If this column is
-#'   present, it will override the `FFMC` argument.
-#'   * `DMC`: A numeric value between 80 and 99 (inclusive). The Duff Moisture
-#'   Code (DMC) as per the Canadian Forest Fire Weather Index (FWI) System.
-#'   Allows DMC to be specified on a per-scenario basis. If this column is
-#'   present, it will override the `DMC` argument.
+#'   If this column *and* the `ws_min` column are present, they will override
+#'   the `ws` argument.
+#'   * `FFMC`: A numeric value between `80` and `99` (inclusive). The Fine Fuel
+#'   Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index (FWI)
+#'   System. Allows FFMC to be specified on a per-scenario basis. If this
+#'   column is present, it will override the `FFMC` argument.
+#'   * `DMC`: A numeric value between `5` and `250` (inclusive). The Duff
+#'   Moisture Code (DMC) as per the Canadian Forest Fire Weather Index (FWI)
+#'   System. Allows DMC to be specified on a per-scenario basis. If this column
+#'   is present, it will override the `DMC` argument.
 #'   * `model_conpyro`: Choose one of `7`, `8`, `10`, or `11`. The ConPyro
 #'   model form used for calculations (see Perrakis et al., 2023). Models `7`
 #'   and `10` use FFMC-based fine fuel moisture content (MCFFMC) while models
@@ -61,9 +61,9 @@
 #'      * `4`: IsaSFC
 #'   * `model_CROS`: Choose one of `1` or `2`. The crown fire ROS model used
 #'   for calculations.
-#'      * `1`: Adapted Cruz, Alexander, & Wakimoto (2005): WS, MC, CBD (default)
-#'      * `2`: Adapted Cruz & Alexander (2019): WS only
-#' @param WS An ordered integer vector of length `2`, with each element being
+#'      * `1`: Adapted Cruz, Alexander, & Wakimoto (2005): ws, MC, CBD (default)
+#'      * `2`: Adapted Cruz & Alexander (2019): ws only
+#' @param ws An ordered integer vector of length `2`, with each element being
 #'   between `0` and `60` (inclusive). The first value defines the minimum wind
 #'   speed and the second defines the maximum, in km/h. Calculations are carried
 #'   out on the sequence of integer values from the minimum to the maximum
@@ -71,7 +71,7 @@
 #' @param FFMC A numeric value between `80` and `99` (inclusive). The Fine Fuel
 #'   Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index (FWI)
 #'   System.
-#' @param DMC A numeric value between `5` and `200` (inclusive). The Duff
+#' @param DMC A numeric value between `5` and `250` (inclusive). The Duff
 #'   Moisture Code (DMC) as per the Canadian Forest Fire Weather Index (FWI)
 #'   System.
 #' @param smooth_CFO Defines whether crown fire initiation is modeled as a
@@ -113,8 +113,8 @@
 #' data(default_input)
 #' new_input <- cbind(
 #'   default_input,
-#'   WS_min = c(0, 10, 15),
-#'   WS_max = c(30, 40, 50)
+#'   ws_min = c(0, 10, 15),
+#'   ws_max = c(30, 40, 50)
 #' )
 #' conpyro(new_input)
 #' # Per-scenario FFMC
@@ -137,7 +137,7 @@
 #' @importFrom utils read.csv
 conpyro <- function(
     input,
-    WS         = c(0, 40),
+    ws         = c(0, 40),
     FFMC       = 91,
     DMC        = 70,
     smooth_CFO = FALSE,
@@ -212,16 +212,16 @@ conpyro <- function(
     assert_logical(input$smooth_cfo, .var.name = "smooth_CFO")
   }
   if ("ws_min" %in% names(input)) {
-    assert_integerish(input$ws_min, lower = 0, upper = 59, .var.name = "WS_min")
+    assert_integerish(input$ws_min, lower = 0, upper = 59, .var.name = "ws_min")
   }
   if ("ws_max" %in% names(input)) {
-    assert_integerish(input$ws_max, lower = 1, upper = 60, .var.name = "WS_max")
+    assert_integerish(input$ws_max, lower = 1, upper = 60, .var.name = "ws_max")
   }
   if ("ffmc" %in% names(input)) {
     assert_numeric(input$ffmc, lower = 80, upper = 99, .var.name = "FFMC")
   }
   if ("dmc" %in% names(input)) {
-    assert_numeric(input$ffmc, lower = 5, upper = 200, .var.name = "DMC")
+    assert_numeric(input$ffmc, lower = 5, upper = 250, .var.name = "DMC")
   }
   if ("model_conpyro" %in% names(input)) {
     assert_subset(input$model_conpyro, choices = c(7, 8, 10, 11))
@@ -232,11 +232,11 @@ conpyro <- function(
   if ("model_cros" %in% names(input)) {
     assert_subset(input$model_cros, choices = c(1, 2))
   }
-  if (length(WS) == 1) {
-    assert_integerish(WS, lower = 0, upper = 60)
-  } else if (length(WS) > 1) {
+  if (length(ws) == 1) {
+    assert_integerish(ws, lower = 0, upper = 60)
+  } else if (length(ws) > 1) {
     assert_integerish(
-      WS,
+      ws,
       lower  = 0,
       upper  = 60,
       unique = TRUE,
@@ -245,7 +245,7 @@ conpyro <- function(
     )
   }
   assert_number(FFMC, lower = 80, upper = 99)
-  assert_number(DMC, lower = 5, upper = 200)
+  assert_number(DMC, lower = 5, upper = 250)
   assert_logical(smooth_CFO, .var.name = "smooth_CFO")
   assert_number(CF_thresh, lower = 0, upper = 1)
   assert_subset(ROS_output, c("SROS", "CROS_P", "CROS_A", "integrated"))
@@ -283,15 +283,15 @@ conpyro <- function(
     } else {
       smooth_CFO
     }
-    WS_seq        <- if (
+    ws_seq        <- if (
       "ws_min" %in% names(input) & "ws_max" %in% names(input)
     ) {
       seq(input$ws_min[i], input$ws_max[i], 1)
     } else {
-      if (length(WS) == 1) {
-        WS
+      if (length(ws) == 1) {
+        ws
       } else {
-        seq(WS[1], WS[2], 1)
+        seq(ws[1], ws[2], 1)
       }
     }
     FFMC          <- if ("ffmc" %in% names(input)) {
@@ -331,10 +331,10 @@ conpyro <- function(
       "10" = MCFFMC,
       "11" = MCSA
     )
-    pCFO          <- fn_pCFO(model_conpyro, WS_seq, FSG, SFC, MC)
-    CF_CI         <- fn_CF_CI(WS_seq, pCFO)
-    SROS          <- fn_SROS(model_SROS, WS_seq, MC, FFMC, SFC)
-    CROS_A        <- fn_CROS_A(model_CROS, MC, WS_seq, CBD)
+    pCFO          <- fn_pCFO(model_conpyro, ws_seq, FSG, SFC, MC)
+    CF_CI         <- fn_CF_CI(ws_seq, pCFO)
+    SROS          <- fn_SROS(model_SROS, ws_seq, MC, FFMC, SFC)
+    CROS_A        <- fn_CROS_A(model_CROS, MC, ws_seq, CBD)
     CAC           <- fn_CAC(CROS_A, CBD)
     CROS_P        <- fn_CROS_P(CROS_A, CAC)
     SROS_smooth   <- fn_SROS_smooth(CROS_P, pCFO, CF_thresh, CAC, SROS, CROS_A)
@@ -363,7 +363,7 @@ conpyro <- function(
     results <- list(
       "MCFFMC" = round(MCFFMC, 2),
       "MCSA" = round(MCSA, 2),
-      "Wind Speed (km/h)" = WS_seq,
+      "Wind Speed (km/h)" = ws_seq,
       "Crown Fire Occurrence Probability (pCFO)" = round(pCFO, 2)
     )
     if ("SROS" %in% ROS_output) {
@@ -382,51 +382,51 @@ conpyro <- function(
     }
     if (length(SROS_out) > 0 & length(CROS_P_out > 0)) {
       results[["Crown Fire (Passive) Wind Speed Threshold (km/h)"]] =
-        WS_seq[length(SROS_out) + 1]
+        ws_seq[length(SROS_out) + 1]
     }
     if (
       (length(SROS_out) > 0 | length(CROS_P_out > 0)) & length(CROS_A_out) > 0
     ) {
       results[["Crown Fire (Active) Wind Speed Threshold (km/h)"]] =
-        WS_seq[length(WS_seq) - length(CROS_A_out) + 1]
+        ws_seq[length(ws_seq) - length(CROS_A_out) + 1]
     }
-    if (!is.na(CF_CI[1]) & length(WS) > 1) {
+    if (!is.na(CF_CI[1]) & length(ws) > 1) {
       results[["Crown Fire Wind Speed Threshold Lower Bound (km/h)"]] = CF_CI[1]
     }
-    if (!is.na(CF_CI[2]) & length(WS) > 1) {
+    if (!is.na(CF_CI[2]) & length(ws) > 1) {
       results[["Crown Fire Wind Speed Threshold Upper Bound (km/h)"]] = CF_CI[2]
     }
     out[[i]] <- results
     # Prepare plotting data
     if (!is.null(plot)) {
-      ggdata_pCFO          <- fn_prep_ggdata(ID, WS_seq, pCFO)
-      ggdata_SROS          <- fn_prep_ggdata(ID, WS_seq, SROS)
-      ggdata_CROS_A        <- fn_prep_ggdata(ID, WS_seq, CROS_A)
-      ggdata_CAC           <- fn_prep_ggdata(ID, WS_seq, CAC)
-      ggdata_CROS_P        <- fn_prep_ggdata(ID, WS_seq, CROS_P)
-      ggdata_SROS_smooth   <- fn_prep_ggdata(ID, WS_seq, SROS_smooth)
-      ggdata_CROS_P_smooth <- fn_prep_ggdata(ID, WS_seq, CROS_P_smooth)
-      ggdata_CROS_A_smooth <- fn_prep_ggdata(ID, WS_seq, CROS_A_smooth)
+      ggdata_pCFO          <- fn_prep_ggdata(ID, ws_seq, pCFO)
+      ggdata_SROS          <- fn_prep_ggdata(ID, ws_seq, SROS)
+      ggdata_CROS_A        <- fn_prep_ggdata(ID, ws_seq, CROS_A)
+      ggdata_CAC           <- fn_prep_ggdata(ID, ws_seq, CAC)
+      ggdata_CROS_P        <- fn_prep_ggdata(ID, ws_seq, CROS_P)
+      ggdata_SROS_smooth   <- fn_prep_ggdata(ID, ws_seq, SROS_smooth)
+      ggdata_CROS_P_smooth <- fn_prep_ggdata(ID, ws_seq, CROS_P_smooth)
+      ggdata_CROS_A_smooth <- fn_prep_ggdata(ID, ws_seq, CROS_A_smooth)
       ggdata_SROS_out      <- fn_prep_ggdata(
         ID,
-        WS_seq[which(pCFO < CF_thresh)],
+        ws_seq[which(pCFO < CF_thresh)],
         SROS_out
       )
       ggdata_CROS_P_out    <- fn_prep_ggdata(
         ID,
-        WS_seq[which(pCFO >= CF_thresh & CAC < 1)],
+        ws_seq[which(pCFO >= CF_thresh & CAC < 1)],
         CROS_P_out
       )
       ggdata_CROS_A_out    <- fn_prep_ggdata(
         ID,
-        WS_seq[which(pCFO >= CF_thresh & CAC > 1)],
+        ws_seq[which(pCFO >= CF_thresh & CAC > 1)],
         CROS_A_out
       )
       ggdata_CF_CI         <- if (!NA %in% CF_CI) {
         data.frame(
           ID  = rep(ID, times = 2),
           var = rep("CF_CI", times = 2),
-          WS  = CF_CI,
+          ws  = CF_CI,
           val = if (length(CROS_P_out) > 0) {
             rep(CROS_P_out[1], times = 2)
           } else if (length(CROS_A_out) > 0) {
@@ -434,14 +434,14 @@ conpyro <- function(
           } else NULL
         )
       }
-      ggdata_ROS_AIO       <- fn_prep_ggdata(ID, WS_seq, ROS_AIO)
+      ggdata_ROS_AIO       <- fn_prep_ggdata(ID, ws_seq, ROS_AIO)
       ggdata_SROS_CROS_P   <- if (
         length(SROS_out) > 0 & length(CROS_P_out) > 0
       ) {
         data.frame(
           ID  = rep(ID, times = 2),
           var = rep("SROS_CROS_P", times = 2),
-          WS  = WS_seq[c(length(SROS_out), length(SROS_out) + 1)],
+          ws  = ws_seq[c(length(SROS_out), length(SROS_out) + 1)],
           val = c(max(SROS_out), min(CROS_P_out))
         )
       } else {
@@ -453,7 +453,7 @@ conpyro <- function(
         data.frame(
           ID  = rep(ID, times = 2),
           var = rep("SROS_CROS_A", times = 2),
-          WS  = WS_seq[c(length(SROS_out), length(SROS_out) + 1)],
+          ws  = ws_seq[c(length(SROS_out), length(SROS_out) + 1)],
           val = c(max(SROS_out), min(CROS_A_out))
         )
       } else {
@@ -465,9 +465,9 @@ conpyro <- function(
         data.frame(
           ID  = rep(ID, times = 2),
           var = rep("CROS_P_CROS_A", times = 2),
-          WS  = WS_seq[c(
-            length(WS_seq) - length(CROS_A_out),
-            length(WS_seq) - length(CROS_A_out) + 1
+          ws  = ws_seq[c(
+            length(ws_seq) - length(CROS_A_out),
+            length(ws_seq) - length(CROS_A_out) + 1
           )],
           val = c(max(CROS_P_out), min(CROS_A_out))
         )
@@ -480,7 +480,7 @@ conpyro <- function(
         data.frame(
           ID  = ID,
           var = "cf_pt_scp",
-          WS  = ggdata_SROS_CROS_P[2, 3],
+          ws  = ggdata_SROS_CROS_P[2, 3],
           val = ggdata_SROS_CROS_P[2, 4]
         )
       } else {
@@ -492,7 +492,7 @@ conpyro <- function(
         data.frame(
           ID  = ID,
           var = "cf_pt_sca",
-          WS  = ggdata_SROS_CROS_A[2, 3],
+          ws  = ggdata_SROS_CROS_A[2, 3],
           val = ggdata_SROS_CROS_A[2, 4]
         )
       } else {
@@ -504,7 +504,7 @@ conpyro <- function(
         data.frame(
           ID  = ID,
           var = "cf_pt_cpca",
-          WS  = ggdata_CROS_P_CROS_A[2, 3],
+          ws  = ggdata_CROS_P_CROS_A[2, 3],
           val = ggdata_CROS_P_CROS_A[2, 4]
         )
       } else {
@@ -622,44 +622,44 @@ conpyro <- function(
       # SROS
       geom_line(
         data = subset(ggdata, var == "SROS_out"),
-        mapping = aes(WS, val, color = ID),
+        mapping = aes(ws, val, color = ID),
         linewidth = 1.5
       ) +
       # CROSp
       geom_line(
         data = subset(ggdata, var == "CROS_P_out"),
-        mapping = aes(WS, val, color = ID),
+        mapping = aes(ws, val, color = ID),
         linewidth = 1.5
       ) +
       # CROSa
       geom_line(
         data = subset(ggdata, var == "CROS_A_out"),
-        mapping = aes(WS, val, color = ID),
+        mapping = aes(ws, val, color = ID),
         linewidth = 1.5
       ) +
       # Transition lines
       geom_line(
         data = subset(ggdata, var == "SROS_CROS_P"),
-        mapping = aes(WS, val, color = ID),
+        mapping = aes(ws, val, color = ID),
         linewidth = 1.5,
         linetype = "dotted"
       ) +
       geom_line(
         data = subset(ggdata, var == "SROS_CROS_A"),
-        mapping = aes(WS, val, color = ID),
+        mapping = aes(ws, val, color = ID),
         linewidth = 1.5,
         linetype = "dotted"
       ) +
       geom_line(
         data = subset(ggdata, var == "CROS_P_CROS_A"),
-        mapping = aes(WS, val, color = ID),
+        mapping = aes(ws, val, color = ID),
         linewidth = 1.5,
         linetype = "dotted"
       ) +
       # CF confidence intervals
       geom_line(
         data = subset(ggdata, var == "CF_CI"),
-        mapping = aes(WS, val, color = ID),
+        mapping = aes(ws, val, color = ID),
         linewidth = 1,
         alpha = 0.5
       ) +
@@ -667,21 +667,21 @@ conpyro <- function(
       # Crown fire point SROS CROS_P
       geom_point(
         data = subset(ggdata, var == "cf_pt_scp"),
-        mapping = aes(WS, val, color = ID),
+        mapping = aes(ws, val, color = ID),
         shape = 16,
         size = 4
       ) +
       # Crown fire point SROS CROS_A
       geom_point(
         data = subset(ggdata, var == "cf_pt_sca"),
-        mapping = aes(WS, val, color = ID),
+        mapping = aes(ws, val, color = ID),
         shape = 15,
         size = 4
       ) +
       # Crown fire point CROS_P CROS_A
       geom_point(
         data = subset(ggdata, var == "cf_pt_cpca"),
-        mapping = aes(WS, val, color = ID),
+        mapping = aes(ws, val, color = ID),
         shape = 15,
         size = 4
       ) +
@@ -750,27 +750,27 @@ fn_MCSA <- function(idx, MCFFMC, MCDMC) {
 }
 
 # __Probability of crown fire occurrence (pCFO) ----
-fn_pCFO <- function(model, WS_seq, FSG, SFC, MC) {
+fn_pCFO <- function(model, ws_seq, FSG, SFC, MC) {
   coefs <- sysdata$coefs_pCFO
   b0    <- coefs[which(coefs[1] == model), 2]
   b1    <- coefs[which(coefs[1] == model), 3]
   b2    <- coefs[which(coefs[1] == model), 4]
   b3    <- coefs[which(coefs[1] == model), 5]
   b4    <- coefs[which(coefs[1] == model), 6]
-  gx    <- b0 + b1 * WS_seq + b2 * FSG^1.5 + b4 * log(SFC) + b3 * MC * WS_seq
+  gx    <- b0 + b1 * ws_seq + b2 * FSG^1.5 + b4 * log(SFC) + b3 * MC * ws_seq
   pCFO  <- exp(gx) / (1 + exp(gx))
   return(pCFO)
 }
 
 # __Confidence intervals
-fn_CF_CI <- function(WS_seq, pCFO, CI = 90) {
+fn_CF_CI <- function(ws_seq, pCFO, CI = 90) {
   lower <- if (any(pCFO > (0.5 - (CI / 200)))) {
-    WS_seq[min(which(pCFO > (0.5 - (CI / 200))))]
+    ws_seq[min(which(pCFO > (0.5 - (CI / 200))))]
   } else {
     NA
   }
   upper <- if (any(pCFO > (0.5 + (CI / 200)))) {
-    WS_seq[min(which(pCFO > (0.5 + (CI / 200))))]
+    ws_seq[min(which(pCFO > (0.5 + (CI / 200))))]
   } else {
     NA
   }
@@ -779,34 +779,34 @@ fn_CF_CI <- function(WS_seq, pCFO, CI = 90) {
 }
 
 # __Surface fire rate of spread (SROS) ----
-fn_SROS <- function(model, WS_seq, MC, FFMC, SFC) {
+fn_SROS <- function(model, ws_seq, MC, FFMC, SFC) {
   if (model == 1) {
     # Aggregated FBPS surf. V4 (default)
-    f_w <- exp(0.05039 * WS_seq)
+    f_w <- exp(0.05039 * ws_seq)
     f_f <- 91.9 * (exp(-0.1386 * MC) * (1 + (MC^5.31 / (4.93 * 10^7))))
     ISI_MC <- 0.208 * f_w * f_f
     SROS_under40 <- 25 * (1 - exp(-0.035177 * ISI_MC))^1.9875
-    f_w <- 1 - exp(-0.0818 * (WS_seq - 28))
+    f_w <- 1 - exp(-0.0818 * (ws_seq - 28))
     ISI_MC <- 0.208 * 12 * f_w * f_f
     SROS_over40 <- 25 * (1 - exp(-0.035177 * ISI_MC))^1.9875
     SROS <- c(
-      SROS_under40[which(WS_seq <= 40)],
-      SROS_over40[which(WS_seq > 40)]
+      SROS_under40[which(ws_seq <= 40)],
+      SROS_over40[which(ws_seq > 40)]
     )
     return(SROS)
   } else if (model == 2) {
     # D-1 FBPS
     cffdrs_in <- data.frame(
-      id = seq(1, length(WS_seq), 1),
-      fueltype = rep("D-1", times = length(WS_seq)),
-      LAT = rep(55, times = length(WS_seq)),
-      LONG = rep(-120, times = length(WS_seq)),
-      FFMC = rep(FFMC, times = length(WS_seq)),
-      BUI = rep(32, times = length(WS_seq)),
-      WS = WS_seq,
-      gs = rep(0, times = length(WS_seq)),
-      Dj = rep(180, times = length(WS_seq)),
-      aspect = rep(0, times = length(WS_seq))
+      id = seq(1, length(ws_seq), 1),
+      fueltype = rep("D-1", times = length(ws_seq)),
+      LAT = rep(55, times = length(ws_seq)),
+      LONG = rep(-120, times = length(ws_seq)),
+      FFMC = rep(FFMC, times = length(ws_seq)),
+      BUI = rep(32, times = length(ws_seq)),
+      ws = ws_seq,
+      gs = rep(0, times = length(ws_seq)),
+      Dj = rep(180, times = length(ws_seq)),
+      aspect = rep(0, times = length(ws_seq))
     )
     cffdrs_out <- cffdrs::fbp(cffdrs_in,output = "Secondary")
     ISI <- cffdrs_out$ISI
@@ -816,16 +816,16 @@ fn_SROS <- function(model, WS_seq, MC, FFMC, SFC) {
   } else if (model == 3) {
     # C-6 (surface only) FBPS
     cffdrs_in <- data.frame(
-      id = seq(1, length(WS_seq), 1),
-      fueltype = rep("C-6", times = length(WS_seq)),
-      LAT = rep(55, times = length(WS_seq)),
-      LONG = rep(-120, times = length(WS_seq)),
-      FFMC = rep(FFMC, times = length(WS_seq)),
-      BUI = rep(62, times = length(WS_seq)),
-      WS = WS_seq,
-      gs = rep(0, times = length(WS_seq)),
-      Dj = rep(180, times = length(WS_seq)),
-      aspect = rep(0, times = length(WS_seq))
+      id = seq(1, length(ws_seq), 1),
+      fueltype = rep("C-6", times = length(ws_seq)),
+      LAT = rep(55, times = length(ws_seq)),
+      LONG = rep(-120, times = length(ws_seq)),
+      FFMC = rep(FFMC, times = length(ws_seq)),
+      BUI = rep(62, times = length(ws_seq)),
+      ws = ws_seq,
+      gs = rep(0, times = length(ws_seq)),
+      Dj = rep(180, times = length(ws_seq)),
+      aspect = rep(0, times = length(ws_seq))
     )
     cffdrs_out <- cffdrs::fbp(cffdrs_in,output = "Secondary")
     ISI <- cffdrs_out$ISI
@@ -836,16 +836,16 @@ fn_SROS <- function(model, WS_seq, MC, FFMC, SFC) {
     # IsaSFC
     b1 <- 0.015822
     b2 <- 0.344379
-    f_w <- exp(0.05039 * WS_seq)
+    f_w <- exp(0.05039 * ws_seq)
     f_f <- 91.9 * (exp(-0.1386 * MC) * (1 + (MC^5.31 / (4.93 * 10^7))))
     ISI_MC <- 0.208 * f_w * f_f
     SROS_under40 <- b1 * ISI_MC^2 + b2 * SFC
-    f_w <- 1 - exp(-0.0818 * (WS_seq - 28))
+    f_w <- 1 - exp(-0.0818 * (ws_seq - 28))
     ISI_MC <- 0.208 * 12 * f_w * f_f
     SROS_over40 <- b1 * ISI_MC^2 + b2 * SFC
     SROS <- c(
-      SROS_under40[which(WS_seq <= 40)],
-      SROS_over40[which(WS_seq > 40)]
+      SROS_under40[which(ws_seq <= 40)],
+      SROS_over40[which(ws_seq > 40)]
     )
     return(SROS)
   }
@@ -853,12 +853,12 @@ fn_SROS <- function(model, WS_seq, MC, FFMC, SFC) {
 
 # __Crown fire rate of spread (CROS) ----
 # Active crown fire rate of spread (CROS_A)
-fn_CROS_A <- function(model, MC, WS_seq, CBD) {
+fn_CROS_A <- function(model, MC, ws_seq, CBD) {
   if (model == 1) {
     effm_mod <- 0.0079 + 3.6059 * log(MC)
-    CROS_A <- 11.02 * (WS_seq^0.9) * CBD^0.19 * exp(-0.17 * effm_mod)
+    CROS_A <- 11.02 * (ws_seq^0.9) * CBD^0.19 * exp(-0.17 * effm_mod)
   } else if (model == 2) {
-    CROS_A <- 0.084 * WS_seq * 1000 / 60
+    CROS_A <- 0.084 * ws_seq * 1000 / 60
   }
   return(CROS_A)
 }

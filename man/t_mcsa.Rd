@@ -11,7 +11,7 @@ t_mcsa(FFMC = 90, DMC = 85, season = 2, density = 2, stand = "p")
 Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index (FWI)
 System.}
 
-\item{DMC}{A numeric value between \code{5} and \code{200} (inclusive). The Duff
+\item{DMC}{A numeric value between \code{5} and \code{250} (inclusive). The Duff
 Moisture Code (DMC) as per the Canadian Forest Fire Weather Index (FWI)
 System.}
 
