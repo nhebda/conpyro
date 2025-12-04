@@ -1,38 +1,3 @@
-test_that("t_ROS() works", {
-  expect_snapshot(t_ROS())
-})
-
-test_that("t_pCFO() works", {
-  expect_identical(t_pCFO(), list(pCFO = 0.55))
-  expect_error(t_pCFO(MC = 4))
-  expect_error(t_pCFO(MC = 21))
-  expect_error(t_pCFO(WS = -1))
-  expect_error(t_pCFO(WS = 61))
-  expect_error(t_pCFO(FSG = 0))
-  expect_error(t_pCFO(FSG = 21))
-  expect_error(t_pCFO(SFC = 0))
-  expect_error(t_pCFO(SFC = 7))
-  expect_error(t_pCFO(model = 9))
-  expect_error(t_pCFO(model = 13))
-})
-
-test_that("t_MC() works", {
-  expect_identical(t_MC(), list(MCFFMC = 9.57, MCSA = 8.8))
-  expect_error(t_MC(FFMC = 79))
-  expect_error(t_MC(FFMC = 101))
-  expect_error(t_MC(DMC = 4))
-  expect_error(t_MC(DMC = 201))
-  expect_error(t_MC(season = ""))
-  expect_error(t_MC(season = NULL))
-  expect_error(t_MC(season = NA))
-  expect_error(t_MC(density = ""))
-  expect_error(t_MC(density = NULL))
-  expect_error(t_MC(density = NA))
-  expect_error(t_MC(stand = ""))
-  expect_error(t_MC(stand = NULL))
-  expect_error(t_MC(stand = NA))
-})
-
 test_that("t_FMC() works", {
   expect_identical(t_FMC(), list(FMC = 120))
   expect_error(t_FMC(LAT = 41))

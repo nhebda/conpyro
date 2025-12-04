@@ -1,9 +1,11 @@
 #' @details
 #' Available functions (click for details):
 #' * [conpyro()]
+#' * [t_mcSeason()]
 #' * [t_mcsa()]
 #' * [t_mcF()]
 #' * [t_pCFO()]
+#' * [t_FT()]
 #' * [t_ROS()]
 #' * [t_FMC()]
 #' * [t_SFC_FBP()]

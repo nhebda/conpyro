@@ -12,9 +12,11 @@ An R package implementation of the Canadian Conifer Pyrometrics crown fire occur
 Available functions (click for details):
 \itemize{
 \item \code{\link[=conpyro]{conpyro()}}
+\item \code{\link[=t_mcSeason]{t_mcSeason()}}
 \item \code{\link[=t_mcsa]{t_mcsa()}}
 \item \code{\link[=t_mcF]{t_mcF()}}
 \item \code{\link[=t_pCFO]{t_pCFO()}}
+\item \code{\link[=t_FT]{t_FT()}}
 \item \code{\link[=t_ROS]{t_ROS()}}
 \item \code{\link[=t_FMC]{t_FMC()}}
 \item \code{\link[=t_SFC_FBP]{t_SFC_FBP()}}

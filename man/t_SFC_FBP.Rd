@@ -12,7 +12,8 @@ t_SFC_FBP(BUI = 85, FFMC = 91, PC = 40)
 Index (BUI) as per the Canadian Forest Fire Weather Index System.}
 
 \item{FFMC}{A numeric value between \code{80} and \code{99} (inclusive). The Fine Fuel
-Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index System.}
+Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index (FWI)
+System.}
 
 \item{PC}{A numeric value between \code{0} and \code{100} (inclusive). Percent conifer
 for M1/M2 fuel types.}
