@@ -4,7 +4,7 @@
 \alias{t_mcsa}
 \title{Estimate fine dead litter moisture content (mcsa)}
 \usage{
-t_mcsa(FFMC = 90, DMC = 85, season = 1, density = 2, stand = "p")
+t_mcsa(FFMC = 90, DMC = 85, season = 2, density = 2, stand = "p")
 }
 \arguments{
 \item{FFMC}{A numeric value between \code{80} and \code{99} (inclusive). The Fine Fuel

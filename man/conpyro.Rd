@@ -24,10 +24,13 @@ order. Missing values are not permitted and will produce an error.
 Required columns are:
 \itemize{
 \item \code{ID}: Unique scenario identifier.
-\item \code{Season}: One of \code{spring}, \code{sp-su}, \code{summer}, or \code{fall}.
-\item \code{Density}: One of \code{light}, \code{moderate}, or \code{dense}.
+\item \code{Season}: One of \code{spring}, \code{sp-su}, \code{summer}, or \code{fall}, or the numeric
+equivalents \code{1}, \code{1.5}, \code{2}, or \code{3}, respectively.
+\item \code{Density}: One of \code{light}, \code{moderate}, or \code{dense}, or the numeric
+equivalents \code{1}, \code{2}, or \code{3}, respectively.
 \item \code{Stand}: One of \code{pine}, \code{spruce}, \code{Douglas-fir}, \code{deciduous}, or
-\code{mixedwood}.
+\code{mixedwood}, or the abbreviated equivalents \code{p}, \code{s}, \code{df}, \code{d}, or \code{m},
+respectively.
 \item \code{FSG}: A numeric value between \code{0.5} and \code{20} (inclusive). Fuel strata
 gap in metres. The vertical distance between the top of the surface fuels
 and the lower limit of the canopy fuels. Analogous to crown base height

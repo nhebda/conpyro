@@ -11,10 +11,13 @@
 #'   order. Missing values are not permitted and will produce an error.
 #'   Required columns are:
 #'   * `ID`: Unique scenario identifier.
-#'   * `Season`: One of `spring`, `sp-su`, `summer`, or `fall`.
-#'   * `Density`: One of `light`, `moderate`, or `dense`.
+#'   * `Season`: One of `spring`, `sp-su`, `summer`, or `fall`, or the numeric
+#'   equivalents `1`, `1.5`, `2`, or `3`, respectively.
+#'   * `Density`: One of `light`, `moderate`, or `dense`, or the numeric
+#'   equivalents `1`, `2`, or `3`, respectively.
 #'   * `Stand`: One of `pine`, `spruce`, `Douglas-fir`, `deciduous`, or
-#'   `mixedwood`.
+#'   `mixedwood`, or the abbreviated equivalents `p`, `s`, `df`, `d`, or `m`,
+#'   respectively.
 #'   * `FSG`: A numeric value between `0.5` and `20` (inclusive). Fuel strata
 #'   gap in metres. The vertical distance between the top of the surface fuels
 #'   and the lower limit of the canopy fuels. Analogous to crown base height
@@ -174,20 +177,31 @@ conpyro <- function(
     .var.name = "Input IDs must be unique"
   )
   assert_subset(
-    input$season,
-    choices = c("spring","sp-su", "summer", "fall"),
+    tolower(input$season),
+    choices = c("spring","sp-su", "summer", "fall", 1, 1.5, 2, 3),
     empty.ok = FALSE,
     .var.name = "season"
   )
   assert_subset(
-    input$density,
-    choices = c("light", "moderate", "dense"),
+    tolower(input$density),
+    choices = c("light", "moderate", "dense", 1, 2, 3),
     empty.ok = FALSE,
     .var.name = "density"
   )
   assert_subset(
-    input$stand,
-    choices = c("deciduous", "douglas-fir", "mixedwood", "pine", "spruce"),
+    tolower(input$stand),
+    choices = c(
+      "deciduous",
+      "douglas-fir",
+      "mixedwood",
+      "pine",
+      "spruce",
+      "d",
+      "df",
+      "m",
+      "p",
+      "s"
+    ),
     empty.ok = FALSE,
     .var.name = "stand"
   )

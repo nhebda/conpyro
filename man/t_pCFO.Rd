@@ -5,7 +5,7 @@
 \title{Calculate probability of crown fire occurrence (pCFO) for a single set of
 conditions}
 \usage{
-t_pCFO(mcsa = 7.6, mcF = NULL, FSG = 6, SFC = 2, ws = 12)
+t_pCFO(mcsa = 10, mcF = NULL, FSG = 6, SFC = 2, ws = 12)
 }
 \arguments{
 \item{mcsa}{A numeric value between \code{5} and \code{20} (inclusive). Fine dead

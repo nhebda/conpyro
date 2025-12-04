@@ -5,7 +5,7 @@
 \title{Calculate rate of spread (ROS) for a single set of conditions}
 \usage{
 t_ROS(
-  mcsa = 7.6,
+  mcsa = 10,
   mcF = NULL,
   FSG = 6,
   SFC = 2,

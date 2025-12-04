@@ -5,7 +5,7 @@
 \title{Calculate fire type}
 \usage{
 t_FT(
-  mcsa = 7.6,
+  mcsa = 10,
   mcF = NULL,
   FSG = 6,
   SFC = 2,

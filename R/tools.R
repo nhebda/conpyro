@@ -73,7 +73,7 @@ t_mcSeason <- function(month = 7, day = 1) {
 t_mcsa <- function(
     FFMC    = 90,
     DMC     = 85,
-    season  = 1,
+    season  = 2,
     density = 2,
     stand   = "p"
 ) {
@@ -174,7 +174,7 @@ t_mcF <- function(FFMC = 90) {
 #'
 #' @importFrom checkmate assert_number
 #'
-t_pCFO <- function(mcsa = 7.6, mcF = NULL, FSG = 6, SFC = 2, ws = 12) {
+t_pCFO <- function(mcsa = 10, mcF = NULL, FSG = 6, SFC = 2, ws = 12) {
   # Check input
   assert_number(mcsa, lower = 5, upper = 20, null.ok = TRUE)
   assert_number(mcF, lower = 5, upper = 20, null.ok = TRUE)
@@ -212,7 +212,7 @@ t_pCFO <- function(mcsa = 7.6, mcF = NULL, FSG = 6, SFC = 2, ws = 12) {
 #' @importFrom checkmate assert_number
 #'
 t_FT <- function(
-    mcsa      = 7.6,
+    mcsa      = 10,
     mcF       = NULL,
     FSG       = 6,
     SFC       = 2,
@@ -269,7 +269,7 @@ t_FT <- function(
 #' @importFrom checkmate assert_number
 #'
 t_ROS <- function(
-    mcsa      = 7.6,
+    mcsa      = 10,
     mcF       = NULL,
     FSG       = 6,
     SFC       = 2,
