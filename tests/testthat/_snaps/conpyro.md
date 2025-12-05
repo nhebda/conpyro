@@ -4,10 +4,10 @@
       conpyro(default_input)
     Output
       $`Scenario 1`
-      $`Scenario 1`$MCFFMC
+      $`Scenario 1`$mcFFMC
       [1] 9.78
       
-      $`Scenario 1`$MCSA
+      $`Scenario 1`$mcsa
       [1] 9.1
       
       $`Scenario 1`$`Wind Speed (km/h)`
@@ -36,10 +36,10 @@
       
       
       $`Scenario 2`
-      $`Scenario 2`$MCFFMC
+      $`Scenario 2`$mcFFMC
       [1] 9.78
       
-      $`Scenario 2`$MCSA
+      $`Scenario 2`$mcsa
       [1] 7.87
       
       $`Scenario 2`$`Wind Speed (km/h)`
@@ -71,10 +71,10 @@
       
       
       $`Scenario 3`
-      $`Scenario 3`$MCFFMC
+      $`Scenario 3`$mcFFMC
       [1] 9.78
       
-      $`Scenario 3`$MCSA
+      $`Scenario 3`$mcsa
       [1] 8.02
       
       $`Scenario 3`$`Wind Speed (km/h)`

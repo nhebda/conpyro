@@ -66,8 +66,8 @@ System. Allows DMC to be specified on a per-scenario basis. If this column
 is present, it will override the \code{DMC} argument.
 \item \code{model_conpyro}: Choose one of \code{7}, \code{8}, \code{10}, or \code{11}. The ConPyro
 model form used for calculations (see Perrakis et al., 2023). Models \code{7}
-and \code{10} use FFMC-based fine fuel moisture content (MCFFMC) while models
-\code{8} and \code{11} use stand-adjusted moisture content (MCSA). Default is \code{11}.
+and \code{10} use FFMC-based fine fuel moisture content (mcFFMC) while models
+\code{8} and \code{11} use stand-adjusted moisture content (mcsa). Default is \code{11}.
 \item \code{model_SROS}: Choose one of \code{1}, \code{2}, \code{3}, or \code{4}. The surface fire ROS
 model used for calculations.
 \itemize{

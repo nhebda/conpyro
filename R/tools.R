@@ -26,22 +26,22 @@ t_mcSeason <- function(month = 7, day = 1) {
   # Calculate
   if (
     inherits(
-      try(as.Date(paste(2025, month, day, sep = "-")), silent = TRUE),
+      try(as.Date(paste(2024, month, day, sep = "-")), silent = TRUE),
       "try-error"
     )
   ) {
-    cat("Invalid date\n")
-    return()
+    cat("Please enter a valid date\n")
+    return(invisible())
   } else {
-    date <- as.Date(paste(2025, month, day, sep = "-"))
+    date <- as.Date(paste(2024, month, day, sep = "-"))
   }
-  season <- if (date >= as.Date("2025-01-01") & date < as.Date("2025-06-01")) {
+  season <- if (date >= as.Date("2024-01-01") & date < as.Date("2024-06-01")) {
     1
-  } else if (date >= as.Date("2025-06-01") & date < as.Date("2025-06-16")) {
+  } else if (date >= as.Date("2024-06-01") & date < as.Date("2024-06-16")) {
     1.5
-  } else if (date >= as.Date("2025-06-16") & date < as.Date("2025-09-01")) {
+  } else if (date >= as.Date("2024-06-16") & date < as.Date("2024-09-01")) {
     2
-  } else if (date >= as.Date("2025-09-01") & date <= as.Date("2025-12-31")) {
+  } else if (date >= as.Date("2024-09-01") & date <= as.Date("2024-12-31")) {
     3
   }
   # Output
@@ -67,7 +67,7 @@ t_mcF <- function(FFMC = 90) {
   # Check input
   assert_number(FFMC, lower = 80, upper = 99)
   # Calculate
-  mcF <- fn_MCFFMC(FFMC)
+  mcF <- fn_mcFFMC(FFMC)
   # Output
   out <- round(mcF, 2)
   return(out)
@@ -132,10 +132,10 @@ t_mcsa <- function(
     .var.name = "stand"
   )
   # Calculate
-  idx   <- fn_MCSA_idx(tolower(season), tolower(density), tolower(stand))
-  mcF   <- fn_MCFFMC(FFMC)
-  mcDMC <- fn_MCDMC(DMC)
-  mcsa  <- fn_MCSA(idx, mcF, mcDMC)
+  idx   <- fn_mcsa_idx(tolower(season), tolower(density), tolower(stand))
+  mcF   <- fn_mcFFMC(FFMC)
+  mcDMC <- fn_mcDMC(DMC)
+  mcsa  <- fn_mcsa(idx, mcF, mcDMC)
   # Output
   out   <- round(mcsa, 2)
   return(out)
@@ -197,10 +197,9 @@ t_pCFO <- function(mcsa = 10, mcF = NULL, FSG = 6, SFC = 2, ws = 12) {
 #' system. See Perrakis et al. (2023) for details.
 #'
 #' @inheritParams t_pCFO
+#' @inheritParams conpyro
 #' @param CBD A numeric value between `0.01` and `0.8` (inclusive). Crown bulk
 #'   density in kg/m^3.
-#' @param CF_thresh A numeric value between `0` and `1` (inclusive). Defines the
-#'   pCFO threshold at which crown fire occurs.
 #'
 #' @returns A single character string, one of either `S`, `PC`, or `AC`,
 #'   corresponding to surface fire, passive crown fire, or active crown fire.
@@ -252,11 +251,9 @@ t_FT <- function(
 #' single-scenario calculation than using the main [conpyro()] function. If you
 #' want want to run multiple scenarios or plot output, use [conpyro()] instead.
 #'
+#' @inheritParams t_FT
 #' @inheritParams t_pCFO
-#' @param CBD A numeric value between `0.01` and `0.8` (inclusive). Crown bulk
-#'   density in kg/m^3.
-#' @param CF_thresh A numeric value between `0` and `1` (inclusive). Defines the
-#'   pCFO threshold at which crown fire occurs.
+#' @inheritParams conpyro
 #'
 #' @returns A list of length 2 consisting of:
 #'   * A single numeric value named `Predicted rate of spread (m/min)`
@@ -293,19 +290,15 @@ t_ROS <- function(
   CROS_A <- fn_CROS_A(1, mc, ws, CBD)
   CAC    <- fn_CAC(CROS_A, CBD)
   CROS_P <- fn_CROS_P(CROS_A, CAC)
-  FT     <- if (pCFO < CF_thresh) {
-    "S"
+  if (pCFO < CF_thresh) {
+    ROS <- SROS
+    FT  <- "S"
   } else if (pCFO >= CF_thresh & CAC < 1) {
-    "PC"
+    ROS <- CROS_P
+    FT  <- "PC"
   } else {
-    "AC"
-  }
-  ROS    <- if (pCFO < CF_thresh) {
-    SROS
-  } else if (pCFO >= CF_thresh & CAC < 1) {
-    CROS_P
-  } else {
-    CROS_A
+    ROS <- CROS_A
+    FT  <- "AC"
   }
   # Output
   out <- list(

@@ -51,8 +51,8 @@
 #'   is present, it will override the `DMC` argument.
 #'   * `model_conpyro`: Choose one of `7`, `8`, `10`, or `11`. The ConPyro
 #'   model form used for calculations (see Perrakis et al., 2023). Models `7`
-#'   and `10` use FFMC-based fine fuel moisture content (MCFFMC) while models
-#'   `8` and `11` use stand-adjusted moisture content (MCSA). Default is `11`.
+#'   and `10` use FFMC-based fine fuel moisture content (mcFFMC) while models
+#'   `8` and `11` use stand-adjusted moisture content (mcsa). Default is `11`.
 #'   * `model_SROS`: Choose one of `1`, `2`, `3`, or `4`. The surface fire ROS
 #'   model used for calculations.
 #'      * `1`: Aggregated FBPS surf. V4 (default)
@@ -320,16 +320,16 @@ conpyro <- function(
       1
     }
     # Do calculations
-    MCFFMC        <- fn_MCFFMC(FFMC)
-    MCDMC         <- fn_MCDMC(DMC)
-    idx           <- fn_MCSA_idx(season, density, stand)
-    MCSA          <- fn_MCSA(idx, MCFFMC, MCDMC)
+    mcFFMC        <- fn_mcFFMC(FFMC)
+    mcDMC         <- fn_mcDMC(DMC)
+    idx           <- fn_mcsa_idx(season, density, stand)
+    mcsa          <- fn_mcsa(idx, mcFFMC, mcDMC)
     MC            <- switch(
       as.character(model_conpyro),
-      "7"  = MCFFMC,
-      "8"  = MCSA,
-      "10" = MCFFMC,
-      "11" = MCSA
+      "7"  = mcFFMC,
+      "8"  = mcsa,
+      "10" = mcFFMC,
+      "11" = mcsa
     )
     pCFO          <- fn_pCFO(model_conpyro, ws_seq, FSG, SFC, MC)
     CF_CI         <- fn_CF_CI(ws_seq, pCFO)
@@ -361,8 +361,8 @@ conpyro <- function(
     ROS_AIO       <- c(SROS_out, CROS_P_out, CROS_A_out)
     # Prepare output data
     results <- list(
-      "MCFFMC" = round(MCFFMC, 2),
-      "MCSA" = round(MCSA, 2),
+      "mcFFMC" = round(mcFFMC, 2),
+      "mcsa" = round(mcsa, 2),
       "Wind Speed (km/h)" = ws_seq,
       "Crown Fire Occurrence Probability (pCFO)" = round(pCFO, 2)
     )
@@ -706,11 +706,11 @@ conpyro <- function(
 # but the standard value of 147.2, as specified in NOR-X-424 (2015), is used
 # here to ensure consistency with other implementations, giving a scale length
 # of ~249.89
-fn_MCFFMC   <- function(FFMC) {147.2 * (101 - FFMC) / (59.5 + FFMC)}
+fn_mcFFMC   <- function(FFMC) {147.2 * (101 - FFMC) / (59.5 + FFMC)}
 # Based on Eq. 16 in Van Wagner (1987)
-fn_MCDMC    <- function(DMC) {20 + exp(-(DMC - 244.72) / 43.43)}
+fn_mcDMC    <- function(DMC) {20 + exp(-(DMC - 244.72) / 43.43)}
 # Convert combinations of stand attributes to numeric codes
-fn_MCSA_idx <- function(season, density, stand) {
+fn_mcsa_idx <- function(season, density, stand) {
   as.numeric(
     paste0(
       if (season == "spring" | season == 1)   1,
@@ -729,24 +729,24 @@ fn_MCSA_idx <- function(season, density, stand) {
   )
 }
 # Calculate stand-adjusted moisture content
-fn_MCSA <- function(idx, MCFFMC, MCDMC) {
+fn_mcsa <- function(idx, mcFFMC, mcDMC) {
   coefs <- sysdata$coefs_MCSA
   c     <- 0.002232
-  calc_MCSA <- function(idx, MCFFMC, MCDMC) {
+  calc_mcsa <- function(idx, mcFFMC, mcDMC) {
     a    <- coefs[which(coefs[1] == idx), 2]
     b    <- coefs[which(coefs[1] == idx), 3]
-    MCSA <- exp(a + b * log(MCFFMC) + c * MCDMC)
+    mcsa <- exp(a + b * log(mcFFMC) + c * mcDMC)
   }
   if (idx < 400) {
-    MCSA <- calc_MCSA(idx, MCFFMC, MCDMC)
+    mcsa <- calc_mcsa(idx, mcFFMC, mcDMC)
   } else {
     idx_sp  <- as.numeric(paste0(1, substr(idx, 2, 3)))
-    MCSA_sp <- calc_MCSA(idx_sp, MCFFMC, MCDMC)
+    mcsa_sp <- calc_mcsa(idx_sp, mcFFMC, mcDMC)
     idx_su  <- as.numeric(paste0(2, substr(idx, 2, 3)))
-    MCSA_su <- calc_MCSA(idx_su, MCFFMC, MCDMC)
-    MCSA    <- mean(c(MCSA_sp, MCSA_su))
+    mcsa_su <- calc_mcsa(idx_su, mcFFMC, mcDMC)
+    mcsa    <- mean(c(mcsa_sp, mcsa_su))
   }
-  return(MCSA)
+  return(mcsa)
 }
 
 # __Probability of crown fire occurrence (pCFO) ----
