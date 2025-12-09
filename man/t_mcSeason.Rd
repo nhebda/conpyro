@@ -2,30 +2,36 @@
 % Please edit documentation in R/tools.R
 \name{t_mcSeason}
 \alias{t_mcSeason}
-\title{Determine season for \code{\link[=t_mcsa]{t_mcsa()}}}
+\title{Determine \code{season} input for \code{\link[=t_mcsa]{t_mcsa()}}}
 \usage{
 t_mcSeason(month = 7, day = 1)
 }
 \arguments{
-\item{month}{A single integer value from \code{1} to \code{12}.}
+\item{month}{An integer in \verb{\{1, 2, 3, ..., 12\}}.}
 
-\item{day}{A single integer value from \code{1} to \code{31}.}
+\item{day}{An integer in \verb{\{1, 2, 3, ..., 31\}}.}
 }
 \value{
-One of \code{1}, \code{1.5}, \code{2}, or \code{3}, corresponding to spring, sp-su,
-summer, or fall.
+A number in \verb{\{1, 1.5, 2, 3\}}, corresponding to \verb{\{"spring", "sp-su", "summer", "fall"\}}.
 }
 \description{
-\code{t_mcSeason()} takes a month and day as input and calculates the "season"
+\code{t_mcSeason()} takes a month and day as input and calculates the \code{season}
 argument to be used in \code{\link[=t_mcsa]{t_mcsa()}}.
 \itemize{
-\item Jan 1 to May 31  = 1
-\item Jun 1 to Jun 15  = 1.5
-\item Jun 16 to Aug 31 = 2
-\item Sep 1 to Dec 31  = 3
+\item Jan 1 to May 31  = \code{1 ("spring")}
+\item Jun 1 to Jun 15  = \code{1.5 ("sp-su")}
+\item Jun 16 to Aug 31 = \code{2 ("summer")}
+\item Sep 1 to Dec 31  = \code{3 ("fall")}
 }
 }
 \examples{
-# TODO
+# Spring
+t_mcSeason(5, 11)
+# Spring-summer transition
+t_mcSeason(6, 7)
+# Summer
+t_mcSeason(8, 16)
+# Fall
+t_mcSeason(9, 24)
 
 }

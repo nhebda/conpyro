@@ -14,10 +14,10 @@ surface fuels.}
 \item{cl}{A numeric value between \code{0.5} and \code{15} (inclusive). Mean centroid
 height of ladder fuels in metres.}
 
-\item{FSG}{A numeric value between \code{0.5} and \code{20} (inclusive). Fuel strata
-gap in metres. The vertical distance between the top of the surface fuels
-and the lower limit of the canopy fuels. Analogous to crown base height
-(CBH) in the absence of mid-story ladder fuels.}
+\item{FSG}{A numeric value in \verb{[0.5, 20]}. Fuel strata gap in metres. The
+vertical distance between the top of the surface fuels and the lower limit
+of the canopy fuels. Analogous to crown base height (CBH) in the absence of
+mid-story ladder fuels.}
 }
 \value{
 A list of length \code{2} consisting of one numeric value named

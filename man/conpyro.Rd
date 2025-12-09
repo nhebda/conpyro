@@ -101,8 +101,8 @@ System.}
 \item{smooth_CFO}{Defines whether crown fire initiation is modeled as a
 smooth transition (\code{TRUE}) or an instantaneous occurrence (\code{FALSE}).}
 
-\item{CF_thresh}{A numeric value between \code{0} and \code{1} (inclusive). Defines the
-pCFO threshold at which crown fire occurs.}
+\item{CF_thresh}{A numeric value in \verb{[0, 1]}. Defines the pCFO threshold at
+which crown fire occurs.}
 
 \item{ROS_output}{A character vector to control ROS output. Choose any of the
 following:

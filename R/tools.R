@@ -1,21 +1,28 @@
-#' Determine season for [t_mcsa()]
+#' Determine `season` input for [t_mcsa()]
 #'
-#' `t_mcSeason()` takes a month and day as input and calculates the "season"
+#' `t_mcSeason()` takes a month and day as input and calculates the `season`
 #' argument to be used in [t_mcsa()].
-#'  * Jan 1 to May 31  = 1
-#'  * Jun 1 to Jun 15  = 1.5
-#'  * Jun 16 to Aug 31 = 2
-#'  * Sep 1 to Dec 31  = 3
+#'  * Jan 1 to May 31  = `1 ("spring")`
+#'  * Jun 1 to Jun 15  = `1.5 ("sp-su")`
+#'  * Jun 16 to Aug 31 = `2 ("summer")`
+#'  * Sep 1 to Dec 31  = `3 ("fall")`
 #'
-#' @param month A single integer value from `1` to `12`.
-#' @param day A single integer value from `1` to `31`.
+#' @param month An integer in `{1, 2, 3, ..., 12}`.
+#' @param day An integer in `{1, 2, 3, ..., 31}`.
 #'
-#' @returns One of `1`, `1.5`, `2`, or `3`, corresponding to spring, sp-su,
-#'   summer, or fall.
+#' @returns A number in `{1, 1.5, 2, 3}`, corresponding to `{"spring", "sp-su",
+#'   "summer", "fall"}`.
 #' @export
 #'
 #' @examples
-#' # TODO
+#' # Spring
+#' t_mcSeason(5, 11)
+#' # Spring-summer transition
+#' t_mcSeason(6, 7)
+#' # Summer
+#' t_mcSeason(8, 16)
+#' # Fall
+#' t_mcSeason(9, 24)
 #'
 #' @importFrom checkmate assert_integerish
 #'
@@ -30,8 +37,7 @@ t_mcSeason <- function(month = 7, day = 1) {
       "try-error"
     )
   ) {
-    cat("Please enter a valid date\n")
-    return(invisible())
+    stop("Please enter a valid date")
   } else {
     date <- as.Date(paste(2024, month, day, sep = "-"))
   }
@@ -48,18 +54,27 @@ t_mcSeason <- function(month = 7, day = 1) {
   return(season)
 }
 
-#' Estimate fine dead litter moisture content (mcF)
+#' Estimate FFMC-based fine dead litter moisture content
 #'
-#' `t_mcF()` estimates fine dead surface litter moisture content from the
-#' Fine Fuel Moisture Code (FFMC).
+#' `t_mcF()` estimates fine dead surface litter moisture content based on the
+#' Fine Fuel Moisture Code (FFMC) of the Canadian Fire Weather Index (FWI)
+#' system.
 #'
 #' @inheritParams conpyro
 #'
-#' @returns A single numeric value.
+#' @returns A numeric value representing fine dead litter moisture content in
+#'   percent.
 #' @export
 #'
 #' @examples
-#' # TODO
+#' # Moist
+#' t_mcF(80)
+#' # Moderate
+#' t_mcF(84)
+#' # Dry
+#' t_mcF(89)
+#' # Very dry
+#' t_mcF(92)
 #'
 #' @importFrom checkmate assert_number
 #'
@@ -73,25 +88,32 @@ t_mcF <- function(FFMC = 90) {
   return(out)
 }
 
-#' Estimate fine dead litter moisture content (mcsa)
+#' Estimate stand-adjusted fine dead litter moisture content
 #'
 #' `t_mcsa()` estimates fine dead surface litter moisture content using the
 #' stand-adjusted model (mcsa).
 #'
 #' @inheritParams conpyro
-#' @param season One of `spring`, `sp-su`, `summer`, or `fall`, or the numeric
-#'   equivalents `1`, `1.5`, `2`, or `3`, respectively.
-#' @param density One of `light`, `moderate`, or `dense`, or the numeric
-#'   equivalents `1`, `2`, or `3`, respectively.
-#' @param stand One of `pine`, `spruce`, `Douglas-fir`, `deciduous`, or
-#'   `mixedwood`, or the abbreviated equivalents `p`, `s`, `df`, `d`, or `m`,
-#'   respectively.
+#' @param season One of `{"spring", "sp-su", "summer", "fall"}` or numeric
+#'   equivalents `{1, 1.5, 2, 3}`. See [t_mcSeason()].
+#' @param density One of `{"light", "moderate", "dense"}` or numeric equivalents
+#'   `{1, 2, 3}`.
+#' @param stand One of `{"pine", "spruce", "Douglas-fir", "deciduous",
+#'   "mixedwood"}` or abbreviated equivalents `{"p", "s", "df", "d", "m"}`.
 #'
-#' @returns A single numeric value.
+#' @returns A numeric value representing fine dead litter moisture content in
+#'   percent.
 #' @export
 #'
 #' @examples
-#' # TODO
+#' # Moist
+#' t_mcsa(80, 20, 1, 3, "s")
+#' # Moderate
+#' t_mcsa(84, 30, 1, 3, "p")
+#' # Dry
+#' t_mcsa(89, 40, 2, 2, "p")
+#' # Very dry
+#' t_mcsa(92, 60, 2, 1, "p")
 #'
 #' @importFrom checkmate assert_number assert_choice
 #'
@@ -148,29 +170,32 @@ t_mcsa <- function(
 #' fuel and fire weather conditions using the Conifer Pyrometrics (ConPyro) fire
 #' behaviour modelling system. See Perrakis et al. (2023) for details.
 #'
-#' @param mcsa A numeric value between `3` and `20` (inclusive). Fine dead
-#'   surface litter moisture content calculated using the stand-adjusted model
-#'   (mcsa). May be estimated using [t_mcsa()]. If `mcF` is anything other than
-#'   NULL, it will override `mcsa`.
-#' @param mcF A numeric value between `3` and `20` (inclusive). Fine dead
-#'   surface litter moisture content calculated using the Fine Fuel Moisture
-#'   Code (FFMC). May be estimated using [t_mcF()]. If NULL, `mcsa` will be used
-#'   instead.
-#' @param FSG A numeric value between `0.5` and `20` (inclusive). Fuel strata
-#'   gap in metres. The vertical distance between the top of the surface fuels
-#'   and the lower limit of the canopy fuels. Analogous to crown base height
-#'   (CBH) in the absence of mid-story ladder fuels.
-#' @param SFC A numeric value between `0.1` and `6` (inclusive). Surface fuel
-#'   consumption in kg/m^2. May be estimated using [t_SFC_FBP()] or
-#'   [t_SFC_deGroot()].
-#' @param ws A numeric value between `0` and `60` (inclusive). Wind speed in
-#'   km/h.
+#' @param mcsa A numeric value in `[3, 20]`. Fine dead surface litter moisture
+#'   content calculated using the stand-adjusted model (mcsa). May be estimated
+#'   using [t_mcsa()]. If `mcF` is anything other than NULL, it will override
+#'   `mcsa`.
+#' @param mcF A numeric value in `[3, 20]`. Fine dead surface litter moisture
+#'   content calculated using the Fine Fuel Moisture Code (FFMC). May be
+#'   estimated using [t_mcF()]. If NULL, `mcsa` will be used instead.
+#' @param FSG A numeric value in `[0.5, 20]`. Fuel strata gap in metres. The
+#'   vertical distance between the top of the surface fuels and the lower limit
+#'   of the canopy fuels. Analogous to crown base height (CBH) in the absence of
+#'   mid-story ladder fuels.
+#' @param SFC A numeric value in `[0.1, 6]`. Surface fuel consumption in kg/m^2.
+#'   May be estimated using [t_SFC_FBP()] or [t_SFC_deGroot()].
+#' @param ws A numeric value in `[0, 60]`. Wind speed in km/h.
 #'
-#' @returns A single numeric value.
+#' @returns A numeric value giving probability of crown fire occurrence in the
+#'   range of `[0, 1]`.
 #' @export
 #'
 #' @examples
-#' # TODO
+#' # Low probability
+#' t_pCFO(mcsa = 10, FSG = 6, SFC = 2, ws = 11)
+#' # Moderate probability
+#' t_pCFO(mcsa = 9, FSG = 6, SFC = 2, ws = 12)
+#' # High probability
+#' t_pCFO(mcsa = 8, FSG = 6, SFC = 2, ws = 13)
 #'
 #' @importFrom checkmate assert_number
 #'
@@ -198,15 +223,20 @@ t_pCFO <- function(mcsa = 10, mcF = NULL, FSG = 6, SFC = 2, ws = 12) {
 #'
 #' @inheritParams t_pCFO
 #' @inheritParams conpyro
-#' @param CBD A numeric value between `0.01` and `0.8` (inclusive). Crown bulk
-#'   density in kg/m^3.
+#' @param CBD A numeric value in `[0.01, 0.8]`. Crown bulk density in kg/m^3.
 #'
-#' @returns A single character string, one of either `S`, `PC`, or `AC`,
-#'   corresponding to surface fire, passive crown fire, or active crown fire.
+#' @returns A single character vector giving the fire type. One of `{"S", "PC",
+#'   "AC"}`, corresponding to surface fire, passive crown fire, or active crown
+#'   fire, respectively.
 #' @export
 #'
 #' @examples
-#' # TODO
+#' # Surface fire
+#' t_FT(mcsa = 9, FSG = 6, SFC = 2, ws = 11, CBD = 0.1)
+#' # Passive crown fire
+#' t_FT(mcsa = 8, FSG = 6, SFC = 2, ws = 11, CBD = 0.1)
+#' # Active crown fire
+#' t_FT(mcsa = 8, FSG = 6, SFC = 2, ws = 11, CBD = 0.2)
 #'
 #' @importFrom checkmate assert_number
 #'
@@ -248,8 +278,8 @@ t_FT <- function(
 #' `t_ROS()` calculates rate of spread for a single set of fuel and fire weather
 #' conditions using the Conifer Pyrometrics (ConPyro) fire behaviour modelling
 #' system. See Perrakis et al. (2023) for details. Provides a more convenient
-#' single-scenario calculation than using the main [conpyro()] function. If you
-#' want want to run multiple scenarios or plot output, use [conpyro()] instead.
+#' single-scenario calculation than the main [conpyro()] function. To run
+#' multiple scenarios or plot output, use [conpyro()] instead.
 #'
 #' @inheritParams t_FT
 #' @inheritParams t_pCFO
@@ -257,7 +287,7 @@ t_FT <- function(
 #'
 #' @returns A list of length 2 consisting of:
 #'   * A single numeric value named `Predicted rate of spread (m/min)`
-#'   * A single character string named `Type of fire`
+#'   * A single character vector named `Type of fire`
 #' @export
 #'
 #' @examples

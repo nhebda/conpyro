@@ -15,37 +15,33 @@ t_FT(
 )
 }
 \arguments{
-\item{mcsa}{A numeric value between \code{3} and \code{20} (inclusive). Fine dead
-surface litter moisture content calculated using the stand-adjusted model
-(mcsa). May be estimated using \code{\link[=t_mcsa]{t_mcsa()}}. If \code{mcF} is anything other than
-NULL, it will override \code{mcsa}.}
+\item{mcsa}{A numeric value in \verb{[3, 20]}. Fine dead surface litter moisture
+content calculated using the stand-adjusted model (mcsa). May be estimated
+using \code{\link[=t_mcsa]{t_mcsa()}}. If \code{mcF} is anything other than NULL, it will override
+\code{mcsa}.}
 
-\item{mcF}{A numeric value between \code{3} and \code{20} (inclusive). Fine dead
-surface litter moisture content calculated using the Fine Fuel Moisture
-Code (FFMC). May be estimated using \code{\link[=t_mcF]{t_mcF()}}. If NULL, \code{mcsa} will be used
-instead.}
+\item{mcF}{A numeric value in \verb{[3, 20]}. Fine dead surface litter moisture
+content calculated using the Fine Fuel Moisture Code (FFMC). May be
+estimated using \code{\link[=t_mcF]{t_mcF()}}. If NULL, \code{mcsa} will be used instead.}
 
-\item{FSG}{A numeric value between \code{0.5} and \code{20} (inclusive). Fuel strata
-gap in metres. The vertical distance between the top of the surface fuels
-and the lower limit of the canopy fuels. Analogous to crown base height
-(CBH) in the absence of mid-story ladder fuels.}
+\item{FSG}{A numeric value in \verb{[0.5, 20]}. Fuel strata gap in metres. The
+vertical distance between the top of the surface fuels and the lower limit
+of the canopy fuels. Analogous to crown base height (CBH) in the absence of
+mid-story ladder fuels.}
 
-\item{SFC}{A numeric value between \code{0.1} and \code{6} (inclusive). Surface fuel
-consumption in kg/m^2. May be estimated using \code{\link[=t_SFC_FBP]{t_SFC_FBP()}} or
-\code{\link[=t_SFC_deGroot]{t_SFC_deGroot()}}.}
+\item{SFC}{A numeric value in \verb{[0.1, 6]}. Surface fuel consumption in kg/m^2.
+May be estimated using \code{\link[=t_SFC_FBP]{t_SFC_FBP()}} or \code{\link[=t_SFC_deGroot]{t_SFC_deGroot()}}.}
 
-\item{CBD}{A numeric value between \code{0.01} and \code{0.8} (inclusive). Crown bulk
-density in kg/m^3.}
+\item{CBD}{A numeric value in \verb{[0.01, 0.8]}. Crown bulk density in kg/m^3.}
 
-\item{ws}{A numeric value between \code{0} and \code{60} (inclusive). Wind speed in
-km/h.}
+\item{ws}{A numeric value in \verb{[0, 60]}. Wind speed in km/h.}
 
-\item{CF_thresh}{A numeric value between \code{0} and \code{1} (inclusive). Defines the
-pCFO threshold at which crown fire occurs.}
+\item{CF_thresh}{A numeric value in \verb{[0, 1]}. Defines the pCFO threshold at
+which crown fire occurs.}
 }
 \value{
-A single character string, one of either \code{S}, \code{PC}, or \code{AC},
-corresponding to surface fire, passive crown fire, or active crown fire.
+A single character vector giving the fire type. One of \verb{\{"S", "PC", "AC"\}}, corresponding to surface fire, passive crown fire, or active crown
+fire, respectively.
 }
 \description{
 \code{t_FT()} calculates fire type from a single set of fuel and fire weather
@@ -53,6 +49,11 @@ conditions using the Conifer Pyrometrics (ConPyro) fire behaviour modelling
 system. See Perrakis et al. (2023) for details.
 }
 \examples{
-# TODO
+# Surface fire
+t_FT(mcsa = 9, FSG = 6, SFC = 2, ws = 11, CBD = 0.1)
+# Passive crown fire
+t_FT(mcsa = 8, FSG = 6, SFC = 2, ws = 11, CBD = 0.1)
+# Active crown fire
+t_FT(mcsa = 8, FSG = 6, SFC = 2, ws = 11, CBD = 0.2)
 
 }

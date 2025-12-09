@@ -2,7 +2,7 @@
 % Please edit documentation in R/tools.R
 \name{t_mcsa}
 \alias{t_mcsa}
-\title{Estimate fine dead litter moisture content (mcsa)}
+\title{Estimate stand-adjusted fine dead litter moisture content}
 \usage{
 t_mcsa(FFMC = 90, DMC = 85, season = 2, density = 2, stand = "p")
 }
@@ -15,24 +15,30 @@ System.}
 Moisture Code (DMC) as per the Canadian Forest Fire Weather Index (FWI)
 System.}
 
-\item{season}{One of \code{spring}, \code{sp-su}, \code{summer}, or \code{fall}, or the numeric
-equivalents \code{1}, \code{1.5}, \code{2}, or \code{3}, respectively.}
+\item{season}{One of \verb{\{"spring", "sp-su", "summer", "fall"\}} or numeric
+equivalents \verb{\{1, 1.5, 2, 3\}}. See \code{\link[=t_mcSeason]{t_mcSeason()}}.}
 
-\item{density}{One of \code{light}, \code{moderate}, or \code{dense}, or the numeric
-equivalents \code{1}, \code{2}, or \code{3}, respectively.}
+\item{density}{One of \verb{\{"light", "moderate", "dense"\}} or numeric equivalents
+\verb{\{1, 2, 3\}}.}
 
-\item{stand}{One of \code{pine}, \code{spruce}, \code{Douglas-fir}, \code{deciduous}, or
-\code{mixedwood}, or the abbreviated equivalents \code{p}, \code{s}, \code{df}, \code{d}, or \code{m},
-respectively.}
+\item{stand}{One of \verb{\{"pine", "spruce", "Douglas-fir", "deciduous", "mixedwood"\}} or abbreviated equivalents \verb{\{"p", "s", "df", "d", "m"\}}.}
 }
 \value{
-A single numeric value.
+A numeric value representing fine dead litter moisture content in
+percent.
 }
 \description{
 \code{t_mcsa()} estimates fine dead surface litter moisture content using the
 stand-adjusted model (mcsa).
 }
 \examples{
-# TODO
+# Moist
+t_mcsa(80, 20, 1, 3, "s")
+# Moderate
+t_mcsa(84, 30, 1, 3, "p")
+# Dry
+t_mcsa(89, 40, 2, 2, "p")
+# Very dry
+t_mcsa(92, 60, 2, 1, "p")
 
 }

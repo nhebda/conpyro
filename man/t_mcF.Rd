@@ -2,7 +2,7 @@
 % Please edit documentation in R/tools.R
 \name{t_mcF}
 \alias{t_mcF}
-\title{Estimate fine dead litter moisture content (mcF)}
+\title{Estimate FFMC-based fine dead litter moisture content}
 \usage{
 t_mcF(FFMC = 90)
 }
@@ -12,13 +12,22 @@ Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index (FWI)
 System.}
 }
 \value{
-A single numeric value.
+A numeric value representing fine dead litter moisture content in
+percent.
 }
 \description{
-\code{t_mcF()} estimates fine dead surface litter moisture content from the
-Fine Fuel Moisture Code (FFMC).
+\code{t_mcF()} estimates fine dead surface litter moisture content based on the
+Fine Fuel Moisture Code (FFMC) of the Canadian Fire Weather Index (FWI)
+system.
 }
 \examples{
-# TODO
+# Moist
+t_mcF(80)
+# Moderate
+t_mcF(84)
+# Dry
+t_mcF(89)
+# Very dry
+t_mcF(92)
 
 }

@@ -76,8 +76,8 @@
 #'   System.
 #' @param smooth_CFO Defines whether crown fire initiation is modeled as a
 #'   smooth transition (`TRUE`) or an instantaneous occurrence (`FALSE`).
-#' @param CF_thresh A numeric value between `0` and `1` (inclusive). Defines the
-#'   pCFO threshold at which crown fire occurs.
+#' @param CF_thresh A numeric value in `[0, 1]`. Defines the pCFO threshold at
+#'   which crown fire occurs.
 #' @param ROS_output A character vector to control ROS output. Choose any of the
 #'   following:
 #'   * `SROS`: Surface fire rate of spread.
