@@ -7,9 +7,8 @@
 t_mcF(FFMC = 90)
 }
 \arguments{
-\item{FFMC}{A numeric value between \code{80} and \code{99} (inclusive). The Fine Fuel
-Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index (FWI)
-System.}
+\item{FFMC}{A numeric value in \verb{[80, 99]}. The Fine Fuel Moisture Code (FFMC)
+as per the Canadian Forest Fire Weather Index (FWI) System.}
 }
 \value{
 A numeric value representing fine dead litter moisture content in

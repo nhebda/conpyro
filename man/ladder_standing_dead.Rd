@@ -16,7 +16,7 @@ height of ladder fuels in metres.}
 
 \item{FSG}{A numeric value in \verb{[0.5, 20]}. Fuel strata gap in metres. The
 vertical distance between the top of the surface fuels and the lower limit
-of the canopy fuels. Analogous to crown base height (CBH) in the absence of
+of the canopy fuels. Analogous to crown base height in the absence of
 mid-story ladder fuels.}
 }
 \value{

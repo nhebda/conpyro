@@ -7,13 +7,11 @@
 t_mcsa(FFMC = 90, DMC = 85, season = 2, density = 2, stand = "p")
 }
 \arguments{
-\item{FFMC}{A numeric value between \code{80} and \code{99} (inclusive). The Fine Fuel
-Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index (FWI)
-System.}
+\item{FFMC}{A numeric value in \verb{[80, 99]}. The Fine Fuel Moisture Code (FFMC)
+as per the Canadian Forest Fire Weather Index (FWI) System.}
 
-\item{DMC}{A numeric value between \code{5} and \code{250} (inclusive). The Duff
-Moisture Code (DMC) as per the Canadian Forest Fire Weather Index (FWI)
-System.}
+\item{DMC}{A numeric value in \verb{[5, 250]}. The Duff Moisture Code (DMC) as per
+the Canadian Forest Fire Weather Index (FWI) System.}
 
 \item{season}{One of \verb{\{"spring", "sp-su", "summer", "fall"\}} or numeric
 equivalents \verb{\{1, 1.5, 2, 3\}}. See \code{\link[=t_mcSeason]{t_mcSeason()}}.}

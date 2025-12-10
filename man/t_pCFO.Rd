@@ -10,16 +10,16 @@ t_pCFO(mcsa = 10, mcF = NULL, FSG = 6, SFC = 2, ws = 12)
 \arguments{
 \item{mcsa}{A numeric value in \verb{[3, 20]}. Fine dead surface litter moisture
 content calculated using the stand-adjusted model (mcsa). May be estimated
-using \code{\link[=t_mcsa]{t_mcsa()}}. If \code{mcF} is anything other than NULL, it will override
+using \code{\link[=t_mcsa]{t_mcsa()}}. If \code{mcF} is anything other than \code{NULL}, it will override
 \code{mcsa}.}
 
 \item{mcF}{A numeric value in \verb{[3, 20]}. Fine dead surface litter moisture
 content calculated using the Fine Fuel Moisture Code (FFMC). May be
-estimated using \code{\link[=t_mcF]{t_mcF()}}. If NULL, \code{mcsa} will be used instead.}
+estimated using \code{\link[=t_mcF]{t_mcF()}}. If \code{NULL}, \code{mcsa} will be used instead.}
 
 \item{FSG}{A numeric value in \verb{[0.5, 20]}. Fuel strata gap in metres. The
 vertical distance between the top of the surface fuels and the lower limit
-of the canopy fuels. Analogous to crown base height (CBH) in the absence of
+of the canopy fuels. Analogous to crown base height in the absence of
 mid-story ladder fuels.}
 
 \item{SFC}{A numeric value in \verb{[0.1, 6]}. Surface fuel consumption in kg/m^2.
@@ -43,5 +43,9 @@ t_pCFO(mcsa = 10, FSG = 6, SFC = 2, ws = 11)
 t_pCFO(mcsa = 9, FSG = 6, SFC = 2, ws = 12)
 # High probability
 t_pCFO(mcsa = 8, FSG = 6, SFC = 2, ws = 13)
+# Using t_McF()
+t_pCFO(mcF = t_mcF(89), FSG = 6, SFC = 2, ws = 13)
+# Using t_mcsa()
+t_pCFO(mcsa = t_mcsa(89, 40, 2, 2, "p"), FSG = 6, SFC = 2, ws = 13)
 
 }

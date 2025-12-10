@@ -68,12 +68,10 @@
 #'   speed and the second defines the maximum, in km/h. Calculations are carried
 #'   out on the sequence of integer values from the minimum to the maximum
 #'   (inclusive).
-#' @param FFMC A numeric value between `80` and `99` (inclusive). The Fine Fuel
-#'   Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index (FWI)
-#'   System.
-#' @param DMC A numeric value between `5` and `250` (inclusive). The Duff
-#'   Moisture Code (DMC) as per the Canadian Forest Fire Weather Index (FWI)
-#'   System.
+#' @param FFMC A numeric value in `[80, 99]`. The Fine Fuel Moisture Code (FFMC)
+#'   as per the Canadian Forest Fire Weather Index (FWI) System.
+#' @param DMC A numeric value in `[5, 250]`. The Duff Moisture Code (DMC) as per
+#'   the Canadian Forest Fire Weather Index (FWI) System.
 #' @param smooth_CFO Defines whether crown fire initiation is modeled as a
 #'   smooth transition (`TRUE`) or an instantaneous occurrence (`FALSE`).
 #' @param CF_thresh A numeric value in `[0, 1]`. Defines the pCFO threshold at

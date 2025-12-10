@@ -172,14 +172,14 @@ t_mcsa <- function(
 #'
 #' @param mcsa A numeric value in `[3, 20]`. Fine dead surface litter moisture
 #'   content calculated using the stand-adjusted model (mcsa). May be estimated
-#'   using [t_mcsa()]. If `mcF` is anything other than NULL, it will override
+#'   using [t_mcsa()]. If `mcF` is anything other than `NULL`, it will override
 #'   `mcsa`.
 #' @param mcF A numeric value in `[3, 20]`. Fine dead surface litter moisture
 #'   content calculated using the Fine Fuel Moisture Code (FFMC). May be
-#'   estimated using [t_mcF()]. If NULL, `mcsa` will be used instead.
+#'   estimated using [t_mcF()]. If `NULL`, `mcsa` will be used instead.
 #' @param FSG A numeric value in `[0.5, 20]`. Fuel strata gap in metres. The
 #'   vertical distance between the top of the surface fuels and the lower limit
-#'   of the canopy fuels. Analogous to crown base height (CBH) in the absence of
+#'   of the canopy fuels. Analogous to crown base height in the absence of
 #'   mid-story ladder fuels.
 #' @param SFC A numeric value in `[0.1, 6]`. Surface fuel consumption in kg/m^2.
 #'   May be estimated using [t_SFC_FBP()] or [t_SFC_deGroot()].
@@ -196,6 +196,10 @@ t_mcsa <- function(
 #' t_pCFO(mcsa = 9, FSG = 6, SFC = 2, ws = 12)
 #' # High probability
 #' t_pCFO(mcsa = 8, FSG = 6, SFC = 2, ws = 13)
+#' # Using t_McF()
+#' t_pCFO(mcF = t_mcF(89), FSG = 6, SFC = 2, ws = 13)
+#' # Using t_mcsa()
+#' t_pCFO(mcsa = t_mcsa(89, 40, 2, 2, "p"), FSG = 6, SFC = 2, ws = 13)
 #'
 #' @importFrom checkmate assert_number
 #'
@@ -206,6 +210,9 @@ t_pCFO <- function(mcsa = 10, mcF = NULL, FSG = 6, SFC = 2, ws = 12) {
   assert_number(FSG, lower = 0.5, upper = 20)
   assert_number(SFC, lower = 0.1, upper = 6)
   assert_number(ws, lower = 0, upper = 60)
+  if (is.null(mcsa) & is.null(mcF)) {
+    stop("Either `mcsa` or `mcF` must be non-NULL.")
+  }
   # Calculate
   model <- if (is.null(mcF)) 11 else 10
   mc    <- if (is.null(mcF)) mcsa else mcF
@@ -232,11 +239,15 @@ t_pCFO <- function(mcsa = 10, mcF = NULL, FSG = 6, SFC = 2, ws = 12) {
 #'
 #' @examples
 #' # Surface fire
-#' t_FT(mcsa = 9, FSG = 6, SFC = 2, ws = 11, CBD = 0.1)
+#' t_FT(mcsa = 9, FSG = 6, SFC = 2, CBD = 0.1, ws = 11)
 #' # Passive crown fire
-#' t_FT(mcsa = 8, FSG = 6, SFC = 2, ws = 11, CBD = 0.1)
+#' t_FT(mcsa = 8, FSG = 6, SFC = 2, CBD = 0.1, ws = 11)
 #' # Active crown fire
-#' t_FT(mcsa = 8, FSG = 6, SFC = 2, ws = 11, CBD = 0.2)
+#' t_FT(mcsa = 8, FSG = 6, SFC = 2, CBD = 0.2, ws = 11)
+#' # Using t_mcF()
+#' t_FT(mcF = t_mcF(91), FSG = 6, SFC = 2, CBD = 0.2, ws = 13)
+#' # Using t_mcsa()
+#' t_FT(mcsa = t_mcsa(91, 60, 2, 2, "p"), FSG = 6, SFC = 2, CBD = 0.2, ws = 13)
 #'
 #' @importFrom checkmate assert_number
 #'
@@ -254,9 +265,12 @@ t_FT <- function(
   assert_number(mcF, lower = 3, upper = 20, null.ok = TRUE)
   assert_number(FSG, lower = 0.5, upper = 20)
   assert_number(SFC, lower = 0.1, upper = 6)
-  assert_numeric(CBD, lower = 0.01, upper = 0.8)
+  assert_number(CBD, lower = 0.01, upper = 0.8)
   assert_number(ws, lower = 0, upper = 60)
   assert_number(CF_thresh, lower = 0, upper = 1)
+  if (is.null(mcsa) & is.null(mcF)) {
+    stop("Either `mcsa` or `mcF` must be non-NULL.")
+  }
   # Calculate
   model  <- if (is.null(mcF)) 11 else 10
   mc     <- if (is.null(mcF)) mcsa else mcF
@@ -291,7 +305,16 @@ t_FT <- function(
 #' @export
 #'
 #' @examples
-#' # TODO
+#' # Surface fire
+#' t_ROS(mcsa = 9, FSG = 6, SFC = 2, CBD = 0.1, ws = 11)
+#' # Passive crown fire
+#' t_ROS(mcsa = 8, FSG = 6, SFC = 2, CBD = 0.1, ws = 11)
+#' # Active crown fire
+#' t_ROS(mcsa = 8, FSG = 6, SFC = 2, CBD = 0.2, ws = 11)
+#' # Using t_mcF()
+#' t_ROS(mcF = t_mcF(91), FSG = 6, SFC = 2, CBD = 0.2, ws = 13)
+#' # Using t_mcsa()
+#' t_ROS(mcsa = t_mcsa(91, 60, 2, 2, "p"), FSG = 6, SFC = 2, CBD = 0.2, ws = 13)
 #'
 #' @importFrom checkmate assert_number
 #'
@@ -309,9 +332,12 @@ t_ROS <- function(
   assert_number(mcF, lower = 3, upper = 20, null.ok = TRUE)
   assert_number(FSG, lower = 0.5, upper = 20)
   assert_number(SFC, lower = 0.1, upper = 6)
-  assert_numeric(CBD, lower = 0.01, upper = 0.8)
+  assert_number(CBD, lower = 0.01, upper = 0.8)
   assert_number(ws, lower = 0, upper = 60)
   assert_number(CF_thresh, lower = 0, upper = 1)
+  if (is.null(mcsa) & is.null(mcF)) {
+    stop("Either `mcsa` or `mcF` must be non-NULL.")
+  }
   # Calculate
   model  <- if (is.null(mcF)) 11 else 10
   mc     <- if (is.null(mcF)) mcsa else mcF

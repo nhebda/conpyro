@@ -1,3 +1,51 @@
+# t_ROS() works
+
+    Code
+      t_ROS(mcsa = 9, FSG = 6, SFC = 2, CBD = 0.1, ws = 11)
+    Output
+      $`Predicted rate of spread (m/min)`
+      [1] 2.08
+      
+      $`Type of fire`
+      [1] "S"
+      
+
+---
+
+    Code
+      t_ROS(mcsa = 8, FSG = 6, SFC = 2, CBD = 0.1, ws = 11)
+    Output
+      $`Predicted rate of spread (m/min)`
+      [1] 9.69
+      
+      $`Type of fire`
+      [1] "PC"
+      
+
+---
+
+    Code
+      t_ROS(mcsa = 8, FSG = 6, SFC = 2, CBD = 0.2, ws = 11)
+    Output
+      $`Predicted rate of spread (m/min)`
+      [1] 19.61
+      
+      $`Type of fire`
+      [1] "AC"
+      
+
+---
+
+    Code
+      t_ROS(mcsa = 8, CBD = 0.2, ws = 11, CF_thresh = 0.6)
+    Output
+      $`Predicted rate of spread (m/min)`
+      [1] 2.61
+      
+      $`Type of fire`
+      [1] "S"
+      
+
 # t_SFC_FBP() works
 
     Code

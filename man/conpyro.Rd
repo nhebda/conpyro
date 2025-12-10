@@ -90,13 +90,11 @@ speed and the second defines the maximum, in km/h. Calculations are carried
 out on the sequence of integer values from the minimum to the maximum
 (inclusive).}
 
-\item{FFMC}{A numeric value between \code{80} and \code{99} (inclusive). The Fine Fuel
-Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index (FWI)
-System.}
+\item{FFMC}{A numeric value in \verb{[80, 99]}. The Fine Fuel Moisture Code (FFMC)
+as per the Canadian Forest Fire Weather Index (FWI) System.}
 
-\item{DMC}{A numeric value between \code{5} and \code{250} (inclusive). The Duff
-Moisture Code (DMC) as per the Canadian Forest Fire Weather Index (FWI)
-System.}
+\item{DMC}{A numeric value in \verb{[5, 250]}. The Duff Moisture Code (DMC) as per
+the Canadian Forest Fire Weather Index (FWI) System.}
 
 \item{smooth_CFO}{Defines whether crown fire initiation is modeled as a
 smooth transition (\code{TRUE}) or an instantaneous occurrence (\code{FALSE}).}
