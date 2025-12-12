@@ -17,13 +17,13 @@ ladder_midstory_saplings(
 \arguments{
 \item{hs}{Sapling height in metres.}
 
-\item{zs}{Sapling LCBH in metres.}
+\item{zs}{Sapling lower crown base height (LCBH) in metres.}
 
-\item{zp}{Overstory LCBH in metres.}
+\item{zp}{Overstory lower crown base height (LCBH) in metres.}
 
 \item{lnfl}{Live needle fuel load in kg/m^2.}
 
-\item{sapling_FMC}{Sapling foliar moisture content in percent.}
+\item{sapling_FMC}{Sapling foliar moisture content (FMC) in percent.}
 
 \item{actual_SFC}{Actual SFC in kg/m^2.}
 }
@@ -38,7 +38,7 @@ midstory sapling cohort (>1.5 m height), e.g., Jack pine overstory with
 midstory live black spruce saplings. These equations assume that the fuel
 strata gap (FSG) represents the distance from the sapling crown centroid to
 the overstory lower crown base height (LCBH). Calculate lower crowning
-probability to the sapling cohort separately. Caution: Experimental! These
+probability to the sapling cohort separately. CAUTION: Experimental! These
 equations are under development and may contain errors.
 }
 \examples{

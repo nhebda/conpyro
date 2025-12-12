@@ -370,28 +370,32 @@ t_ROS <- function(
 #' Fire Behavior Prediction System (FBPS) equations. A simple wrapper for
 #' `cffdrs:::foliar_moisture_content`.
 #'
-#' @param LAT A numeric value between `42` and `70` (inclusive). Latitude in
-#'   decimal degrees.
-#' @param LONG A numeric value between `53` and `141` (inclusive). Longitude in
-#'   decimal degrees.
-#' @param ELV A numeric value between `0` and `2500` (inclusive).Elevation in
-#'   metres about sea level.
-#' @param Dj A numeric value between `0` and `365` (inclusive). Julian day.
+#' @param LAT A numeric value in `[41, 70]`. Latitude in decimal degrees.
+#' @param LONG A numeric value in `[52, 141]`. Longitude in decimal degrees.
+#' @param ELV A numeric value in `[0, 2500]` or `NA`. Elevation in metres above
+#'   sea level. If `NA`, elevation will not be used in the calculation.
+#' @param Dj A numeric value in `[1, 366]`. Julian day.
 #'
-#' @returns A list of length `1` consisting of a numeric value named `FMC`.
+#' @returns A numeric value giving an estimate of foliar moisture content in
+#'   percent.
 #' @export
 #'
 #' @examples
+#' # Excluding elevation
+#' t_FMC(LAT = 54.13, LONG = 116.89, ELV = NA, Dj = 178)
+#' # Including elevation
 #' t_FMC(LAT = 54.13, LONG = 116.89, ELV = 1000, Dj = 178)
 #'
 #' @importFrom checkmate assert_number
-t_FMC <- function(LAT = 48, LONG = 83.3, ELV = 100, Dj = 200) {
-  assert_number(LAT, lower = 42, upper = 70)
-  assert_number(LONG, lower = 53, upper = 141)
-  assert_number(ELV, lower = 0, upper = 2500)
-  assert_number(Dj, lower = 0, upper = 365)
+#'
+t_FMC <- function(LAT = 48, LONG = 83.3, ELV = NA, Dj = 200) {
+  assert_number(LAT, lower = 41, upper = 70)
+  assert_number(LONG, lower = 52, upper = 141)
+  assert_number(ELV, lower = 0, upper = 2500, na.ok = TRUE)
+  assert_number(Dj, lower = 1, upper = 366)
+  ELV <- if (is.na(ELV)) 0 else ELV
   FMC <- cffdrs:::foliar_moisture_content(LAT, LONG, ELV, Dj, 0)
-  out <- list("FMC" = round(FMC, 2))
+  out <- round(FMC, 2)
   return(out)
 }
 
@@ -403,10 +407,10 @@ t_FMC <- function(LAT = 48, LONG = 83.3, ELV = 100, Dj = 200) {
 #' alternative SFC calculation method is offered by [t_SFC_deGroot()].
 #'
 #' @inheritParams conpyro
-#' @param BUI A numeric value between `80` and `200` (inclusive). The Buildup
-#'   Index (BUI) as per the Canadian Forest Fire Weather Index (FWI) System.
-#' @param PC A numeric value between `0` and `100` (inclusive). Percent conifer
-#'   for M1/M2 fuel types.
+#' @param BUI A numeric value in `[80, 200]`. The Buildup Index (BUI) as per the
+#'   Canadian Forest Fire Weather Index (FWI) System.
+#' @param PC A numeric value in `[0, 100]`. Percent conifer for M1/M2 fuel
+#'   types.
 #'
 #' @returns A list of length `10` consisting of named numeric values
 #'   corresponding to the major FBPS fuel types.
@@ -416,6 +420,7 @@ t_FMC <- function(LAT = 48, LONG = 83.3, ELV = 100, Dj = 200) {
 #' t_SFC_FBP(BUI = 81, FFMC = 92, PC = 55)
 #'
 #' @importFrom checkmate assert_number
+#'
 t_SFC_FBP <- function(BUI = 85, FFMC = 91, PC = 40) {
   assert_number(BUI, lower = 0, upper = 200)
   assert_number(FFMC, lower = 80, upper = 99)
@@ -453,19 +458,20 @@ t_SFC_FBP <- function(BUI = 85, FFMC = 91, PC = 40) {
 #' BUI. See De Groot et al. (2009) for details.
 #'
 #' @inheritParams t_SFC_FBP
-#' @param FFL A numeric value between `1` and `5` (inclusive). Forest floor load
-#'   (litter + duff) in kg/m^2.
-#' @param FWFL A numeric value between `0` and `2` (inclusive). Fine woody fuel
-#'   load (<7 cm diam.) in kg/m^2.
+#' @param FFL A numeric value in `[1, 5]`. Forest floor load (litter + duff) in
+#'   kg/m^2.
+#' @param FWFL A numeric value in `[0, 2]`. Fine woody fuel load (<7 cm diam.)
+#'   in kg/m^2.
 #'
-#' @returns A list of length `2` consisting of one numeric value named
-#'   `Forest Floor Fuel Consumption` and one numeric value named `SFC`.
+#' @returns A list of length `2` consisting of one numeric value named `Forest
+#'   Floor Fuel Consumption` and one numeric value named `SFC`, both in kg/m^2.
 #' @export
 #'
 #' @examples
 #' t_SFC_deGroot(BUI = 78, FFL = 2.8, FWFL = 0.4)
 #'
 #' @importFrom checkmate assert_number
+#'
 t_SFC_deGroot <- function(BUI = 85, FFL = 3.5, FWFL = 0.3) {
   assert_number(BUI, lower = 0, upper = 200)
   assert_number(FFL, lower = 1, upper = 5)
@@ -481,15 +487,14 @@ t_SFC_deGroot <- function(BUI = 85, FFL = 3.5, FWFL = 0.3) {
 #'
 #' `ladder_standing_dead()` estimates standing dead ladder fuels for midstory
 #' small snags <5 cm DBH, e.g., Jack pine overstory with dense standing dead
-#' pine ladder fuels. Caution: Experimental! These equations are under
+#' pine ladder fuels. CAUTION: Experimental! These equations are under
 #' development and may contain errors.
 #'
 #' @inheritParams t_pCFO
-#' @param consumption A numeric value between `0.1` and `10` (inclusive).
-#'   Consumption of fine dead elevated wood in kg/m^2. Assumes continuity with
-#'   surface fuels.
-#' @param cl A numeric value between `0.5` and `15` (inclusive). Mean centroid
-#'   height of ladder fuels in metres.
+#' @param cons A numeric value in `[0.1, 10]`. Consumption of fine dead elevated
+#'   wood in kg/m^2. Assumes continuity with surface fuels.
+#' @param cl A numeric value in `[0.5, 15]`. Mean centroid height of ladder
+#'   fuels in metres.
 #'
 #' @returns A list of length `2` consisting of one numeric value named
 #'   `LFSG [m]` and one numeric value named
@@ -497,16 +502,17 @@ t_SFC_deGroot <- function(BUI = 85, FFL = 3.5, FWFL = 0.3) {
 #' @export
 #'
 #' @examples
-#' ladder_standing_dead(consumption = 1.1, cl = 5.1, FSG = 6.3)
+#' ladder_standing_dead(cons = 1.1, cl = 5.1, FSG = 6.3)
 #'
 #' @importFrom checkmate assert_number
-ladder_standing_dead <- function(consumption = 0.2, cl = 4, FSG = 6) {
-  assert_number(consumption, lower = 0.1, upper = 10)
+#'
+ladder_standing_dead <- function(cons = 0.2, cl = 4, FSG = 6) {
+  assert_number(cons, lower = 0.1, upper = 10)
   assert_number(cl, lower = 0.5, upper = 15)
   assert_number(FSG, lower = 0.5, upper = 20)
   snag_centroid <- if((cl / 2) >= FSG) FSG - 0.5 else cl / 2
   zl            <- FSG - snag_centroid
-  scaled_SFC    <- (FSG / zl)^1.5 * consumption * 3.1
+  scaled_SFC    <- (FSG / zl)^1.5 * cons * 3.1
   out           <- list(
     "LFSG [m]" = round(zl, 2),
     "Scaled SFC contribution, small snags [kg/m^2]" = round(scaled_SFC, 2)
@@ -522,14 +528,14 @@ ladder_standing_dead <- function(consumption = 0.2, cl = 4, FSG = 6) {
 #' midstory live black spruce saplings. These equations assume that the fuel
 #' strata gap (FSG) represents the distance from the sapling crown centroid to
 #' the overstory lower crown base height (LCBH). Calculate lower crowning
-#' probability to the sapling cohort separately. Caution: Experimental! These
+#' probability to the sapling cohort separately. CAUTION: Experimental! These
 #' equations are under development and may contain errors.
 #'
 #' @param hs Sapling height in metres.
-#' @param zs Sapling LCBH in metres.
-#' @param zp Overstory LCBH in metres.
+#' @param zs Sapling lower crown base height (LCBH) in metres.
+#' @param zp Overstory lower crown base height (LCBH) in metres.
 #' @param lnfl Live needle fuel load in kg/m^2.
-#' @param sapling_FMC Sapling foliar moisture content in percent.
+#' @param sapling_FMC Sapling foliar moisture content (FMC) in percent.
 #' @param actual_SFC Actual SFC in kg/m^2.
 #'
 #' @returns A list of length `5` consisting of numeric values named
@@ -542,6 +548,7 @@ ladder_standing_dead <- function(consumption = 0.2, cl = 4, FSG = 6) {
 #' = 120, actual_SFC  = 2.8)
 #'
 #' @importFrom checkmate assert_number
+#'
 ladder_midstory_saplings <- function(
     hs          = 5,
     zs          = 1,

@@ -4,15 +4,14 @@
 \alias{ladder_standing_dead}
 \title{Estimate standing dead ladder fuels for midstory small snags <5 cm DBH}
 \usage{
-ladder_standing_dead(consumption = 0.2, cl = 4, FSG = 6)
+ladder_standing_dead(cons = 0.2, cl = 4, FSG = 6)
 }
 \arguments{
-\item{consumption}{A numeric value between \code{0.1} and \code{10} (inclusive).
-Consumption of fine dead elevated wood in kg/m^2. Assumes continuity with
-surface fuels.}
+\item{cons}{A numeric value in \verb{[0.1, 10]}. Consumption of fine dead elevated
+wood in kg/m^2. Assumes continuity with surface fuels.}
 
-\item{cl}{A numeric value between \code{0.5} and \code{15} (inclusive). Mean centroid
-height of ladder fuels in metres.}
+\item{cl}{A numeric value in \verb{[0.5, 15]}. Mean centroid height of ladder
+fuels in metres.}
 
 \item{FSG}{A numeric value in \verb{[0.5, 20]}. Fuel strata gap in metres. The
 vertical distance between the top of the surface fuels and the lower limit
@@ -27,10 +26,10 @@ A list of length \code{2} consisting of one numeric value named
 \description{
 \code{ladder_standing_dead()} estimates standing dead ladder fuels for midstory
 small snags <5 cm DBH, e.g., Jack pine overstory with dense standing dead
-pine ladder fuels. Caution: Experimental! These equations are under
+pine ladder fuels. CAUTION: Experimental! These equations are under
 development and may contain errors.
 }
 \examples{
-ladder_standing_dead(consumption = 1.1, cl = 5.1, FSG = 6.3)
+ladder_standing_dead(cons = 1.1, cl = 5.1, FSG = 6.3)
 
 }

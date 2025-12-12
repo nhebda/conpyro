@@ -177,56 +177,236 @@ test_that("t_ROS() works", {
 })
 
 test_that("t_FMC() works", {
-  expect_identical(t_FMC(), list(FMC = 120))
-  expect_error(t_FMC(LAT = 41))
-  expect_error(t_FMC(LAT = 71))
-  expect_error(t_FMC(LONG = 52))
-  expect_error(t_FMC(LONG = 142))
-  expect_error(t_FMC(ELV = -1))
-  expect_error(t_FMC(ELV = 2501))
-  expect_error(t_FMC(Dj = -1))
-  expect_error(t_FMC(Dj = 367))
+  expect_identical(t_FMC(LAT = 48, LONG = 83.3, ELV = 100, Dj = 200), 120)
+  expect_error(t_FMC(LAT = 40, LONG = 83.3, ELV = 100, Dj = 200))
+  expect_error(t_FMC(LAT = 71, LONG = 83.3, ELV = 100, Dj = 200))
+  expect_error(t_FMC(LAT = 48, LONG = 51, ELV = 100, Dj = 200))
+  expect_error(t_FMC(LAT = 48, LONG = 142, ELV = 100, Dj = 200))
+  expect_error(t_FMC(LAT = 48, LONG = 83.3, ELV = -1, Dj = 200))
+  expect_error(t_FMC(LAT = 48, LONG = 83.3, ELV = 2501, Dj = 200))
+  expect_error(t_FMC(LAT = 48, LONG = 83.3, ELV = 100, Dj = 0))
+  expect_error(t_FMC(LAT = 48, LONG = 83.3, ELV = 100, Dj = 367))
+  expect_error(t_FMC(LAT = "", LONG = 83.3, ELV = 100, Dj = 200))
+  expect_error(t_FMC(LAT = 48, LONG = "", ELV = 100, Dj = 200))
+  expect_error(t_FMC(LAT = 48, LONG = 83.3, ELV = "", Dj = 200))
+  expect_error(t_FMC(LAT = 48, LONG = 83.3, ELV = 100, Dj = ""))
+  expect_error(t_FMC(LAT = NA, LONG = 83.3, ELV = 100, Dj = 200))
+  expect_error(t_FMC(LAT = 48, LONG = NA, ELV = 100, Dj = 200))
+  expect_error(t_FMC(LAT = 48, LONG = 83.3, ELV = 100, Dj = NA))
+  expect_error(t_FMC(LAT = NULL, LONG = 83.3, ELV = 100, Dj = 200))
+  expect_error(t_FMC(LAT = 48, LONG = NULL, ELV = 100, Dj = 200))
+  expect_error(t_FMC(LAT = 48, LONG = 83.3, ELV = NULL, Dj = 200))
+  expect_error(t_FMC(LAT = 48, LONG = 83.3, ELV = 100, Dj = NULL))
 })
 
 test_that("t_SFC_FBP() works", {
-  expect_snapshot(t_SFC_FBP())
-  expect_error(t_SFC_FBP(BUI = -1))
-  expect_error(t_SFC_FBP(BUI = 201))
-  expect_error(t_SFC_FBP(FFMC = 79))
-  expect_error(t_SFC_FBP(FFMC = 101))
-  expect_error(t_SFC_FBP(PC = -1))
-  expect_error(t_SFC_FBP(PC = 101))
+  expect_snapshot(t_SFC_FBP(BUI = 85, FFMC = 91, PC = 40))
+  expect_error(t_SFC_FBP(BUI = -1, FFMC = 91, PC = 40))
+  expect_error(t_SFC_FBP(BUI = 201, FFMC = 91, PC = 40))
+  expect_error(t_SFC_FBP(BUI = 85, FFMC = 79, PC = 40))
+  expect_error(t_SFC_FBP(BUI = 85, FFMC = 100, PC = 40))
+  expect_error(t_SFC_FBP(BUI = 85, FFMC = 91, PC = -1))
+  expect_error(t_SFC_FBP(BUI = 85, FFMC = 91, PC = 101))
+  expect_error(t_SFC_FBP(BUI = "", FFMC = 91, PC = 40))
+  expect_error(t_SFC_FBP(BUI = 85, FFMC = "", PC = 40))
+  expect_error(t_SFC_FBP(BUI = 85, FFMC = 91, PC = ""))
+  expect_error(t_SFC_FBP(BUI = NA, FFMC = 91, PC = 40))
+  expect_error(t_SFC_FBP(BUI = 85, FFMC = NA, PC = 40))
+  expect_error(t_SFC_FBP(BUI = 85, FFMC = 91, PC = NA))
+  expect_error(t_SFC_FBP(BUI = NULL, FFMC = 91, PC = 40))
+  expect_error(t_SFC_FBP(BUI = 85, FFMC = NULL, PC = 40))
+  expect_error(t_SFC_FBP(BUI = 85, FFMC = 91, PC = NULL))
 })
 
 test_that("t_SFC_deGroot() works", {
-  expect_identical(
-    t_SFC_deGroot(),
-    list("Forest Floor Fuel Consumption" = 1.65, "SFC" = 1.95)
-  )
-  expect_error(t_SFC_FBP(BUI = -1))
-  expect_error(t_SFC_FBP(BUI = 201))
-  expect_error(t_SFC_FBP(FFL = 0.5))
-  expect_error(t_SFC_FBP(FFL = 5.5))
-  expect_error(t_SFC_FBP(FWFL = -1))
-  expect_error(t_SFC_FBP(FWFL = 2.5))
+  expect_snapshot(t_SFC_deGroot(BUI = 85, FFL = 3.5, FWFL = 0.3))
+  expect_error(t_SFC_deGroot(BUI = -1, FFL = 3.5, FWFL = 0.3))
+  expect_error(t_SFC_deGroot(BUI = 201, FFL = 3.5, FWFL = 0.3))
+  expect_error(t_SFC_deGroot(BUI = 85, FFL = 0.5, FWFL = 0.3))
+  expect_error(t_SFC_deGroot(BUI = 85, FFL = 5.5, FWFL = 0.3))
+  expect_error(t_SFC_deGroot(BUI = 85, FFL = 3.5, FWFL = -1))
+  expect_error(t_SFC_deGroot(BUI = 85, FFL = 3.5, FWFL = 2.5))
+  expect_error(t_SFC_deGroot(BUI = "", FFL = 3.5, FWFL = 0.3))
+  expect_error(t_SFC_deGroot(BUI = 85, FFL = "", FWFL = 0.3))
+  expect_error(t_SFC_deGroot(BUI = 85, FFL = 3.5, FWFL = ""))
+  expect_error(t_SFC_deGroot(BUI = NA, FFL = 3.5, FWFL = 0.3))
+  expect_error(t_SFC_deGroot(BUI = 85, FFL = NA, FWFL = 0.3))
+  expect_error(t_SFC_deGroot(BUI = 85, FFL = 3.5, FWFL = NA))
+  expect_error(t_SFC_deGroot(BUI = NULL, FFL = 3.5, FWFL = 0.3))
+  expect_error(t_SFC_deGroot(BUI = 85, FFL = NULL, FWFL = 0.3))
+  expect_error(t_SFC_deGroot(BUI = 85, FFL = 3.5, FWFL = NULL))
 })
 
 test_that("ladder_standing_dead() works", {
-  expect_identical(
-    ladder_standing_dead(),
-    list(
-      "LFSG [m]" = 4,
-      "Scaled SFC contribution, small snags [kg/m^2]" = 1.14
-    )
-  )
-  expect_error(ladder_standing_dead(consumption = 0))
-  expect_error(ladder_standing_dead(consumption = 11))
-  expect_error(ladder_standing_dead(cl = 0))
-  expect_error(ladder_standing_dead(cl = 16))
-  expect_error(ladder_standing_dead(FSG = 0))
-  expect_error(ladder_standing_dead(FSG = 21))
+  expect_snapshot(ladder_standing_dead(cons = 0.2, cl = 4, FSG = 6))
+  expect_error(ladder_standing_dead(cons = 0, cl = 4, FSG = 6))
+  expect_error(ladder_standing_dead(cons = 11, cl = 4, FSG = 6))
+  expect_error(ladder_standing_dead(cons = 0.2, cl = 0, FSG = 6))
+  expect_error(ladder_standing_dead(cons = 0.2, cl = 16, FSG = 6))
+  expect_error(ladder_standing_dead(cons = 0.2, cl = 4, FSG = 0))
+  expect_error(ladder_standing_dead(cons = 0.2, cl = 4, FSG = 21))
+  expect_error(ladder_standing_dead(cons = "", cl = 4, FSG = 6))
+  expect_error(ladder_standing_dead(cons = 0.2, cl = "", FSG = 6))
+  expect_error(ladder_standing_dead(cons = 0.2, cl = 4, FSG = ""))
+  expect_error(ladder_standing_dead(cons = NA, cl = 4, FSG = 6))
+  expect_error(ladder_standing_dead(cons = 0.2, cl = NA, FSG = 6))
+  expect_error(ladder_standing_dead(cons = 0.2, cl = 4, FSG = NA))
+  expect_error(ladder_standing_dead(cons = NULL, cl = 4, FSG = 6))
+  expect_error(ladder_standing_dead(cons = 0.2, cl = NULL, FSG = 6))
+  expect_error(ladder_standing_dead(cons = 0.2, cl = 4, FSG = NULL))
 })
 
 test_that("ladder_midstory_saplings() works", {
-  expect_snapshot(ladder_midstory_saplings())
+  expect_snapshot(ladder_midstory_saplings(
+    hs          = 5,
+    zs          = 1,
+    zp          = 6,
+    lnfl        = 0.5,
+    sapling_FMC = 120,
+    actual_SFC  = 2.7
+  ))
+  expect_error(ladder_midstory_saplings(
+    hs          = "",
+    zs          = 1,
+    zp          = 6,
+    lnfl        = 0.5,
+    sapling_FMC = 120,
+    actual_SFC  = 2.7
+  ))
+  expect_error(ladder_midstory_saplings(
+    hs          = 5,
+    zs          = "",
+    zp          = 6,
+    lnfl        = 0.5,
+    sapling_FMC = 120,
+    actual_SFC  = 2.7
+  ))
+  expect_error(ladder_midstory_saplings(
+    hs          = 5,
+    zs          = 1,
+    zp          = "",
+    lnfl        = 0.5,
+    sapling_FMC = 120,
+    actual_SFC  = 2.7
+  ))
+  expect_error(ladder_midstory_saplings(
+    hs          = 5,
+    zs          = 1,
+    zp          = 6,
+    lnfl        = "",
+    sapling_FMC = 120,
+    actual_SFC  = 2.7
+  ))
+  expect_error(ladder_midstory_saplings(
+    hs          = 5,
+    zs          = 1,
+    zp          = 6,
+    lnfl        = 0.5,
+    sapling_FMC = "",
+    actual_SFC  = 2.7
+  ))
+  expect_error(ladder_midstory_saplings(
+    hs          = 5,
+    zs          = 1,
+    zp          = 6,
+    lnfl        = 0.5,
+    sapling_FMC = 120,
+    actual_SFC  = ""
+  ))
+  expect_error(ladder_midstory_saplings(
+    hs          = NA,
+    zs          = 1,
+    zp          = 6,
+    lnfl        = 0.5,
+    sapling_FMC = 120,
+    actual_SFC  = 2.7
+  ))
+  expect_error(ladder_midstory_saplings(
+    hs          = 5,
+    zs          = NA,
+    zp          = 6,
+    lnfl        = 0.5,
+    sapling_FMC = 120,
+    actual_SFC  = 2.7
+  ))
+  expect_error(ladder_midstory_saplings(
+    hs          = 5,
+    zs          = 1,
+    zp          = NA,
+    lnfl        = 0.5,
+    sapling_FMC = 120,
+    actual_SFC  = 2.7
+  ))
+  expect_error(ladder_midstory_saplings(
+    hs          = 5,
+    zs          = 1,
+    zp          = 6,
+    lnfl        = NA,
+    sapling_FMC = 120,
+    actual_SFC  = 2.7
+  ))
+  expect_error(ladder_midstory_saplings(
+    hs          = 5,
+    zs          = 1,
+    zp          = 6,
+    lnfl        = 0.5,
+    sapling_FMC = NA,
+    actual_SFC  = 2.7
+  ))
+  expect_error(ladder_midstory_saplings(
+    hs          = 5,
+    zs          = 1,
+    zp          = 6,
+    lnfl        = 0.5,
+    sapling_FMC = 120,
+    actual_SFC  = NA
+  ))
+  expect_error(ladder_midstory_saplings(
+    hs          = NULL,
+    zs          = 1,
+    zp          = 6,
+    lnfl        = 0.5,
+    sapling_FMC = 120,
+    actual_SFC  = 2.7
+  ))
+  expect_error(ladder_midstory_saplings(
+    hs          = 5,
+    zs          = NULL,
+    zp          = 6,
+    lnfl        = 0.5,
+    sapling_FMC = 120,
+    actual_SFC  = 2.7
+  ))
+  expect_error(ladder_midstory_saplings(
+    hs          = 5,
+    zs          = 1,
+    zp          = NULL,
+    lnfl        = 0.5,
+    sapling_FMC = 120,
+    actual_SFC  = 2.7
+  ))
+  expect_error(ladder_midstory_saplings(
+    hs          = 5,
+    zs          = 1,
+    zp          = 6,
+    lnfl        = NULL,
+    sapling_FMC = 120,
+    actual_SFC  = 2.7
+  ))
+  expect_error(ladder_midstory_saplings(
+    hs          = 5,
+    zs          = 1,
+    zp          = 6,
+    lnfl        = 0.5,
+    sapling_FMC = NULL,
+    actual_SFC  = 2.7
+  ))
+  expect_error(ladder_midstory_saplings(
+    hs          = 5,
+    zs          = 1,
+    zp          = 6,
+    lnfl        = 0.5,
+    sapling_FMC = 120,
+    actual_SFC  = NULL
+  ))
 })

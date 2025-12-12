@@ -4,22 +4,21 @@
 \alias{t_FMC}
 \title{Estimate foliar moisture content (FMC)}
 \usage{
-t_FMC(LAT = 48, LONG = 83.3, ELV = 100, Dj = 200)
+t_FMC(LAT = 48, LONG = 83.3, ELV = NA, Dj = 200)
 }
 \arguments{
-\item{LAT}{A numeric value between \code{42} and \code{70} (inclusive). Latitude in
-decimal degrees.}
+\item{LAT}{A numeric value in \verb{[41, 70]}. Latitude in decimal degrees.}
 
-\item{LONG}{A numeric value between \code{53} and \code{141} (inclusive). Longitude in
-decimal degrees.}
+\item{LONG}{A numeric value in \verb{[52, 141]}. Longitude in decimal degrees.}
 
-\item{ELV}{A numeric value between \code{0} and \code{2500} (inclusive).Elevation in
-metres about sea level.}
+\item{ELV}{A numeric value in \verb{[0, 2500]} or \code{NA}. Elevation in metres above
+sea level. If \code{NA}, elevation will not be used in the calculation.}
 
-\item{Dj}{A numeric value between \code{0} and \code{365} (inclusive). Julian day.}
+\item{Dj}{A numeric value in \verb{[1, 366]}. Julian day.}
 }
 \value{
-A list of length \code{1} consisting of a numeric value named \code{FMC}.
+A numeric value giving an estimate of foliar moisture content in
+percent.
 }
 \description{
 \code{t_FMC()} estimates foliar moisture content as per the Canadian Forest
@@ -27,6 +26,9 @@ Fire Behavior Prediction System (FBPS) equations. A simple wrapper for
 \code{cffdrs:::foliar_moisture_content}.
 }
 \examples{
+# Excluding elevation
+t_FMC(LAT = 54.13, LONG = 116.89, ELV = NA, Dj = 178)
+# Including elevation
 t_FMC(LAT = 54.13, LONG = 116.89, ELV = 1000, Dj = 178)
 
 }

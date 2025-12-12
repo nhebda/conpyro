@@ -11,63 +11,59 @@
 #'   order. Missing values are not permitted and will produce an error. Required
 #'   columns are:
 #'   * `ID`: Unique scenario identifier.
-#'   * `Season`: One of `spring`, `sp-su`, `summer`, or `fall`, or the numeric
-#'   equivalents `1`, `1.5`, `2`, or `3`, respectively.
-#'   * `Density`: One of `light`, `moderate`, or `dense`, or the numeric
-#'   equivalents `1`, `2`, or `3`, respectively.
-#'   * `Stand`: One of `pine`, `spruce`, `Douglas-fir`, `deciduous`, or
-#'   `mixedwood`, or the abbreviated equivalents `p`, `s`, `df`, `d`, or `m`,
-#'   respectively.
-#'   * `FSG`: A numeric value between `0.5` and `20` (inclusive). Fuel strata
-#'   gap in metres. The vertical distance between the top of the surface fuels
-#'   and the lower limit of the canopy fuels. Analogous to crown base height
-#'   (CBH) in the absence of mid-story ladder fuels.
-#'   * `SFC`: A numeric value between `0.1` and `6` (inclusive). Surface fuel
-#'   consumption in kg/m^2. May be estimated using [t_SFC_FBP()] or
-#'   [t_SFC_deGroot()].
-#'   * `CBD`: A numeric value between `0.01` and `0.8` (inclusive). Crown bulk
-#'   density in kg/m^3.
+#'   * `Season`: One of `{"spring", "sp-su", "summer", "fall"}` or numeric
+#'   equivalents `{1, 1.5, 2, 3}`. See [t_mcSeason()].
+#'   * `Density`: One of `{"light", "moderate", "dense"}` or numeric equivalents
+#'   `{1, 2, 3}`.
+#'   * `Stand`: One of `{"pine", "spruce", "Douglas-fir", "deciduous",
+#'   "mixedwood"}` or abbreviated equivalents `{"p", "s", "df", "d", "m"}`.
+#'   * `FSG`: A numeric value in `[0.5, 20]`. Fuel strata gap in metres. The
+#'   vertical distance between the top of the surface fuels and the lower limit
+#'   of the canopy fuels. Analogous to crown base height in the absence of
+#'   mid-story ladder fuels.
+#'   * `SFC`: A numeric value in `[0.1, 6]`. Surface fuel consumption in kg/m^2.
+#'   May be estimated using [t_SFC_FBP()] or [t_SFC_deGroot()].
+#'   * `CBD`: A numeric value in `[0.01, 0.8]`. Crown bulk density in kg/m^3.
 #'
 #'   Additionally, there are several optional columns:
 #'   * `smooth_CFO`: Defines whether crown fire initiation is modeled as a
 #'   smooth transition (`TRUE`) or an instantaneous occurrence (`FALSE`). Allows
 #'   this behaviour to be specified on a per-scenario basis. If this column is
 #'   present, it will override the `smooth_CFI` argument.
-#'   * `ws_min`: A numeric value between `0` and `60` (inclusive). Minimum wind
-#'   speed in km/h. Allows wind speed to be specified on a per-scenario basis.
-#'   If this column *and* the `ws_max` column are present, they will override
-#'   the `ws` argument.
-#'   * `ws_max`: A numeric value between `0` and `60` (inclusive). Maximum wind
-#'   speed in km/h. Allows wind speed to be specified on a per-scenario basis.
-#'   If this column *and* the `ws_min` column are present, they will override
-#'   the `ws` argument.
-#'   * `FFMC`: A numeric value between `80` and `99` (inclusive). The Fine Fuel
-#'   Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index (FWI)
-#'   System. Allows FFMC to be specified on a per-scenario basis. If this
-#'   column is present, it will override the `FFMC` argument.
-#'   * `DMC`: A numeric value between `5` and `250` (inclusive). The Duff
-#'   Moisture Code (DMC) as per the Canadian Forest Fire Weather Index (FWI)
-#'   System. Allows DMC to be specified on a per-scenario basis. If this column
-#'   is present, it will override the `DMC` argument.
-#'   * `model_conpyro`: Choose one of `7`, `8`, `10`, or `11`. The ConPyro
-#'   model form used for calculations (see Perrakis et al., 2023). Models `7`
-#'   and `10` use FFMC-based fine fuel moisture content (mcFFMC) while models
-#'   `8` and `11` use stand-adjusted moisture content (mcsa). Default is `11`.
-#'   * `model_SROS`: Choose one of `1`, `2`, `3`, or `4`. The surface fire ROS
-#'   model used for calculations.
+#'   * `ws_min`: A numeric value in `[0, 60]`. Minimum wind speed in km/h.
+#'   Allows wind speed to be specified on a per-scenario basis. If this column
+#'   *and* the `ws_max` column are present, they will override the `ws`
+#'   argument.
+#'   * `ws_max`: A numeric value in `[0, 60]`. Maximum wind speed in km/h.
+#'   Allows wind speed to be specified on a per-scenario basis. If this column
+#'   *and* the `ws_min` column are present, they will override the `ws`
+#'   argument.
+#'   * `FFMC`: A numeric value in `[80, 99]`. The Fine Fuel Moisture Code (FFMC)
+#'   as per the Canadian Forest Fire Weather Index (FWI) System. Allows FFMC to
+#'   be specified on a per-scenario basis. If this column is present, it will
+#'   override the `FFMC` argument.
+#'   * `DMC`: A numeric value in `[5, 250]`. The Duff Moisture Code (DMC) as per
+#'   the Canadian Forest Fire Weather Index (FWI) System. Allows DMC to be
+#'   specified on a per-scenario basis. If this column is present, it will
+#'   override the `DMC` argument.
+#'   * `model_conpyro`: One of `{7, 8, 10, 11}`. The ConPyro model form used for
+#'   calculations (see Perrakis et al., 2023). Models `7` and `10` use
+#'   FFMC-based fine fuel moisture content (mcFFMC) while models `8` and `11`
+#'   use stand-adjusted moisture content (mcsa). Default is `11`.
+#'   * `model_SROS`: One of `{1, 2, 3, 4}`. The surface fire ROS model used for
+#'   calculations.
 #'      * `1`: Aggregated FBPS surf. V4 (default)
 #'      * `2`: D-1 FBPS
 #'      * `3`: C-6 (surface only) FBPS
 #'      * `4`: IsaSFC
-#'   * `model_CROS`: Choose one of `1` or `2`. The crown fire ROS model used
-#'   for calculations.
+#'   * `model_CROS`: One of `{1, 2}`. The crown fire ROS model used for
+#'   calculations.
 #'      * `1`: Adapted Cruz, Alexander, & Wakimoto (2005): ws, MC, CBD (default)
 #'      * `2`: Adapted Cruz & Alexander (2019): ws only
-#' @param ws An ordered integer vector of length `2`, with each element being
-#'   between `0` and `60` (inclusive). The first value defines the minimum wind
-#'   speed and the second defines the maximum, in km/h. Calculations are carried
-#'   out on the sequence of integer values from the minimum to the maximum
-#'   (inclusive).
+#' @param ws An ordered integer vector of length `2`, with each element being in
+#'   `[0, 60]`. The first value defines the minimum wind speed and the second
+#'   defines the maximum, in km/h. Calculations are carried out on the sequence
+#'   of integer values from the minimum to the maximum, inclusive.
 #' @param FFMC A numeric value in `[80, 99]`. The Fine Fuel Moisture Code (FFMC)
 #'   as per the Canadian Forest Fire Weather Index (FWI) System.
 #' @param DMC A numeric value in `[5, 250]`. The Duff Moisture Code (DMC) as per
@@ -133,6 +129,7 @@
 #' @importFrom checkmate assert_data_frame assert_subset assert_true
 #'   assert_numeric assert_logical assert_integerish
 #' @importFrom utils read.csv
+#'
 conpyro <- function(
     input,
     ws         = c(0, 40),

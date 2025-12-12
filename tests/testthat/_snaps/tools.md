@@ -49,7 +49,7 @@
 # t_SFC_FBP() works
 
     Code
-      t_SFC_FBP()
+      t_SFC_FBP(BUI = 85, FFMC = 91, PC = 40)
     Output
       $C1
       [1] 1.42
@@ -82,10 +82,35 @@
       [1] 25.72
       
 
+# t_SFC_deGroot() works
+
+    Code
+      t_SFC_deGroot(BUI = 85, FFL = 3.5, FWFL = 0.3)
+    Output
+      $`Forest Floor Fuel Consumption`
+      [1] 1.65
+      
+      $SFC
+      [1] 1.95
+      
+
+# ladder_standing_dead() works
+
+    Code
+      ladder_standing_dead(cons = 0.2, cl = 4, FSG = 6)
+    Output
+      $`LFSG [m]`
+      [1] 4
+      
+      $`Scaled SFC contribution, small snags [kg/m^2]`
+      [1] 1.14
+      
+
 # ladder_midstory_saplings() works
 
     Code
-      ladder_midstory_saplings()
+      ladder_midstory_saplings(hs = 5, zs = 1, zp = 6, lnfl = 0.5, sapling_FMC = 120,
+        actual_SFC = 2.7)
     Output
       $`Sapling crown centroid [m]`
       [1] 3
