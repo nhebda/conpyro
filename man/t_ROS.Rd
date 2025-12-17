@@ -11,7 +11,8 @@ t_ROS(
   SFC = 2,
   CBD = 0.16,
   ws = 12,
-  CF_thresh = 0.5
+  CF_thresh = 0.5,
+  smooth_CFO = FALSE
 )
 }
 \arguments{
@@ -38,6 +39,9 @@ May be estimated using \code{\link[=t_SFC_FBP]{t_SFC_FBP()}} or \code{\link[=t_S
 
 \item{CF_thresh}{A numeric value in \verb{[0, 1]}. Defines the pCFO threshold at
 which crown fire occurs.}
+
+\item{smooth_CFO}{Defines whether crown fire initiation is modeled as a
+smooth transition (\code{TRUE}) or an instantaneous occurrence (\code{FALSE}).}
 }
 \value{
 A list of length 2 consisting of:
@@ -60,6 +64,8 @@ t_ROS(mcsa = 9, FSG = 6, SFC = 2, CBD = 0.1, ws = 11)
 t_ROS(mcsa = 8, FSG = 6, SFC = 2, CBD = 0.1, ws = 11)
 # Active crown fire
 t_ROS(mcsa = 8, FSG = 6, SFC = 2, CBD = 0.2, ws = 11)
+# Active crown fire with smooth initiation
+t_ROS(mcsa = 8, FSG = 6, SFC = 2, CBD = 0.2, ws = 11, smooth_CFO = TRUE)
 # Using t_mcF()
 t_ROS(mcF = t_mcF(91), FSG = 6, SFC = 2, CBD = 0.2, ws = 13)
 # Using t_mcsa()

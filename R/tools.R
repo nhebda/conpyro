@@ -214,8 +214,8 @@ t_pCFO <- function(mcsa = 10, mcF = NULL, FSG = 6, SFC = 2, ws = 12) {
     stop("Either `mcsa` or `mcF` must be non-NULL.")
   }
   # Calculate
-  model <- if (is.null(mcF)) 11 else 10
-  mc    <- if (is.null(mcF)) mcsa else mcF
+  model <- ifelse(is.null(mcF), 11, 10)
+  mc    <- ifelse(is.null(mcF), mcsa, mcF)
   pCFO  <- fn_pCFO(model, ws, FSG, SFC, mc)
   # Output
   out <- round(pCFO, 2)
@@ -231,6 +231,8 @@ t_pCFO <- function(mcsa = 10, mcF = NULL, FSG = 6, SFC = 2, ws = 12) {
 #' @inheritParams t_pCFO
 #' @inheritParams conpyro
 #' @param CBD A numeric value in `[0.01, 0.8]`. Crown bulk density in kg/m^3.
+#' @param params Additional options for advanced users. Default is "base", and
+#'   should generally be left as such.
 #'
 #' @returns A single character vector giving the fire type. One of `{"S", "PC",
 #'   "AC"}`, corresponding to surface fire, passive crown fire, or active crown
@@ -258,7 +260,8 @@ t_FT <- function(
     SFC       = 2,
     CBD       = 0.16,
     ws        = 12,
-    CF_thresh = 0.5
+    CF_thresh = 0.5,
+    params    = "base"
 ) {
   # Check input
   assert_number(mcsa, lower = 3, upper = 20, null.ok = TRUE)
@@ -272,12 +275,13 @@ t_FT <- function(
     stop("Either `mcsa` or `mcF` must be non-NULL.")
   }
   # Calculate
-  model  <- if (is.null(mcF)) 11 else 10
-  mc     <- if (is.null(mcF)) mcsa else mcF
-  pCFO   <- fn_pCFO(model, ws, FSG, SFC, mc)
-  CROS_A <- fn_CROS_A(1, mc, ws, CBD)
-  CAC    <- fn_CAC(CROS_A, CBD)
-  FT     <- if (pCFO < CF_thresh) {
+  model_conpyro <- ifelse(is.null(mcF), 11, 10)
+  model_CROS_A  <- ifelse(params == "base", 1, params$model_CROS_A)
+  mc            <- ifelse(is.null(mcF), mcsa, mcF)
+  pCFO          <- fn_pCFO(model_conpyro, ws, FSG, SFC, mc)
+  CROS_A        <- fn_CROS_A(model_CROS_A, mc, ws, CBD)
+  CAC           <- fn_CAC(CROS_A, CBD)
+  FT            <- if (pCFO < CF_thresh) {
     "S"
   } else if (pCFO >= CF_thresh & CAC < 1) {
     "PC"
@@ -311,21 +315,24 @@ t_FT <- function(
 #' t_ROS(mcsa = 8, FSG = 6, SFC = 2, CBD = 0.1, ws = 11)
 #' # Active crown fire
 #' t_ROS(mcsa = 8, FSG = 6, SFC = 2, CBD = 0.2, ws = 11)
+#' # Active crown fire with smooth initiation
+#' t_ROS(mcsa = 8, FSG = 6, SFC = 2, CBD = 0.2, ws = 11, smooth_CFO = TRUE)
 #' # Using t_mcF()
 #' t_ROS(mcF = t_mcF(91), FSG = 6, SFC = 2, CBD = 0.2, ws = 13)
 #' # Using t_mcsa()
 #' t_ROS(mcsa = t_mcsa(91, 60, 2, 2, "p"), FSG = 6, SFC = 2, CBD = 0.2, ws = 13)
 #'
-#' @importFrom checkmate assert_number
+#' @importFrom checkmate assert_number assert_logical
 #'
 t_ROS <- function(
-    mcsa      = 10,
-    mcF       = NULL,
-    FSG       = 6,
-    SFC       = 2,
-    CBD       = 0.16,
-    ws        = 12,
-    CF_thresh = 0.5
+    mcsa       = 10,
+    mcF        = NULL,
+    FSG        = 6,
+    SFC        = 2,
+    CBD        = 0.16,
+    ws         = 12,
+    CF_thresh  = 0.5,
+    smooth_CFO = FALSE
 ) {
   # Check input
   assert_number(mcsa, lower = 3, upper = 20, null.ok = TRUE)
@@ -335,6 +342,7 @@ t_ROS <- function(
   assert_number(CBD, lower = 0.01, upper = 0.8)
   assert_number(ws, lower = 0, upper = 60)
   assert_number(CF_thresh, lower = 0, upper = 1)
+  assert_logical(smooth_CFO)
   if (is.null(mcsa) & is.null(mcF)) {
     stop("Either `mcsa` or `mcF` must be non-NULL.")
   }
@@ -346,14 +354,19 @@ t_ROS <- function(
   CROS_A <- fn_CROS_A(1, mc, ws, CBD)
   CAC    <- fn_CAC(CROS_A, CBD)
   CROS_P <- fn_CROS_P(CROS_A, CAC)
+  if (isTRUE(smooth_CFO)) {
+    SROS_smooth   <- fn_SROS_smooth(CROS_P, pCFO, CF_thresh, CAC, SROS, CROS_A)
+    CROS_P_smooth <- fn_CROS_P_smooth(SROS, pCFO, CROS_P)
+    CROS_A_smooth <- fn_CROS_A_smooth(SROS, pCFO, CROS_A)
+  }
   if (pCFO < CF_thresh) {
-    ROS <- SROS
+    ROS <- ifelse(isTRUE(smooth_CFO), SROS_smooth, SROS)
     FT  <- "S"
   } else if (pCFO >= CF_thresh & CAC < 1) {
-    ROS <- CROS_P
+    ROS <- ifelse(isTRUE(smooth_CFO), CROS_P_smooth, CROS_P)
     FT  <- "PC"
   } else {
-    ROS <- CROS_A
+    ROS <- ifelse(isTRUE(smooth_CFO), CROS_A_smooth, CROS_A)
     FT  <- "AC"
   }
   # Output

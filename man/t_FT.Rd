@@ -11,7 +11,8 @@ t_FT(
   SFC = 2,
   CBD = 0.16,
   ws = 12,
-  CF_thresh = 0.5
+  CF_thresh = 0.5,
+  params = "base"
 )
 }
 \arguments{
@@ -38,6 +39,9 @@ May be estimated using \code{\link[=t_SFC_FBP]{t_SFC_FBP()}} or \code{\link[=t_S
 
 \item{CF_thresh}{A numeric value in \verb{[0, 1]}. Defines the pCFO threshold at
 which crown fire occurs.}
+
+\item{params}{Additional options for advanced users. Default is "base", and
+should generally be left as such.}
 }
 \value{
 A single character vector giving the fire type. One of \verb{\{"S", "PC", "AC"\}}, corresponding to surface fire, passive crown fire, or active crown
