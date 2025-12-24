@@ -13,6 +13,7 @@ Available functions (click for details):
 \itemize{
 \item \code{\link[=conpyro]{conpyro()}}
 \item \code{\link[=t_mcSeason]{t_mcSeason()}}
+\item \code{\link[=t_mcDensity]{t_mcDensity()}}
 \item \code{\link[=t_mcF]{t_mcF()}}
 \item \code{\link[=t_mcsa]{t_mcsa()}}
 \item \code{\link[=t_pCFO]{t_pCFO()}}

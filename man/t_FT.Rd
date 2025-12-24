@@ -12,7 +12,7 @@ t_FT(
   CBD = 0.16,
   ws = 12,
   CF_thresh = 0.5,
-  params = "base"
+  params = NULL
 )
 }
 \arguments{

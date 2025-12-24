@@ -54,6 +54,33 @@ t_mcSeason <- function(month = 7, day = 1) {
   return(season)
 }
 
+#' Determine `density` input for [t_mcsa()]
+#'
+#' `t_mcDensity()` takes a canopy closure value as input and outputs a
+#' categorical `density` value to be used in [t_mcsa()].
+#'
+#' @param canopy_closure An integer in `[20, 100]`. Canopy closure in percent.
+#'
+#' @returns A number in `{1, 2, 3}`, corresponding to `{"light", "moderate",
+#'   "dense"}`
+#' @export
+#'
+#' @examples
+#' # TODO
+#'
+#' @importFrom checkmate assert_integerish
+#'
+t_mcDensity <- function(canopy_closure = 50) {
+  # Check input
+  assert_integerish(canopy_closure, lower = 20, upper = 100)
+  # Calculate
+  dens <- if ((canopy_closure >= 20) & (canopy_closure <= 45)) {1}
+  else if ((canopy_closure > 45) & (canopy_closure <= 60)) {2}
+  else if (canopy_closure > 60) {3}
+  # Output
+  return(dens)
+}
+
 #' Estimate FFMC-based fine dead litter moisture content
 #'
 #' `t_mcF()` estimates fine dead surface litter moisture content based on the
@@ -261,7 +288,7 @@ t_FT <- function(
     CBD       = 0.16,
     ws        = 12,
     CF_thresh = 0.5,
-    params    = "base"
+    params    = NULL
 ) {
   # Check input
   assert_number(mcsa, lower = 3, upper = 20, null.ok = TRUE)
@@ -275,9 +302,17 @@ t_FT <- function(
     stop("Either `mcsa` or `mcF` must be non-NULL.")
   }
   # Calculate
-  model_conpyro <- ifelse(is.null(mcF), 11, 10)
-  model_CROS_A  <- ifelse(params == "base", 1, params$model_CROS_A)
   mc            <- ifelse(is.null(mcF), mcsa, mcF)
+  model_conpyro <- ifelse(
+    "model_conpyro" %in% names(params),
+    params$model_conpyro,
+    ifelse(is.null(mcF), 11, 10)
+  )
+  model_CROS_A  <- ifelse(
+    "model_CROS_A" %in% names(params),
+    params$model_CROS_A,
+    1
+  )
   pCFO          <- fn_pCFO(model_conpyro, ws, FSG, SFC, mc)
   CROS_A        <- fn_CROS_A(model_CROS_A, mc, ws, CBD)
   CAC           <- fn_CAC(CROS_A, CBD)
@@ -361,7 +396,6 @@ t_ROS <- function(
     model_SROS <- 1
     FFMC       <- NULL
   }
-  model_SROS    <- ifelse("model_SROS" %in% names(params), params$model_SROS, 1)
   model_CROS_A  <- ifelse(
     "model_CROS_A" %in% names(params),
     params$model_CROS_A,

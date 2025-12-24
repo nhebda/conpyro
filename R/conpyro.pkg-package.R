@@ -2,6 +2,7 @@
 #' Available functions (click for details):
 #' * [conpyro()]
 #' * [t_mcSeason()]
+#' * [t_mcDensity()]
 #' * [t_mcF()]
 #' * [t_mcsa()]
 #' * [t_pCFO()]
