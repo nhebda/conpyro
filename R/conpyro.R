@@ -278,9 +278,9 @@ conpyro <- function(
     } else {
       smooth_CFO
     }
-    ws_seq        <- if (
-      "ws_min" %in% names(input) & "ws_max" %in% names(input)
-    ) {
+    ws_seq        <- if ("ws" %in% names(input)) {
+      input$ws
+    } else if ("ws_min" %in% names(input) & "ws_max" %in% names(input)) {
       seq(input$ws_min[i], input$ws_max[i], 1)
     } else {
       if (length(ws) == 1) {
