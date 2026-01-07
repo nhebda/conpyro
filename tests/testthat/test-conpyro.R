@@ -4,6 +4,38 @@ test_that("conpyro() works", {
   rm(default_input, envir = .GlobalEnv)
 })
 
+test_that("conpyro() ws input priority works", {
+  expect_identical(
+    conpyro(default_input, ws = c(10, 30))$`Scenario 1`$`Wind Speed (km/h)`,
+    seq(10, 30, 1)
+  )
+  expect_identical(
+    conpyro(default_input, ws = 10)$`Scenario 1`$`Wind Speed (km/h)`,
+    10
+  )
+  expect_identical(
+    conpyro(
+      cbind(
+        default_input,
+        ws_min = rep(10, times = 3),
+        ws_max = rep(30, times = 3)
+      )
+    )$`Scenario 1`$`Wind Speed (km/h)`,
+    seq(10, 30, 1)
+  )
+  expect_identical(
+    conpyro(
+      cbind(
+        default_input,
+        ws_min = rep(10, times = 3),
+        ws_max = rep(30, times = 3),
+        ws     = rep(10, times = 3)
+      )
+    )$`Scenario 1`$`Wind Speed (km/h)`,
+    10
+  )
+})
+
 test_that("fn_mcFFMC() works", {
   expect_equal(fn_mcFFMC(0), 249.8689075630)
   expect_equal(fn_mcFFMC(90), 10.8307692308)

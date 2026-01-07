@@ -151,7 +151,7 @@ conpyro <- function(
   # Validate user input
   assert_data_frame(
     input,
-    any.missing = FALSE,
+    any.missing = TRUE,
     all.missing = FALSE,
     col.names   = "named"
   )
@@ -173,13 +173,13 @@ conpyro <- function(
   )
   assert_subset(
     tolower(input$season),
-    choices = c("spring","sp-su", "summer", "fall", 1, 1.5, 2, 3),
+    choices = c("spring","sp-su", "summer", "fall", 1, 1.5, 2, 3, NA),
     empty.ok = FALSE,
     .var.name = "season"
   )
   assert_subset(
     tolower(input$density),
-    choices = c("light", "moderate", "dense", 1, 2, 3),
+    choices = c("light", "moderate", "dense", 1, 2, 3, NA),
     empty.ok = FALSE,
     .var.name = "density"
   )
@@ -195,7 +195,8 @@ conpyro <- function(
       "df",
       "m",
       "p",
-      "s"
+      "s",
+      NA
     ),
     empty.ok = FALSE,
     .var.name = "stand"
@@ -279,7 +280,7 @@ conpyro <- function(
       smooth_CFO
     }
     ws_seq        <- if ("ws" %in% names(input)) {
-      input$ws
+      input$ws[i]
     } else if ("ws_min" %in% names(input) & "ws_max" %in% names(input)) {
       seq(input$ws_min[i], input$ws_max[i], 1)
     } else {
@@ -317,15 +318,28 @@ conpyro <- function(
     # Do calculations
     mcFFMC        <- fn_mcFFMC(FFMC)
     mcDMC         <- fn_mcDMC(DMC)
-    idx           <- fn_mcsa_idx(season, density, stand)
-    mcsa          <- fn_mcsa(idx, mcFFMC, mcDMC)
-    MC            <- switch(
-      as.character(model_conpyro),
-      "7"  = mcFFMC,
-      "8"  = mcsa,
-      "10" = mcFFMC,
-      "11" = mcsa
-    )
+    if (!NA %in% c(season, density, stand)) {
+      idx         <- fn_mcsa_idx(season, density, stand)
+      mcsa        <- fn_mcsa(idx, mcFFMC, mcDMC)
+      MC          <- switch(
+        as.character(model_conpyro),
+        "7"  = mcFFMC,
+        "8"  = mcsa,
+        "10" = mcFFMC,
+        "11" = mcsa
+      )
+    } else {
+      mcsa = NA
+      MC   = mcFFMC
+      if (!model_conpyro %in% c(7, 10)) model_conpyro <- 10
+      message(
+        "Missing value(s) detected in ",
+        ID,
+        ", using mcFFMC with ConPyro Model ",
+        model_conpyro,
+        "."
+      )
+    }
     pCFO          <- fn_pCFO(model_conpyro, ws_seq, FSG, SFC, MC)
     CF_CI         <- fn_CF_CI(ws_seq, pCFO)
     SROS          <- fn_SROS(model_SROS, ws_seq, MC, FFMC, SFC)
@@ -385,10 +399,10 @@ conpyro <- function(
       results[["Crown Fire (Active) Wind Speed Threshold (km/h)"]] =
         ws_seq[length(ws_seq) - length(CROS_A_out) + 1]
     }
-    if (!is.na(CF_CI[1]) & length(ws) > 1) {
+    if (!is.na(CF_CI[1]) & length(ws_seq) > 1) {
       results[["Crown Fire Wind Speed Threshold Lower Bound (km/h)"]] = CF_CI[1]
     }
-    if (!is.na(CF_CI[2]) & length(ws) > 1) {
+    if (!is.na(CF_CI[2]) & length(ws_seq) > 1) {
       results[["Crown Fire Wind Speed Threshold Upper Bound (km/h)"]] = CF_CI[2]
     }
     out[[i]] <- results
