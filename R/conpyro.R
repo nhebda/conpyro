@@ -151,9 +151,7 @@ conpyro <- function(
   # Validate user input
   assert_data_frame(
     input,
-    any.missing = TRUE,
-    all.missing = FALSE,
-    col.names   = "named"
+    col.names = "named"
   )
   assert_subset(
     c(
@@ -201,9 +199,27 @@ conpyro <- function(
     empty.ok = FALSE,
     .var.name = "stand"
   )
-  assert_numeric(input$fsg, lower = 0.5, upper = 20, .var.name = "FSG")
-  assert_numeric(input$sfc, lower = 0.1, upper = 6, .var.name = "SFC")
-  assert_numeric(input$cbd, lower = 0.01, upper = 0.8, .var.name = "CBD")
+  assert_numeric(
+    input$fsg,
+    lower = 0.5,
+    upper = 20,
+    .var.name = "FSG",
+    any.missing = FALSE
+  )
+  assert_numeric(
+    input$sfc,
+    lower = 0.1,
+    upper = 6,
+    .var.name = "SFC",
+    any.missing = FALSE
+  )
+  assert_numeric(
+    input$cbd,
+    lower = 0.01,
+    upper = 0.8,
+    .var.name = "CBD",
+    any.missing = FALSE
+  )
   if ("smooth_cfo" %in% names(input)) {
     assert_logical(input$smooth_cfo, .var.name = "smooth_CFO")
   }

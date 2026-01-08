@@ -36,6 +36,19 @@ test_that("conpyro() ws input priority works", {
   )
 })
 
+test_that("conpyro() can handle NA values", {
+  df <- default_input
+  df[1, 2] <- NA
+  expect_identical(conpyro(df)$`Scenario 1`$`mcsa`, as.numeric(NA))
+  df <- default_input
+  df[1, 3] <- NA
+  expect_identical(conpyro(df)$`Scenario 1`$`mcsa`, as.numeric(NA))
+  df <- default_input
+  df[1, 4] <- NA
+  expect_identical(conpyro(df)$`Scenario 1`$`mcsa`, as.numeric(NA))
+  rm(df)
+})
+
 test_that("fn_mcFFMC() works", {
   expect_equal(fn_mcFFMC(0), 249.8689075630)
   expect_equal(fn_mcFFMC(90), 10.8307692308)
