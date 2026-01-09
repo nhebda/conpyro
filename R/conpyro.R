@@ -135,6 +135,7 @@ conpyro <- function(
     ws         = c(0, 40),
     FFMC       = 91,
     DMC        = 70,
+    model_mcsa = "corrected",
     smooth_CFO = FALSE,
     CF_thresh  = 0.5,
     ROS_output = "integrated",
@@ -335,7 +336,7 @@ conpyro <- function(
     mcFFMC        <- fn_mcFFMC(FFMC)
     mcDMC         <- fn_mcDMC(DMC)
     if (!NA %in% c(season, density, stand)) {
-      idx         <- fn_mcsa_idx(season, density, stand)
+      idx         <- fn_mcsa_idx(FFMC, season, density, stand, model_mcsa)
       mcsa        <- fn_mcsa(idx, mcFFMC, mcDMC)
       MC          <- switch(
         as.character(model_conpyro),
@@ -735,16 +736,20 @@ fn_mcFFMC   <- function(FFMC) {147.2 * (101 - FFMC) / (59.5 + FFMC)}
 # Based on Eq. 16 in Van Wagner (1987)
 fn_mcDMC    <- function(DMC) {20 + exp(-(DMC - 244.72) / 43.43)}
 # Convert combinations of stand attributes to numeric codes
-fn_mcsa_idx <- function(season, density, stand) {
+fn_mcsa_idx <- function(FFMC, season, density, stand, model_mcsa) {
   as.numeric(
     paste0(
       if (season == "spring" | season == 1)   1,
       if (season == "summer" | season == 2)   2,
       if (season == "fall"   | season == 3)   3,
       if (season == "sp-su"  | season == 1.5) 4,
-      if (density == "light"    | density == 1) 1,
+      if (density == "light"    | density == 1) {
+        if (model_mcsa == "corrected" & FFMC > 96.1) 2 else 1
+      },
       if (density == "moderate" | density == 2) 2,
-      if (density == "dense"    | density == 3) 3,
+      if (density == "dense"    | density == 3) {
+        if (model_mcsa == "corrected" & FFMC > 92.9) 2 else 3
+      },
       if (stand == "deciduous"   | stand == "d")  1,
       if (stand == "douglas-fir" | stand == "df") 2,
       if (stand == "mixedwood"   | stand == "m")  3,

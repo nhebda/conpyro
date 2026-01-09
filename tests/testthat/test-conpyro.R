@@ -36,7 +36,7 @@ test_that("conpyro() ws input priority works", {
   )
 })
 
-test_that("conpyro() can handle NA values", {
+test_that("conpyro() can handle NA input values", {
   df <- default_input
   df[1, 2] <- NA
   expect_identical(conpyro(df)$`Scenario 1`$`mcsa`, as.numeric(NA))
@@ -62,11 +62,99 @@ test_that("fn_mcDMC() works", {
 })
 
 test_that("fn_mcsa_idx() works", {
-  expect_identical(fn_mcsa_idx("spring", "light", "deciduous"), 111)
-  expect_identical(fn_mcsa_idx("summer", "moderate", "douglas-fir"), 222)
-  expect_identical(fn_mcsa_idx("fall", "dense", "mixedwood"), 333)
-  expect_identical(fn_mcsa_idx("sp-su", "light", "pine"), 414)
-  expect_identical(fn_mcsa_idx("summer", "moderate", "spruce"), 225)
+  expect_identical(
+    fn_mcsa_idx(
+      FFMC       = 90,
+      season     = "spring",
+      density    = "light",
+      stand      = "deciduous",
+      model_mcsa = "original"
+    ),
+    111
+  )
+  expect_identical(
+    fn_mcsa_idx(
+      FFMC       = 90,
+      season     = "summer",
+      density    = "moderate",
+      stand      = "douglas-fir",
+      model_mcsa = "original"
+    ),
+    222
+  )
+  expect_identical(
+    fn_mcsa_idx(
+      FFMC       = 90,
+      season     = "fall",
+      density    = "dense",
+      stand      = "mixedwood",
+      model_mcsa = "original"
+    ),
+    333
+  )
+  expect_identical(
+    fn_mcsa_idx(
+      FFMC       = 90,
+      season     = "sp-su",
+      density    = "light",
+      stand      = "pine",
+      model_mcsa = "original"
+    ),
+    414
+  )
+  expect_identical(
+    fn_mcsa_idx(
+      FFMC       = 90,
+      season     = "summer",
+      density    = "moderate",
+      stand      = "spruce",
+      model_mcsa = "original"
+    ),
+    225
+  )
+})
+
+test_that("fn_mcsa_idx(model_mcsa = 'corrected') works", {
+  expect_identical(
+    fn_mcsa_idx(
+      FFMC       = 92,
+      season     = 2,
+      density    = 3,
+      stand      = "s",
+      model_mcsa = "corrected"
+    ),
+    235
+  )
+  expect_identical(
+    fn_mcsa_idx(
+      FFMC       = 93,
+      season     = 2,
+      density    = 3,
+      stand      = "s",
+      model_mcsa = "corrected"
+    ),
+    225
+  )
+  expect_identical(
+    fn_mcsa_idx(
+      FFMC       = 92,
+      season     = 2,
+      density    = 3,
+      stand      = "s",
+      model_mcsa = "original"
+    ),
+    235
+  )
+  expect_identical(
+    fn_mcsa_idx(
+      FFMC       = 93,
+      season     = 2,
+      density    = 3,
+      stand      = "s",
+      model_mcsa = "original"
+    ),
+    235
+  )
 })
 
 test_that("fn_mcsa() works", {
