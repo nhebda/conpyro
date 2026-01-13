@@ -744,11 +744,11 @@ fn_mcsa_idx <- function(FFMC, season, density, stand, model_mcsa) {
       if (season == "fall"   | season == 3)   3,
       if (season == "sp-su"  | season == 1.5) 4,
       if (density == "light"    | density == 1) {
-        if (model_mcsa == "corrected" & FFMC > 96.1) 2 else 1
+        if (model_mcsa == "corrected" & FFMC > 96.15) 2 else 1
       },
       if (density == "moderate" | density == 2) 2,
       if (density == "dense"    | density == 3) {
-        if (model_mcsa == "corrected" & FFMC > 92.9) 2 else 3
+        if (model_mcsa == "corrected" & FFMC > 92.93) 2 else 3
       },
       if (stand == "deciduous"   | stand == "d")  1,
       if (stand == "douglas-fir" | stand == "df") 2,

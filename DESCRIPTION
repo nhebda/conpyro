@@ -1,7 +1,7 @@
 Package: conpyro.pkg
 Type: Package
 Title: Conifer Pyrometrics Fire Behaviour Modelling System
-Version: 0.0.0.9013
+Version: 0.0.0.9014
 Description: An R package implementation of the Conifer Pyrometrics (ConPyro) 
     fire behaviour modelling system. See Perrakis et al. (2023) for details.
 Authors@R: c(
