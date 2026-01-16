@@ -145,11 +145,12 @@ t_mcF <- function(FFMC = 90) {
 #' @importFrom checkmate assert_number assert_choice
 #'
 t_mcsa <- function(
-    FFMC    = 90,
-    DMC     = 85,
-    season  = 2,
-    density = 2,
-    stand   = "p"
+    FFMC       = 90,
+    DMC        = 85,
+    season     = 2,
+    density    = 2,
+    stand      = "p",
+    model_mcsa = "corrected"
 ) {
   # Check input
   assert_number(FFMC, lower = 80, upper = 99)
@@ -180,8 +181,19 @@ t_mcsa <- function(
     ),
     .var.name = "stand"
   )
+  assert_choice(
+    tolower(model_mcsa),
+    c("original", "corrected"),
+    .var.name = "model_mcsa"
+  )
   # Calculate
-  idx   <- fn_mcsa_idx(tolower(season), tolower(density), tolower(stand))
+  idx   <- fn_mcsa_idx(
+    FFMC       = FFMC,
+    season     = tolower(season),
+    density    = tolower(density),
+    stand      = tolower(stand),
+    model_mcsa = model_mcsa
+  )
   mcF   <- fn_mcFFMC(FFMC)
   mcDMC <- fn_mcDMC(DMC)
   mcsa  <- fn_mcsa(idx, mcF, mcDMC)
