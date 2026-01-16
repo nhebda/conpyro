@@ -891,6 +891,17 @@ fn_SROS <- function(model, ws_seq, MC, FFMC, SFC) {
       SROS_over40[which(ws_seq > 40)]
     )
     return(SROS)
+  } else if (model == 12) {
+    # m12
+    f_w  <- exp(0.05039 * ws_seq)
+    f_f  <- 91.9 * (exp(-0.1386 * MC) * (1 + (MC^5.31 / (4.93 * 10^7))))
+    ISI  <- 0.208 * f_w * f_f
+    m    <- 0.15
+    i    <- 13
+    b    <- 0.13498
+    c    <- 5.773107
+    SROS <- (m * ISI + i) * (1-exp(-b * ISI))^c
+    return(SROS)
   }
 }
 
