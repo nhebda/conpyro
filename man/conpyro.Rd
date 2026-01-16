@@ -10,6 +10,7 @@ conpyro(
   ws = c(0, 40),
   FFMC = 91,
   DMC = 70,
+  model_mcsa = "corrected",
   smooth_CFO = FALSE,
   CF_thresh = 0.5,
   ROS_output = "integrated",
@@ -90,6 +91,13 @@ as per the Canadian Forest Fire Weather Index (FWI) System.}
 
 \item{DMC}{A numeric value in \verb{[5, 250]}. The Duff Moisture Code (DMC) as per
 the Canadian Forest Fire Weather Index (FWI) System.}
+
+\item{model_mcsa}{One of \verb{\{"original", "corrected"\}}. Defines whether the
+mcsa calculation uses the original version as per Wotton & Beverly (2007)
+or the updated version from Perrakis et al. (2023), which corrects certain
+illogical behaviours at high FFMC levels. Specifically, when \code{model_mcsa = "corrected"}, if \code{FFMC > 92.93} and \code{density = "dense"}, the density class
+will be adjusted to \code{"moderate"}. Similarly, if \code{FFMC > 96.15} and \code{density = "light"}, the density class will be adjusted to \code{"moderate"}. See
+Perrakis et al. (2023) Supplementary Material for details.}
 
 \item{smooth_CFO}{Defines whether crown fire initiation is modeled as a
 smooth transition (\code{TRUE}) or an instantaneous occurrence (\code{FALSE}).}

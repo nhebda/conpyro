@@ -4,7 +4,14 @@
 \alias{t_mcsa}
 \title{Estimate stand-adjusted fine dead litter moisture content}
 \usage{
-t_mcsa(FFMC = 90, DMC = 85, season = 2, density = 2, stand = "p")
+t_mcsa(
+  FFMC = 90,
+  DMC = 85,
+  season = 2,
+  density = 2,
+  stand = "p",
+  model_mcsa = "corrected"
+)
 }
 \arguments{
 \item{FFMC}{A numeric value in \verb{[80, 99]}. The Fine Fuel Moisture Code (FFMC)
@@ -20,6 +27,13 @@ equivalents \verb{\{1, 1.5, 2, 3\}}. See \code{\link[=t_mcSeason]{t_mcSeason()}}
 \verb{\{1, 2, 3\}}.}
 
 \item{stand}{One of \verb{\{"pine", "spruce", "Douglas-fir", "deciduous", "mixedwood"\}} or abbreviated equivalents \verb{\{"p", "s", "df", "d", "m"\}}.}
+
+\item{model_mcsa}{One of \verb{\{"original", "corrected"\}}. Defines whether the
+mcsa calculation uses the original version as per Wotton & Beverly (2007)
+or the updated version from Perrakis et al. (2023), which corrects certain
+illogical behaviours at high FFMC levels. Specifically, when \code{model_mcsa = "corrected"}, if \code{FFMC > 92.93} and \code{density = "dense"}, the density class
+will be adjusted to \code{"moderate"}. Similarly, if \code{FFMC > 96.15} and \code{density = "light"}, the density class will be adjusted to \code{"moderate"}. See
+Perrakis et al. (2023) Supplementary Material for details.}
 }
 \value{
 A numeric value representing fine dead litter moisture content in

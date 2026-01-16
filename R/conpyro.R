@@ -68,6 +68,14 @@
 #'   as per the Canadian Forest Fire Weather Index (FWI) System.
 #' @param DMC A numeric value in `[5, 250]`. The Duff Moisture Code (DMC) as per
 #'   the Canadian Forest Fire Weather Index (FWI) System.
+#' @param model_mcsa One of `{"original", "corrected"}`. Defines whether the
+#'   mcsa calculation uses the original version as per Wotton & Beverly (2007)
+#'   or the updated version from Perrakis et al. (2023), which corrects certain
+#'   illogical behaviours at high FFMC levels. Specifically, when `model_mcsa =
+#'   "corrected"`, if `FFMC > 92.93` and `density = "dense"`, the density class
+#'   will be adjusted to `"moderate"`. Similarly, if `FFMC > 96.15` and `density
+#'   = "light"`, the density class will be adjusted to `"moderate"`. See
+#'   Perrakis et al. (2023) Supplementary Material for details.
 #' @param smooth_CFO Defines whether crown fire initiation is modeled as a
 #'   smooth transition (`TRUE`) or an instantaneous occurrence (`FALSE`).
 #' @param CF_thresh A numeric value in `[0, 1]`. Defines the pCFO threshold at
@@ -199,6 +207,11 @@ conpyro <- function(
     ),
     empty.ok = FALSE,
     .var.name = "stand"
+  )
+  assert_choice(
+    tolower(model_mcsa),
+    c("original", "corrected"),
+    .var.name = "model_mcsa"
   )
   assert_numeric(
     input$fsg,
