@@ -270,8 +270,6 @@ t_pCFO <- function(mcsa = 10, mcF = NULL, FSG = 6, SFC = 2, ws = 12) {
 #' @inheritParams t_pCFO
 #' @inheritParams conpyro
 #' @param CBD A numeric value in `[0.01, 0.8]`. Crown bulk density in kg/m^3.
-#' @param params Additional options for advanced users. Default is "base", and
-#'   should generally be left as such.
 #'
 #' @returns A single character vector giving the fire type. One of `{"S", "PC",
 #'   "AC"}`, corresponding to surface fire, passive crown fire, or active crown
@@ -300,7 +298,7 @@ t_FT <- function(
     CBD       = 0.16,
     ws        = 12,
     CF_thresh = 0.5,
-    params    = NULL
+    ...
 ) {
   # Check input
   assert_number(mcsa, lower = 3, upper = 20, null.ok = TRUE)
@@ -314,15 +312,16 @@ t_FT <- function(
     stop("Either `mcsa` or `mcF` must be non-NULL.")
   }
   # Calculate
+  extra_args    <- list(...)
   mc            <- ifelse(is.null(mcF), mcsa, mcF)
   model_conpyro <- ifelse(
-    "model_conpyro" %in% names(params),
-    params$model_conpyro,
+    "model_conpyro" %in% names(extra_args),
+    extra_args$model_conpyro,
     ifelse(is.null(mcF), 11, 10)
   )
   model_CROS_A  <- ifelse(
-    "model_CROS_A" %in% names(params),
-    params$model_CROS_A,
+    "model_CROS_A" %in% names(extra_args),
+    extra_args$model_CROS_A,
     1
   )
   pCFO          <- fn_pCFO(model_conpyro, ws, FSG, SFC, mc)
@@ -380,7 +379,7 @@ t_ROS <- function(
     ws         = 12,
     CF_thresh  = 0.5,
     smooth_CFO = FALSE,
-    params     = NULL
+    ...
 ) {
   # Check input
   assert_number(mcsa, lower = 3, upper = 20, null.ok = TRUE)
@@ -395,26 +394,25 @@ t_ROS <- function(
     stop("Either `mcsa` or `mcF` must be non-NULL.")
   }
   # Calculate
+  extra_args    <- list(...)
   mc            <- ifelse(is.null(mcF), mcsa, mcF)
   model_conpyro <- ifelse(
-    "model_conpyro" %in% names(params),
-    params$model_conpyro,
+    "model_conpyro" %in% names(extra_args),
+    extra_args$model_conpyro,
     ifelse(is.null(mcF), 11, 10)
   )
-  if ("model_SROS" %in% names(params)) {
-    model_SROS <- params$model_SROS
-    if (model_SROS == 2 | model_SROS == 3) FFMC <- params$FFMC
-  } else {
-    model_SROS <- 1
-    FFMC       <- NULL
-  }
+  model_SROS    <- ifelse(
+    "model_SROS" %in% names(extra_args),
+    extra_args$model_SROS,
+    ifelse(is.null(mcF), 13, 12)
+  )
   model_CROS_A  <- ifelse(
-    "model_CROS_A" %in% names(params),
-    params$model_CROS_A,
+    "model_CROS_A" %in% names(extra_args),
+    extra_args$model_CROS_A,
     1
   )
   pCFO          <- fn_pCFO(model_conpyro, ws, FSG, SFC, mc)
-  SROS          <- fn_SROS(model_SROS, ws, mc, FFMC, SFC)
+  SROS          <- fn_SROS(model = model_SROS, ws_seq = ws, mc = mc, SFC = SFC)
   CROS_A        <- fn_CROS_A(model_CROS_A, mc, ws, CBD)
   CAC           <- fn_CAC(CROS_A, CBD)
   CROS_P        <- fn_CROS_P(CROS_A, CAC)

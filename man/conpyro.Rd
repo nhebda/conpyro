@@ -14,7 +14,8 @@ conpyro(
   smooth_CFO = FALSE,
   CF_thresh = 0.5,
   ROS_output = "integrated",
-  plot = NULL
+  plot = NULL,
+  ...
 )
 }
 \arguments{
@@ -125,6 +126,8 @@ the following:
 \item \code{ROS_integrated}: Complete composite rate of spread plot with crowning
 thresholds.
 }}
+
+\item{...}{Additional arguments to be passed to nested functions.}
 }
 \value{
 A list of lists, with each sub-list containing outputs for a single

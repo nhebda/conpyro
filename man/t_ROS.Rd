@@ -13,7 +13,7 @@ t_ROS(
   ws = 12,
   CF_thresh = 0.5,
   smooth_CFO = FALSE,
-  params = NULL
+  ...
 )
 }
 \arguments{
@@ -44,8 +44,7 @@ which crown fire occurs.}
 \item{smooth_CFO}{Defines whether crown fire initiation is modeled as a
 smooth transition (\code{TRUE}) or an instantaneous occurrence (\code{FALSE}).}
 
-\item{params}{Additional options for advanced users. Default is "base", and
-should generally be left as such.}
+\item{...}{Additional arguments to be passed to nested functions.}
 }
 \value{
 A list of length 2 consisting of:
