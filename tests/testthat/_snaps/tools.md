@@ -4,7 +4,7 @@
       t_ROS(mcsa = 9, FSG = 6, SFC = 2, CBD = 0.1, ws = 11)
     Output
       $`Predicted rate of spread (m/min)`
-      [1] 2.08
+      [1] 1.99
       
       $`Type of fire`
       [1] "S"
@@ -40,7 +40,7 @@
       t_ROS(mcsa = 8, CBD = 0.2, ws = 11, CF_thresh = 0.6)
     Output
       $`Predicted rate of spread (m/min)`
-      [1] 2.61
+      [1] 2.8
       
       $`Type of fire`
       [1] "S"

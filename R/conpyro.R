@@ -95,6 +95,7 @@
 #'   * `CAC`: Criterion for active crowning.
 #'   * `ROS_integrated`: Complete composite rate of spread plot with crowning
 #'   thresholds.
+#' @param ... Additional arguments to be passed to nested functions.
 #'
 #' @returns A list of lists, with each sub-list containing outputs for a single
 #'   scenario (input row). Optionally plots output.
@@ -133,7 +134,6 @@
 #' )
 #' conpyro(new_input)
 #'
-#' @importFrom cffdrs fbp
 #' @importFrom checkmate assert_data_frame assert_subset assert_true
 #'   assert_numeric assert_logical assert_integerish
 #' @importFrom utils read.csv
@@ -147,7 +147,8 @@ conpyro <- function(
     smooth_CFO = FALSE,
     CF_thresh  = 0.5,
     ROS_output = "integrated",
-    plot       = NULL
+    plot       = NULL,
+    ...
 ) {
   # Coerce input data (except scenario names) to lowercase
   input[] <- cbind(
@@ -157,7 +158,7 @@ conpyro <- function(
     })
   )
   colnames(input) <- tolower(colnames(input))
-  # Validate user input
+  # Validate user input ----
   assert_data_frame(
     input,
     col.names = "named"
@@ -253,7 +254,7 @@ conpyro <- function(
     assert_subset(input$model_conpyro, choices = c(7, 8, 10, 11))
   }
   if ("model_sros" %in% names(input)) {
-    assert_subset(input$model_sros, choices = c(1, 2, 3, 4))
+    assert_subset(input$model_sros, choices = c(1, 2, 3, 4, 12, 13))
   }
   if ("model_cros" %in% names(input)) {
     assert_subset(input$model_cros, choices = c(1, 2))
@@ -296,7 +297,8 @@ conpyro <- function(
   ggdata    <- data.frame()
   # Loop through input rows (scenarios)
   for (i in 1:nrow(input)) {
-    # Assign inputs to vars
+    # Assign inputs to vars ----
+    extra_args    <- list(...)
     ID            <- input$id[i]
     season        <- input$season[i]
     density       <- input$density[i]
@@ -335,13 +337,15 @@ conpyro <- function(
     } else {
       11
     }
-    model_SROS    <- if ("model_SROS" %in% names(input)) {
-      input$model_SROS[i]
+    model_SROS    <- if ("model_sros" %in% names(input)) {
+      input$model_sros[i]
+    } else if ("model_SROS" %in% names(extra_args)) {
+      extra_args$model_SROS
     } else {
-      1
+      if (NA %in% c(season, density, stand)) 12 else 13
     }
-    model_CROS    <- if ("model_CROS" %in% names(input)) {
-      input$model_CROS[i]
+    model_CROS    <- if ("model_cros" %in% names(input)) {
+      input$model_cros[i]
     } else {
       1
     }
@@ -372,7 +376,12 @@ conpyro <- function(
     }
     pCFO          <- fn_pCFO(model_conpyro, ws_seq, FSG, SFC, MC)
     CF_CI         <- fn_CF_CI(ws_seq, pCFO)
-    SROS          <- fn_SROS(model_SROS, ws_seq, MC, FFMC, SFC)
+    SROS          <- fn_SROS(
+      model  = model_SROS,
+      ws_seq = ws_seq,
+      mc     = MC,
+      SFC    = SFC
+    )
     CROS_A        <- fn_CROS_A(model_CROS, MC, ws_seq, CBD)
     CAC           <- fn_CAC(CROS_A, CBD)
     CROS_P        <- fn_CROS_P(CROS_A, CAC)
@@ -738,6 +747,17 @@ conpyro <- function(
 }
 
 # Internal functions ----
+# __General ----
+fn_ISI <- function(ws_seq, mc) {
+  fw1  <- exp(0.05039 * ws_seq)
+  fw2  <- 12 * (1 - exp(-0.0818 *(ws_seq - 28)))
+  ff   <- 91.9 * exp(-0.1386 * mc) * (1 + (mc^5.31) / 4.93e+07)
+  ISI1 <- 0.208 * fw1 * ff
+  ISI2 <- 0.208 * fw2 * ff
+  ISI  <- c(ISI1[which(ws_seq <= 40)], ISI2[which(ws_seq > 40)])
+  return(ISI)
+}
+
 # __Fuel moisture content estimates ----
 
 # Based on Eq. 2b in Van Wagner (1987). A more precise multiplier (e.g.,
@@ -821,77 +841,25 @@ fn_CF_CI <- function(ws_seq, pCFO, CI = 90) {
   return(out)
 }
 
-# __Surface fire rate of spread (SROS) ----
-fn_SROS <- function(model, ws_seq, MC, FFMC, SFC) {
-  if (model == 1) {
-    # Aggregated FBPS surf. V4 (default)
-    f_w <- exp(0.05039 * ws_seq)
-    f_f <- 91.9 * (exp(-0.1386 * MC) * (1 + (MC^5.31 / (4.93 * 10^7))))
-    ISI_MC <- 0.208 * f_w * f_f
-    SROS_under40 <- 25 * (1 - exp(-0.035177 * ISI_MC))^1.9875
-    f_w <- 1 - exp(-0.0818 * (ws_seq - 28))
-    ISI_MC <- 0.208 * 12 * f_w * f_f
-    SROS_over40 <- 25 * (1 - exp(-0.035177 * ISI_MC))^1.9875
-    SROS <- c(
-      SROS_under40[which(ws_seq <= 40)],
-      SROS_over40[which(ws_seq > 40)]
-    )
-    return(SROS)
-  } else if (model == 2) {
-    # D-1 FBPS
-    cffdrs_in <- data.frame(
-      id = seq(1, length(ws_seq), 1),
-      fueltype = rep("D-1", times = length(ws_seq)),
-      LAT = rep(55, times = length(ws_seq)),
-      LONG = rep(-120, times = length(ws_seq)),
-      FFMC = rep(FFMC, times = length(ws_seq)),
-      BUI = rep(32, times = length(ws_seq)),
-      ws = ws_seq,
-      gs = rep(0, times = length(ws_seq)),
-      Dj = rep(180, times = length(ws_seq)),
-      aspect = rep(0, times = length(ws_seq))
-    )
-    cffdrs_out <- cffdrs::fbp(cffdrs_in,output = "Secondary")
-    ISI <- cffdrs_out$ISI
-    rsi_d1 <- 30 * (1 - exp(-0.0232 * ISI))^1.6
-    SROS <- rsi_d1
-    return(SROS)
-  } else if (model == 3) {
-    # C-6 (surface only) FBPS
-    cffdrs_in <- data.frame(
-      id = seq(1, length(ws_seq), 1),
-      fueltype = rep("C-6", times = length(ws_seq)),
-      LAT = rep(55, times = length(ws_seq)),
-      LONG = rep(-120, times = length(ws_seq)),
-      FFMC = rep(FFMC, times = length(ws_seq)),
-      BUI = rep(62, times = length(ws_seq)),
-      ws = ws_seq,
-      gs = rep(0, times = length(ws_seq)),
-      Dj = rep(180, times = length(ws_seq)),
-      aspect = rep(0, times = length(ws_seq))
-    )
-    cffdrs_out <- cffdrs::fbp(cffdrs_in,output = "Secondary")
-    ISI <- cffdrs_out$ISI
-    rsi_c6 <- 30 * (1 - exp(-0.08 * ISI))^3
-    SROS <- rsi_c6
-    return(SROS)
-  } else if (model == 4) {
-    # IsaSFC
-    b1 <- 0.015822
-    b2 <- 0.344379
-    f_w <- exp(0.05039 * ws_seq)
-    f_f <- 91.9 * (exp(-0.1386 * MC) * (1 + (MC^5.31 / (4.93 * 10^7))))
-    ISI_MC <- 0.208 * f_w * f_f
-    SROS_under40 <- b1 * ISI_MC^2 + b2 * SFC
-    f_w <- 1 - exp(-0.0818 * (ws_seq - 28))
-    ISI_MC <- 0.208 * 12 * f_w * f_f
-    SROS_over40 <- b1 * ISI_MC^2 + b2 * SFC
-    SROS <- c(
-      SROS_under40[which(ws_seq <= 40)],
-      SROS_over40[which(ws_seq > 40)]
-    )
-    return(SROS)
-  }
+# __Surface fire rate of spread (sROS) ----
+fn_SROS <- function(model, ws_seq, mc, SFC) {
+  ISI  <- fn_ISI(ws_seq = ws_seq, mc = mc)
+  sROS <- switch(
+    as.character(model),
+    # FBPS aggregated surf. V4
+    "1"  = 25 * (1 - exp(-0.035177 * ISI))^1.9875, # ST-X-3 Eq. 26
+    # FBPS D-1 (no BE)
+    "2"  = 30 * (1 - exp(-0.0232 * ISI))^1.6, # ST-X-3 Eq. 26 & Tbl. 6
+    # FBPS C-6 (surface only, no BE)
+    "3"  = 30 * (1 - exp(-0.08 * ISI))^3, # ST-X-3 Eq. 62
+    # ISI2SFC
+    "4"  = 0.015822 * ISI^2 + 0.344379 * SFC,
+    # m12 sl.con.ISI (Perrakis et al., 2026): default for mcFFMC
+    "12" = (0.15 * ISI + 13) * (1-exp(-0.13498 * ISI))^5.773107, # Tbls. 1 & A2
+    # m13 sl.con.isim (Perrakis et al., 2026): default for mcsa
+    "13" = (0.15 * ISI + 13) * (1-exp(-0.101379 * ISI))^4.164469 # Tbls. 1 & A2
+  )
+  return(sROS)
 }
 
 # __Crown fire rate of spread (CROS) ----
