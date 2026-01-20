@@ -56,10 +56,11 @@
 #'      * `2`: D-1 FBPS
 #'      * `3`: C-6 (surface only) FBPS
 #'      * `4`: IsaSFC
-#'   * `model_CROS`: One of `{1, 2}`. The crown fire ROS model used for
+#'   * `model_CROS`: One of `{1, 2, 3}`. The crown fire ROS model used for
 #'   calculations.
 #'      * `1`: Adapted Cruz, Alexander, & Wakimoto (2005): ws, MC, CBD (default)
 #'      * `2`: Adapted Cruz & Alexander (2019): ws only
+#'      * `3`: Adapted Cruz & Alexander (2019): ws only, 10%
 #' @param ws An ordered integer vector of length `2`, with each element being in
 #'   `[0, 60]`. The first value defines the minimum wind speed and the second
 #'   defines the maximum, in km/h. Calculations are carried out on the sequence
@@ -257,7 +258,7 @@ conpyro <- function(
     assert_subset(input$model_sros, choices = c(1, 2, 3, 4, 12, 13))
   }
   if ("model_cros" %in% names(input)) {
-    assert_subset(input$model_cros, choices = c(1, 2))
+    assert_subset(input$model_cros, choices = c(1, 2, 3))
   }
   if (length(ws) == 1) {
     assert_integerish(ws, lower = 0, upper = 60)
@@ -870,6 +871,8 @@ fn_CROS_A <- function(model, MC, ws_seq, CBD) {
     CROS_A <- 11.02 * (ws_seq^0.9) * CBD^0.19 * exp(-0.17 * effm_mod)
   } else if (model == 2) {
     CROS_A <- 0.084 * ws_seq * 1000 / 60
+  } else if (model == 3) {
+    CROS_A <- 0.1 * ws_seq * 1000 / 60
   }
   return(CROS_A)
 }
