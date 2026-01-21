@@ -136,46 +136,53 @@
 #' conpyro(new_input)
 #'
 #' @importFrom checkmate assert_data_frame assert_subset assert_true
-#'   assert_numeric assert_logical assert_integerish
+#'   assert_numeric assert_logical assert_integerish test_subset
 #' @importFrom utils read.csv
 #'
 conpyro <- function(
     input,
-    ws         = c(0, 40),
-    FFMC       = 91,
-    DMC        = 70,
+    ws = c(0, 40),
+    FFMC = 91,
+    DMC = 70,
     model_mcsa = "corrected",
     smooth_CFO = FALSE,
-    CF_thresh  = 0.5,
+    CF_thresh = 0.5,
     ROS_output = "integrated",
-    plot       = NULL,
+    plot = NULL,
     ...
 ) {
-  # Coerce input data (except scenario names) to lowercase
-  input[] <- cbind(
-    input[1],
-    lapply(input[-1], function(col) {
-      if (is.character(col)) tolower(col) else col
-    })
-  )
-  colnames(input) <- tolower(colnames(input))
-  # Validate user input ----
+  # Process input ----
+  # __ Validate input data frame
   assert_data_frame(
     input,
     col.names = "named"
   )
-  assert_subset(
-    c(
-      "id",
-      "season",
-      "density",
-      "stand",
-      "fsg",
-      "sfc",
-      "cbd"
-    ),
-    colnames(input)
+  required_col_names <- c(
+    "id",
+    "season",
+    "density",
+    "stand",
+    "fsg",
+    "sfc",
+    "cbd"
   )
+  test_col_names <- test_subset(required_col_names, tolower(names(input)))
+  if (isFALSE(test_col_names)) {
+    stop(
+      paste0(
+        "Input data frame is missing the following required column: ",
+        setdiff(required_col_names, tolower(names(input))),
+        "\n"
+      )
+    )
+  }
+  # __ Standardize character input to lowercase, except scenario IDs ----
+  names(input) <- tolower(names(input))
+  cols_to_modify <- setdiff(names(input), "id")
+  input[cols_to_modify] <- lapply(input[cols_to_modify], function(x) {
+    if (is.character(x)) tolower(x) else x
+  })
+  # __ Validate input ----
   assert_true(
     length(input$id) == length(unique(input$id)),
     .var.name = "Input IDs must be unique"

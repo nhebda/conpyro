@@ -74,11 +74,12 @@ calculations.
 \item \code{3}: C-6 (surface only) FBPS
 \item \code{4}: IsaSFC
 }
-\item \code{model_CROS}: One of \verb{\{1, 2\}}. The crown fire ROS model used for
+\item \code{model_CROS}: One of \verb{\{1, 2, 3\}}. The crown fire ROS model used for
 calculations.
 \itemize{
 \item \code{1}: Adapted Cruz, Alexander, & Wakimoto (2005): ws, MC, CBD (default)
 \item \code{2}: Adapted Cruz & Alexander (2019): ws only
+\item \code{3}: Adapted Cruz & Alexander (2019): ws only, 10\%
 }
 }}
 
