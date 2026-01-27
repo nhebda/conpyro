@@ -152,11 +152,13 @@ conpyro <- function(
     ...
 ) {
   # Process input ----
-  # __ Validate input data frame
+  # __ Validate input ----
+  # Validate input data frame
   assert_data_frame(
     input,
     col.names = "named"
   )
+  # Required columns
   required_col_names <- c(
     "id",
     "season",
@@ -166,17 +168,20 @@ conpyro <- function(
     "sfc",
     "cbd"
   )
-  test_col_names <- test_subset(required_col_names, tolower(names(input)))
-  if (isFALSE(test_col_names)) {
+  # Normalize case
+  input_col_names <- tolower(names(input))
+  required_col_names <- tolower(required_col_names)
+  # Identify missing columns
+  missing_cols <- setdiff(required_col_names, input_col_names)
+  if (length(missing_cols) > 0) {
     stop(
-      paste0(
-        "Input data frame is missing the following required column: ",
-        setdiff(required_col_names, tolower(names(input))),
-        "\n"
+      paste(
+        "Input data frame is missing the following required column(s):",
+        paste(missing_cols, collapse = ", ")
       )
     )
   }
-  # __ Standardize character input to lowercase, except scenario IDs ----
+  # __ Normalize character input to lowercase, except scenario IDs ----
   names(input) <- tolower(names(input))
   cols_to_modify <- setdiff(names(input), "id")
   input[cols_to_modify] <- lapply(input[cols_to_modify], function(x) {
