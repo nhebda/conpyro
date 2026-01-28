@@ -783,7 +783,7 @@ fn_mcFFMC   <- function(FFMC) {147.2 * (101 - FFMC) / (59.5 + FFMC)}
 fn_mcDMC    <- function(DMC) {20 + exp(-(DMC - 244.72) / 43.43)}
 # Convert combinations of stand attributes to numeric codes
 fn_mcsa_idx <- function(FFMC, season, density, stand, model_mcsa) {
-  as.numeric(
+  idx <- as.numeric(
     paste0(
       if (season == "spring" | season == 1)   1,
       if (season == "summer" | season == 2)   2,
@@ -803,6 +803,7 @@ fn_mcsa_idx <- function(FFMC, season, density, stand, model_mcsa) {
       if (stand == "spruce"      | stand == "s")  5
     )
   )
+  return(idx)
 }
 # Calculate stand-adjusted moisture content
 fn_mcsa <- function(idx, mcFFMC, mcDMC) {
