@@ -136,7 +136,8 @@
 #' conpyro(new_input)
 #'
 #' @importFrom checkmate assert_data_frame assert_subset assert_true
-#'   assert_numeric assert_logical assert_integerish test_subset
+#'   assert_numeric assert_logical assert_integerish test_subset assert_number
+#'   assert_choice
 #' @importFrom utils read.csv
 #'
 conpyro <- function(
@@ -151,7 +152,7 @@ conpyro <- function(
     plot = NULL,
     ...
 ) {
-  # Process input ----
+  # Prepare input ----
   # __ Validate input ----
   # Validate input data frame
   assert_data_frame(
@@ -181,52 +182,23 @@ conpyro <- function(
       )
     )
   }
-  # __ Normalize character input to lowercase, except scenario IDs ----
+  # Normalize character columns to lowercase, except ID, if present
   names(input) <- tolower(names(input))
-  cols_to_modify <- setdiff(names(input), "id")
+  cols_to_modify <- if ("id" %in% names(input)) {
+    setdiff(names(input), "id")
+  } else {
+    names(input)
+  }
   input[cols_to_modify] <- lapply(input[cols_to_modify], function(x) {
     if (is.character(x)) tolower(x) else x
   })
-  # __ Validate input ----
-  assert_true(
-    length(input$id) == length(unique(input$id)),
-    .var.name = "Input IDs must be unique"
-  )
-  assert_subset(
-    tolower(input$season),
-    choices = c("spring","sp-su", "summer", "fall", 1, 1.5, 2, 3, NA),
-    empty.ok = FALSE,
-    .var.name = "season"
-  )
-  assert_subset(
-    tolower(input$density),
-    choices = c("light", "moderate", "dense", 1, 2, 3, NA),
-    empty.ok = FALSE,
-    .var.name = "density"
-  )
-  assert_subset(
-    tolower(input$stand),
-    choices = c(
-      "deciduous",
-      "douglas-fir",
-      "mixedwood",
-      "pine",
-      "spruce",
-      "d",
-      "df",
-      "m",
-      "p",
-      "s",
-      NA
-    ),
-    empty.ok = FALSE,
-    .var.name = "stand"
-  )
-  assert_choice(
-    tolower(model_mcsa),
-    c("original", "corrected"),
-    .var.name = "model_mcsa"
-  )
+  # If ID column exists, ensure that IDs are unique
+  if ("id" %in% names(input)) {
+    assert_true(
+      length(input$id) == length(unique(input$id)),
+      .var.name = "Input IDs must be unique"
+    )
+  }
   assert_numeric(
     input$fsg,
     lower = 0.5,
@@ -284,7 +256,6 @@ conpyro <- function(
       sorted = TRUE
     )
   }
-  assert_number(FFMC, lower = 80, upper = 99)
   assert_number(DMC, lower = 5, upper = 250)
   assert_logical(smooth_CFO, .var.name = "smooth_CFO")
   assert_number(CF_thresh, lower = 0, upper = 1)
@@ -304,18 +275,17 @@ conpyro <- function(
       "ROS_integrated"
     )
   )
-
   # Initialize data structures
-  out       <- list()
-  ggdata    <- data.frame()
+  out <- list()
+  ggdata <- data.frame()
   # Loop through input rows (scenarios)
   for (i in 1:nrow(input)) {
     # Assign inputs to vars ----
-    extra_args    <- list(...)
-    ID            <- input$id[i]
-    season        <- input$season[i]
-    density       <- input$density[i]
-    stand         <- input$stand[i]
+    extra_args <- list(...)
+    ID <- if("id" %in% names(input)) input$id[[i]] else i
+    season <- if("season" %in% names(input)) input$season[[i]] else NA
+    density <- if("density" %in% names(input)) input$density[[i]] else NA
+    stand <- if("stand" %in% names(input)) input$stand[[i]] else NA
     FSG           <- input$fsg[i]
     SFC           <- input$sfc[i]
     CBD           <- input$cbd[i]
@@ -781,30 +751,6 @@ fn_ISI <- function(ws_seq, mc) {
 fn_mcFFMC   <- function(FFMC) {147.2 * (101 - FFMC) / (59.5 + FFMC)}
 # Based on Eq. 16 in Van Wagner (1987)
 fn_mcDMC    <- function(DMC) {20 + exp(-(DMC - 244.72) / 43.43)}
-# Convert combinations of stand attributes to numeric codes
-fn_mcsa_idx <- function(FFMC, season, density, stand, model_mcsa) {
-  idx <- as.numeric(
-    paste0(
-      if (season == "spring" | season == 1)   1,
-      if (season == "summer" | season == 2)   2,
-      if (season == "fall"   | season == 3)   3,
-      if (season == "sp-su"  | season == 1.5) 4,
-      if (density == "light"    | density == 1) {
-        if (model_mcsa == "corrected" & FFMC > 96.15) 2 else 1
-      },
-      if (density == "moderate" | density == 2) 2,
-      if (density == "dense"    | density == 3) {
-        if (model_mcsa == "corrected" & FFMC > 92.93) 2 else 3
-      },
-      if (stand == "deciduous"   | stand == "d")  1,
-      if (stand == "douglas-fir" | stand == "df") 2,
-      if (stand == "mixedwood"   | stand == "m")  3,
-      if (stand == "pine"        | stand == "p")  4,
-      if (stand == "spruce"      | stand == "s")  5
-    )
-  )
-  return(idx)
-}
 # Calculate stand-adjusted moisture content
 fn_mcsa <- function(idx, mcFFMC, mcDMC) {
   coefs <- sysdata$coefs_MCSA
