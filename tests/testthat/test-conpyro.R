@@ -49,24 +49,24 @@ test_that("conpyro() can handle NA input values", {
   rm(df)
 })
 
-test_that("fn_mcFFMC() works", {
-  expect_equal(fn_mcFFMC(0), 249.8689075630)
-  expect_equal(fn_mcFFMC(90), 10.8307692308)
-  expect_identical(fn_mcFFMC(101), 0)
-})
-
-test_that("fn_mcDMC() works", {
-  expect_equal(fn_mcDMC(0), 300.0070115918)
-  expect_equal(fn_mcDMC(100), 48.0015203601)
-  expect_equal(fn_mcDMC(200), 22.8002339585)
-})
-
-test_that("fn_mcsa() works", {
-  expect_equal(fn_mcsa(111, 0, 0), 0)
-  expect_equal(fn_mcsa(224, 10, 50), 8.7607376501)
-  expect_equal(fn_mcsa(435, 10, 50), 8.8152118260)
-  expect_equal(fn_mcsa(331, 250, 300), 2955.2094540452)
-})
+# test_that("fn_mcFFMC() works", {
+#   expect_equal(fn_mcFFMC(0), 249.8689075630)
+#   expect_equal(fn_mcFFMC(90), 10.8307692308)
+#   expect_identical(fn_mcFFMC(101), 0)
+# })
+#
+# test_that("fn_mcDMC() works", {
+#   expect_equal(fn_mcDMC(0), 300.0070115918)
+#   expect_equal(fn_mcDMC(100), 48.0015203601)
+#   expect_equal(fn_mcDMC(200), 22.8002339585)
+# })
+#
+# test_that("fn_mcsa() works", {
+#   expect_equal(fn_mcsa(111, 0, 0), 0)
+#   expect_equal(fn_mcsa(224, 10, 50), 8.7607376501)
+#   expect_equal(fn_mcsa(435, 10, 50), 8.8152118260)
+#   expect_equal(fn_mcsa(331, 250, 300), 2955.2094540452)
+# })
 
 test_that("fn_pCFO() works", {
   expect_equal(

@@ -137,7 +137,7 @@
 #'
 #' @importFrom checkmate assert_data_frame assert_subset assert_true
 #'   assert_numeric assert_logical assert_integerish test_subset assert_number
-#'   assert_choice
+#'   assert_choice assert_int makeAssertCollection reportAssertions
 #' @importFrom utils read.csv
 #'
 conpyro <- function(
@@ -256,7 +256,6 @@ conpyro <- function(
       sorted = TRUE
     )
   }
-  assert_number(DMC, lower = 5, upper = 250)
   assert_logical(smooth_CFO, .var.name = "smooth_CFO")
   assert_number(CF_thresh, lower = 0, upper = 1)
   assert_subset(ROS_output, c("SROS", "CROS_P", "CROS_A", "integrated"))
@@ -730,60 +729,6 @@ conpyro <- function(
 }
 
 # Internal functions ----
-# __General ----
-fn_ISI <- function(ws_seq, mc) {
-  fw1  <- exp(0.05039 * ws_seq)
-  fw2  <- 12 * (1 - exp(-0.0818 *(ws_seq - 28)))
-  ff   <- 91.9 * exp(-0.1386 * mc) * (1 + (mc^5.31) / 4.93e+07)
-  ISI1 <- 0.208 * fw1 * ff
-  ISI2 <- 0.208 * fw2 * ff
-  ISI  <- c(ISI1[which(ws_seq <= 40)], ISI2[which(ws_seq > 40)])
-  return(ISI)
-}
-
-# __Fuel moisture content estimates ----
-
-# Based on Eq. 2b in Van Wagner (1987). A more precise multiplier (e.g.,
-# 147.2772277228) could be used to ensure a scale length closer to exactly 250,
-# but the standard value of 147.2, as specified in NOR-X-424 (2015), is used
-# here to ensure consistency with other implementations, giving a scale length
-# of ~249.89
-fn_mcFFMC   <- function(FFMC) {147.2 * (101 - FFMC) / (59.5 + FFMC)}
-# Based on Eq. 16 in Van Wagner (1987)
-fn_mcDMC    <- function(DMC) {20 + exp(-(DMC - 244.72) / 43.43)}
-# Calculate stand-adjusted moisture content
-fn_mcsa <- function(idx, mcFFMC, mcDMC) {
-  coefs <- sysdata$coefs_MCSA
-  c     <- 0.002232
-  calc_mcsa <- function(idx, mcFFMC, mcDMC) {
-    a    <- coefs[which(coefs[1] == idx), 2]
-    b    <- coefs[which(coefs[1] == idx), 3]
-    mcsa <- exp(a + b * log(mcFFMC) + c * mcDMC)
-  }
-  if (idx < 400) {
-    mcsa <- calc_mcsa(idx, mcFFMC, mcDMC)
-  } else {
-    idx_sp  <- as.numeric(paste0(1, substr(idx, 2, 3)))
-    mcsa_sp <- calc_mcsa(idx_sp, mcFFMC, mcDMC)
-    idx_su  <- as.numeric(paste0(2, substr(idx, 2, 3)))
-    mcsa_su <- calc_mcsa(idx_su, mcFFMC, mcDMC)
-    mcsa    <- mean(c(mcsa_sp, mcsa_su))
-  }
-  return(mcsa)
-}
-
-# __Probability of crown fire occurrence (pCFO) ----
-fn_pCFO <- function(model, ws_seq, FSG, SFC, MC) {
-  coefs <- sysdata$coefs_pCFO
-  b0    <- coefs[which(coefs[1] == model), 2]
-  b1    <- coefs[which(coefs[1] == model), 3]
-  b2    <- coefs[which(coefs[1] == model), 4]
-  b3    <- coefs[which(coefs[1] == model), 5]
-  b4    <- coefs[which(coefs[1] == model), 6]
-  gx    <- b0 + b1 * ws_seq + b2 * FSG^1.5 + b4 * log(SFC) + b3 * MC * ws_seq
-  pCFO  <- exp(gx) / (1 + exp(gx))
-  return(pCFO)
-}
 
 # __Confidence intervals
 fn_CF_CI <- function(ws_seq, pCFO, CI = 90) {

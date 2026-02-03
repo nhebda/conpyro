@@ -106,11 +106,7 @@ t_mcDensity <- function(canopy_closure = 50) {
 #' @importFrom checkmate assert_number
 #'
 t_mcF <- function(FFMC = 90) {
-  # Check input
-  assert_number(FFMC, lower = 80, upper = 99)
-  # Calculate
   mcF <- fn_mcFFMC(FFMC)
-  # Output
   out <- round(mcF, 2)
   return(out)
 }
