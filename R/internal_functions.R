@@ -30,8 +30,6 @@ fn_ISI <- function(ws_seq, mc) {
 # of ~249.89
 #' @keywords internal
 fn_mcFFMC <- function(FFMC) {
-  FFMC <- as.numeric(FFMC)
-  fn_validate_input(FFMC = FFMC)
   mcFFMC <- 147.2 * (101 - FFMC) / (59.5 + FFMC)
   return(mcFFMC)
 }

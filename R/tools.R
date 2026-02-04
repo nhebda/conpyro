@@ -6,6 +6,8 @@
 #'  * Jun 1 to Jun 15  = `1.5 ("sp-su")`
 #'  * Jun 16 to Aug 31 = `2 ("summer")`
 #'  * Sep 1 to Dec 31  = `3 ("fall")`
+#' A leap year (2024) is used internally so that February 29 is treated as a
+#' valid date.
 #'
 #' @param month An integer in `{1, 2, 3, ..., 12}`.
 #' @param day An integer in `{1, 2, 3, ..., 31}`.
@@ -24,33 +26,26 @@
 #' # Fall
 #' t_mcSeason(9, 24)
 #'
-#' @importFrom checkmate assert_integerish
-#'
-t_mcSeason <- function(month = 7, day = 1) {
-  # Check input
-  assert_integerish(month, lower = 1, upper = 12)
-  assert_integerish(day, lower = 1, upper = 31)
-  # Calculate
-  if (
-    inherits(
-      try(as.Date(paste(2024, month, day, sep = "-")), silent = TRUE),
-      "try-error"
-    )
-  ) {
-    stop("Please enter a valid date")
-  } else {
-    date <- as.Date(paste(2024, month, day, sep = "-"))
+t_mcSeason <- function(month, day) {
+  # Validate input
+  fn_validate_input(month = month, day = day)
+  # Validate calendar date using a leap year (allows Feb 29)
+  year <- 2024
+  date <- as.Date(paste(year, month, day, sep = "-"), optional = TRUE)
+  if (is.na(date)) {
+    stop("Invalid month/day combination.", call. = FALSE)
   }
-  season <- if (date >= as.Date("2024-01-01") & date < as.Date("2024-06-01")) {
+  # Calculate
+  md <- month * 100L + day
+  season <- if (md < 601L) {
     1
-  } else if (date >= as.Date("2024-06-01") & date < as.Date("2024-06-16")) {
+  } else if (md < 616L) {
     1.5
-  } else if (date >= as.Date("2024-06-16") & date < as.Date("2024-09-01")) {
+  } else if (md < 901L) {
     2
-  } else if (date >= as.Date("2024-09-01") & date <= as.Date("2024-12-31")) {
+  } else {
     3
   }
-  # Output
   return(season)
 }
 
@@ -103,9 +98,8 @@ t_mcDensity <- function(canopy_closure = 50) {
 #' # Very dry
 #' t_mcF(92)
 #'
-#' @importFrom checkmate assert_number
-#'
-t_mcF <- function(FFMC = 90) {
+t_mcF <- function(FFMC) {
+  fn_validate_input(FFMC = FFMC)
   mcF <- fn_mcFFMC(FFMC)
   out <- round(mcF, 2)
   return(out)

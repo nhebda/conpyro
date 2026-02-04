@@ -1,37 +1,159 @@
-test_that("t_mcSeason() works", {
-  expect_identical(t_mcSeason(1, 1), 1)
-  expect_identical(t_mcSeason(2, 29), 1)
-  expect_identical(t_mcSeason(5, 31), 1)
-  expect_identical(t_mcSeason(6, 1), 1.5)
-  expect_identical(t_mcSeason(6, 15), 1.5)
-  expect_identical(t_mcSeason(6, 16), 2)
-  expect_identical(t_mcSeason(8, 31), 2)
-  expect_identical(t_mcSeason(9, 1), 3)
-  expect_error(t_mcSeason(0, 0))
-  expect_error(t_mcSeason(0, 1))
-  expect_error(t_mcSeason(1, 0))
-  expect_error(t_mcSeason(2, 30))
-  expect_error(t_mcSeason(13, 1))
-  expect_error(t_mcSeason(1, 32))
-  expect_error(t_mcSeason(1.5, 1))
-  expect_error(t_mcSeason(1, 1.5))
-  expect_error(t_mcSeason("", ""))
-  expect_error(t_mcSeason(NA, NA))
-  expect_error(t_mcSeason(NULL, NULL))
+# Comprehensive unit test suite for exported functions in tools.R
+
+# t_mcSeason ----
+test_that("t_mcSeason returns a length-1 numeric scalar", {
+  out <- t_mcSeason(5, 11)
+  expect_type(out, "double")
+  expect_length(out, 1L)
 })
 
-test_that("t_mcF() works", {
-  expect_identical(t_mcF(80), 22.16)
-  expect_identical(t_mcF(90), 10.83)
-  expect_identical(t_mcF(91.5), 9.26)
-  expect_identical(t_mcF(99), 1.86)
-  expect_error(t_mcF(79))
-  expect_error(t_mcF(100))
-  expect_error(t_mcF(""))
-  expect_error(t_mcF(NA))
-  expect_error(t_mcF(NULL))
+test_that("t_mcSeason correctly classifies spring dates (Jan 1 – May 31)", {
+  expect_equal(t_mcSeason(1, 1), 1)
+  expect_equal(t_mcSeason(3, 15), 1)
+  expect_equal(t_mcSeason(5, 31), 1)
 })
 
+test_that("t_mcSeason correctly classifies spring–summer transition (Jun 1 –
+          Jun 15)", {
+  expect_equal(t_mcSeason(6, 1), 1.5)
+  expect_equal(t_mcSeason(6, 7), 1.5)
+  expect_equal(t_mcSeason(6, 15), 1.5)
+})
+
+test_that("t_mcSeason correctly classifies summer dates (Jun 16 – Aug 31)", {
+  expect_equal(t_mcSeason(6, 16), 2)
+  expect_equal(t_mcSeason(7, 10), 2)
+  expect_equal(t_mcSeason(8, 31), 2)
+})
+
+test_that("t_mcSeason correctly classifies fall dates (Sep 1 – Dec 31)", {
+  expect_equal(t_mcSeason(9, 1), 3)
+  expect_equal(t_mcSeason(10, 15), 3)
+  expect_equal(t_mcSeason(12, 31), 3)
+})
+
+test_that("t_mcSeason correctly handles boundary transitions", {
+  expect_equal(t_mcSeason(5, 31), 1)
+  expect_equal(t_mcSeason(6, 1), 1.5)
+
+  expect_equal(t_mcSeason(6, 15), 1.5)
+  expect_equal(t_mcSeason(6, 16), 2)
+
+  expect_equal(t_mcSeason(8, 31), 2)
+  expect_equal(t_mcSeason(9, 1), 3)
+})
+
+test_that("t_mcSeason allows February 29 (leap year handling)", {
+  expect_equal(t_mcSeason(2, 29), 1)
+})
+
+test_that("t_mcSeason rejects invalid calendar dates", {
+  expect_error(
+    t_mcSeason(2, 30),
+    "Invalid month/day combination"
+  )
+
+  expect_error(
+    t_mcSeason(4, 31),
+    "Invalid month/day combination"
+  )
+
+  expect_error(
+    t_mcSeason(11, 31),
+    "Invalid month/day combination"
+  )
+})
+
+test_that("t_mcSeason rejects invalid month values", {
+  expect_error(t_mcSeason(0, 15), "month")
+  expect_error(t_mcSeason(13, 15), "month")
+})
+
+test_that("t_mcSeason rejects invalid day values", {
+  expect_error(t_mcSeason(6, 0), "day")
+  expect_error(t_mcSeason(6, 32), "day")
+})
+
+test_that("t_mcSeason rejects non-integerish inputs", {
+  expect_error(t_mcSeason(6.5, 10), "month")
+  expect_error(t_mcSeason(6, 10.2), "day")
+  expect_error(t_mcSeason("6", 10), "month")
+  expect_error(t_mcSeason(6, "10"), "day")
+})
+
+test_that("t_mcSeason rejects vector inputs", {
+  expect_error(t_mcSeason(c(6, 7), 10), "month")
+  expect_error(t_mcSeason(6, c(10, 11)), "day")
+})
+
+test_that("t_mcSeason is deterministic for identical inputs", {
+  expect_identical(t_mcSeason(8, 16), t_mcSeason(8, 16))
+})
+
+# t_mcF ----
+test_that("t_mcF returns correct numeric values for representative FFMC
+          inputs", {
+  expect_equal(t_mcF(80), round(147.2 * (101 - 80) / (59.5 + 80), 2))
+  expect_equal(t_mcF(84), round(147.2 * (101 - 84) / (59.5 + 84), 2))
+  expect_equal(t_mcF(89), round(147.2 * (101 - 89) / (59.5 + 89), 2))
+  expect_equal(t_mcF(92), round(147.2 * (101 - 92) / (59.5 + 92), 2))
+})
+
+test_that("t_mcF returns a length-1 numeric value rounded to two decimals", {
+  out <- t_mcF(85)
+  expect_type(out, "double")
+  expect_length(out, 1)
+  expect_equal(out, round(out, 2))
+})
+
+test_that("t_mcF enforces lower FFMC bound", {
+  expect_error(
+    t_mcF(79.999),
+    "FFMC.*>=\\s*80"
+  )
+})
+
+test_that("t_mcF enforces upper FFMC bound", {
+  expect_error(
+    t_mcF(99.001),
+    "FFMC.*<=\\s*99"
+  )
+})
+
+test_that("t_mcF rejects NA, NaN, and infinite FFMC values", {
+  expect_error(t_mcF(NA), "FFMC")
+  expect_error(t_mcF(NaN), "FFMC")
+  expect_error(t_mcF(Inf), "FFMC")
+  expect_error(t_mcF(-Inf), "FFMC")
+})
+
+test_that("t_mcF rejects non-numeric FFMC inputs", {
+  expect_error(t_mcF("85"), "FFMC")
+  expect_error(t_mcF(TRUE), "FFMC")
+  expect_error(t_mcF(factor(85)), "FFMC")
+})
+
+test_that("t_mcF rejects vector inputs", {
+  expect_error(
+    t_mcF(c(85, 86)),
+    "FFMC"
+  )
+})
+
+test_that("t_mcF produces monotonically decreasing moisture with increasing
+          FFMC", {
+  mc_low <- t_mcF(80)
+  mc_mid <- t_mcF(85)
+  mc_high <- t_mcF(90)
+  expect_gt(mc_low, mc_mid)
+  expect_gt(mc_mid, mc_high)
+})
+
+test_that("t_mcF is deterministic for identical inputs", {
+  expect_identical(t_mcF(87), t_mcF(87))
+})
+
+# t_mcsa ----
 test_that("t_mcsa() works", {
   expect_identical(t_mcsa(80, 20, 1, 3, "s"), 23.45)
   expect_identical(t_mcsa(84, 30, 1, 3, "p"), 16.33)

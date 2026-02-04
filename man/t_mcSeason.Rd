@@ -4,7 +4,7 @@
 \alias{t_mcSeason}
 \title{Determine \code{season} input for \code{\link[=t_mcsa]{t_mcsa()}}}
 \usage{
-t_mcSeason(month = 7, day = 1)
+t_mcSeason(month, day)
 }
 \arguments{
 \item{month}{An integer in \verb{\{1, 2, 3, ..., 12\}}.}
@@ -22,6 +22,8 @@ argument to be used in \code{\link[=t_mcsa]{t_mcsa()}}.
 \item Jun 1 to Jun 15  = \code{1.5 ("sp-su")}
 \item Jun 16 to Aug 31 = \code{2 ("summer")}
 \item Sep 1 to Dec 31  = \code{3 ("fall")}
+A leap year (2024) is used internally so that February 29 is treated as a
+valid date.
 }
 }
 \examples{

@@ -4,7 +4,7 @@
 \alias{t_mcF}
 \title{Estimate FFMC-based fine dead litter moisture content}
 \usage{
-t_mcF(FFMC = 90)
+t_mcF(FFMC)
 }
 \arguments{
 \item{FFMC}{A numeric value in \verb{[80, 99]}. The Fine Fuel Moisture Code (FFMC)

@@ -1,5 +1,9 @@
-# Centralized input validation function
+#' Centralized input validation function
+#'
 #' @keywords internal
+#' @importFrom checkmate assert_number assert_numeric assert_choice
+#'   assert_integerish
+#'
 fn_validate_input <- function(...) {
   input <- list(...)
   coll <- makeAssertCollection()
@@ -114,6 +118,22 @@ fn_validate_input <- function(...) {
         upper = 6,
         finite = TRUE,
         .var.name = "SFC",
+        add = coll
+      )
+    },
+    "month" = function(name, collection) {
+      assert_integerish(
+        name,
+        len = 1L,
+        .var.name = "month",
+        add = coll
+      )
+    },
+    "day" = function(name, collection) {
+      assert_integerish(
+        name,
+        len = 1L,
+        .var.name = "day",
         add = coll
       )
     }
