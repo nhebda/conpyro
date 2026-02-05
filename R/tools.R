@@ -61,18 +61,24 @@ t_mcSeason <- function(month, day) {
 #' @export
 #'
 #' @examples
-#' # TODO
+#' # Light
+#' t_mcDensity(30)
+#' # Moderate
+#' t_mcDensity(50)
+#' # Dense
+#' t_mcDensity(70)
 #'
-#' @importFrom checkmate assert_integerish
-#'
-t_mcDensity <- function(canopy_closure = 50) {
-  # Check input
-  assert_integerish(canopy_closure, lower = 20, upper = 100)
+t_mcDensity <- function(canopy_closure) {
+  # Validate input
+  fn_validate_input(canopy_closure = canopy_closure)
   # Calculate
-  dens <- if ((canopy_closure >= 20) & (canopy_closure <= 45)) {1}
-  else if ((canopy_closure > 45) & (canopy_closure <= 60)) {2}
-  else if (canopy_closure > 60) {3}
-  # Output
+  dens <- if (canopy_closure <= 45) {
+    1
+  } else if (canopy_closure <= 60) {
+    2
+  } else {
+    3
+  }
   return(dens)
 }
 
@@ -99,7 +105,9 @@ t_mcDensity <- function(canopy_closure = 50) {
 #' t_mcF(92)
 #'
 t_mcF <- function(FFMC) {
+  # Validate input
   fn_validate_input(FFMC = FFMC)
+  # Calculate
   mcF <- fn_mcFFMC(FFMC)
   out <- round(mcF, 2)
   return(out)

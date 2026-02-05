@@ -19,7 +19,7 @@ fn_validate_input <- function(...) {
         add = coll
       )
     },
-    "DMC" = function(name, collection) {
+    "DMC" = function(name, coll) {
       assert_number(
         name,
         lower = 5,
@@ -29,7 +29,7 @@ fn_validate_input <- function(...) {
         add = coll
       )
     },
-    "ws_seq" = function(name, collection) {
+    "ws_seq" = function(name, coll) {
       assert_numeric(
         name,
         lower = 0,
@@ -40,7 +40,7 @@ fn_validate_input <- function(...) {
         add = coll
       )
     },
-    "mc" = function(name, collection) {
+    "mc" = function(name, coll) {
       assert_number(
         name,
         lower = 0,
@@ -50,23 +50,23 @@ fn_validate_input <- function(...) {
         add = coll
       )
     },
-    "season" = function(name, collection) {
+    "season" = function(name, coll) {
       assert_choice(
-        name,
+        as.character(name),
         choices = c("spring","sp-su", "summer", "fall", "1", "1.5", "2", "3"),
         .var.name = "season",
         add = coll
       )
     },
-    "density" = function(name, collection) {
+    "density" = function(name, coll) {
       assert_choice(
-        name,
+        as.character(name),
         choices = c("light", "moderate", "dense", "1", "2", "3"),
         .var.name = "density",
         add = coll
       )
     },
-    "stand" = function(name, collection) {
+    "stand" = function(name, coll) {
       assert_choice(
         name,
         choices = c(
@@ -85,7 +85,7 @@ fn_validate_input <- function(...) {
         add = coll
       )
     },
-    "model_mcsa" = function(name, collection) {
+    "model_mcsa" = function(name, coll) {
       assert_choice(
         name,
         choices = c("original", "corrected"),
@@ -93,15 +93,15 @@ fn_validate_input <- function(...) {
         add = coll
       )
     },
-    "model_pCFO" = function(name, collection) {
+    "model_pCFO" = function(name, coll) {
       assert_choice(
         name,
-        choices = c(7, 8, 10, 11),
+        choices = c(7L, 8L, 10L, 11L),
         .var.name = "model_pCFO",
         add = coll
       )
     },
-    "FSG" = function(name, collection) {
+    "FSG" = function(name, coll) {
       assert_number(
         name,
         lower = 0.5,
@@ -111,7 +111,7 @@ fn_validate_input <- function(...) {
         add = coll
       )
     },
-    "SFC" = function(name, collection) {
+    "SFC" = function(name, coll) {
       assert_number(
         name,
         lower = 0.1,
@@ -121,7 +121,7 @@ fn_validate_input <- function(...) {
         add = coll
       )
     },
-    "month" = function(name, collection) {
+    "month" = function(name, coll) {
       assert_integerish(
         name,
         len = 1L,
@@ -129,11 +129,20 @@ fn_validate_input <- function(...) {
         add = coll
       )
     },
-    "day" = function(name, collection) {
+    "day" = function(name, coll) {
       assert_integerish(
         name,
         len = 1L,
         .var.name = "day",
+        add = coll
+      )
+    },
+    "canopy_closure" = function(name, coll) {
+      assert_number(
+        name,
+        lower = 20,
+        upper = 100,
+        .var.name = "canopy_closure",
         add = coll
       )
     }

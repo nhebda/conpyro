@@ -90,6 +90,77 @@ test_that("t_mcSeason is deterministic for identical inputs", {
   expect_identical(t_mcSeason(8, 16), t_mcSeason(8, 16))
 })
 
+# t_mcDensity ----
+test_that("t_mcDensity returns a length-1 numeric scalar", {
+  out <- t_mcDensity(50)
+  expect_type(out, "double")
+  expect_length(out, 1L)
+})
+
+test_that("t_mcDensity classifies light canopy density (<= 45)", {
+  expect_equal(t_mcDensity(20), 1)
+  expect_equal(t_mcDensity(30), 1)
+  expect_equal(t_mcDensity(45), 1)
+})
+
+test_that("t_mcDensity classifies moderate canopy density (46–60)", {
+  expect_equal(t_mcDensity(46), 2)
+  expect_equal(t_mcDensity(50), 2)
+  expect_equal(t_mcDensity(60), 2)
+})
+
+test_that("t_mcDensity classifies dense canopy density (> 60)", {
+  expect_equal(t_mcDensity(61), 3)
+  expect_equal(t_mcDensity(70), 3)
+  expect_equal(t_mcDensity(100), 3)
+})
+
+test_that("t_mcDensity handles boundary transitions correctly", {
+  expect_equal(t_mcDensity(45), 1)
+  expect_equal(t_mcDensity(46), 2)
+  expect_equal(t_mcDensity(60), 2)
+  expect_equal(t_mcDensity(61), 3)
+})
+
+test_that("t_mcDensity rejects values below minimum canopy closure", {
+  expect_error(
+    t_mcDensity(19),
+    "canopy_closure"
+  )
+})
+
+test_that("t_mcDensity rejects values above maximum canopy closure", {
+  expect_error(
+    t_mcDensity(101),
+    "canopy_closure"
+  )
+})
+
+test_that("t_mcDensity rejects non-numeric inputs", {
+  expect_error(t_mcDensity("50"), "canopy_closure")
+  expect_error(t_mcDensity(TRUE), "canopy_closure")
+  expect_error(t_mcDensity(factor(50)), "canopy_closure")
+})
+
+test_that("t_mcDensity rejects NA, NaN, and infinite values", {
+  expect_error(t_mcDensity(NA), "canopy_closure")
+  expect_error(t_mcDensity(NaN), "canopy_closure")
+  expect_error(t_mcDensity(Inf), "canopy_closure")
+  expect_error(t_mcDensity(-Inf), "canopy_closure")
+})
+
+test_that("t_mcDensity rejects vector inputs", {
+  expect_error(
+    t_mcDensity(c(30, 40)),
+    "canopy_closure"
+  )
+})
+
+test_that("t_mcDensity is deterministic for identical inputs", {
+  expect_identical(t_mcDensity(70), t_mcDensity(70))
+})
+
+
 # t_mcF ----
 test_that("t_mcF returns correct numeric values for representative FFMC
           inputs", {

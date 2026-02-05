@@ -4,7 +4,7 @@
 \alias{t_mcDensity}
 \title{Determine \code{density} input for \code{\link[=t_mcsa]{t_mcsa()}}}
 \usage{
-t_mcDensity(canopy_closure = 50)
+t_mcDensity(canopy_closure)
 }
 \arguments{
 \item{canopy_closure}{An integer in \verb{[20, 100]}. Canopy closure in percent.}
@@ -17,6 +17,11 @@ A number in \verb{\{1, 2, 3\}}, corresponding to \verb{\{"light", "moderate", "d
 categorical \code{density} value to be used in \code{\link[=t_mcsa]{t_mcsa()}}.
 }
 \examples{
-# TODO
+# Light
+t_mcDensity(30)
+# Moderate
+t_mcDensity(50)
+# Dense
+t_mcDensity(70)
 
 }

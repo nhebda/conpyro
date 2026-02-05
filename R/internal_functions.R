@@ -30,6 +30,7 @@ fn_ISI <- function(ws_seq, mc) {
 # of ~249.89
 #' @keywords internal
 fn_mcFFMC <- function(FFMC) {
+  FFMC <- as.numeric(FFMC)
   mcFFMC <- 147.2 * (101 - FFMC) / (59.5 + FFMC)
   return(mcFFMC)
 }
@@ -37,8 +38,8 @@ fn_mcFFMC <- function(FFMC) {
 # Follows Eq. 16 in Van Wagner (1987)
 #' @keywords internal
 fn_mcDMC <- function(DMC) {
-  DMC <- as.numeric(DMC)
   fn_validate_input(DMC = DMC)
+  DMC <- as.numeric(DMC)
   mcDMC <- 20 + exp(-(DMC - 244.72) / 43.43)
   return(mcDMC)
 }
