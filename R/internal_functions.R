@@ -38,7 +38,6 @@ fn_mcFFMC <- function(FFMC) {
 # Follows Eq. 16 in Van Wagner (1987)
 #' @keywords internal
 fn_mcDMC <- function(DMC) {
-  fn_validate_input(DMC = DMC)
   DMC <- as.numeric(DMC)
   mcDMC <- 20 + exp(-(DMC - 244.72) / 43.43)
   return(mcDMC)
@@ -51,7 +50,7 @@ fn_mcsa_idx <- function(
     season,
     density,
     stand,
-    model_mcsa = "corrected"
+    model_mcsa
 ) {
   # Normalize input
   FFMC <- as.numeric(FFMC)
@@ -149,13 +148,23 @@ fn_mcsa <- function(idx, mcFFMC, mcDMC) {
 
 # Probability of crown fire occurrence (pCFO) ----
 #' @keywords internal
-fn_pCFO <- function(model_pCFO, ws_seq, FSG, SFC, MC) {
+fn_pCFO <- function(
+    ws_seq,
+    mc,
+    FSG,
+    SFC,
+    mc_type,
+    model_pCFO_mcF,
+    model_pCFO_mcsa
+) {
   # Normalize input
-  model_pCFO <- as.numeric(model_pCFO)
   ws_seq <- as.numeric(ws_seq)
+  mc <- as.numeric(mc)
   FSG <- as.numeric(FSG)
   SFC <- as.numeric(SFC)
-  MC <- as.numeric(MC)
+  mc_type <- as.character(mc_type)
+  model_pCFO_mcF <- as.numeric(model_pCFO_mcF)
+  model_pCFO_mcsa <- as.numeric(model_pCFO_mcsa)
   # Validate input
   fn_validate_input(
     model_pCFO = model_pCFO,

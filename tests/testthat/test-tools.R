@@ -52,12 +52,10 @@ test_that("t_mcSeason rejects invalid calendar dates", {
     t_mcSeason(2, 30),
     "Invalid month/day combination"
   )
-
   expect_error(
     t_mcSeason(4, 31),
     "Invalid month/day combination"
   )
-
   expect_error(
     t_mcSeason(11, 31),
     "Invalid month/day combination"
@@ -159,7 +157,6 @@ test_that("t_mcDensity rejects vector inputs", {
 test_that("t_mcDensity is deterministic for identical inputs", {
   expect_identical(t_mcDensity(70), t_mcDensity(70))
 })
-
 
 # t_mcF ----
 test_that("t_mcF returns correct numeric values for representative FFMC

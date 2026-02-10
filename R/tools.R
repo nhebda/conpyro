@@ -140,63 +140,35 @@ t_mcF <- function(FFMC) {
 #' # Very dry
 #' t_mcsa(92, 60, 2, 1, "p")
 #'
-#' @importFrom checkmate assert_number assert_choice
-#'
 t_mcsa <- function(
-    FFMC       = 90,
-    DMC        = 85,
-    season     = 2,
-    density    = 2,
-    stand      = "p",
+    FFMC,
+    DMC,
+    season,
+    density,
+    stand,
     model_mcsa = "corrected"
 ) {
-  # Check input
-  assert_number(FFMC, lower = 80, upper = 99)
-  assert_number(DMC, lower = 5, upper = 250)
-  assert_choice(
-    tolower(season),
-    c("spring","sp-su", "summer", "fall", 1, 1.5, 2, 3),
-    .var.name = "season"
-  )
-  assert_choice(
-    tolower(density),
-    c("light", "moderate", "dense", 1, 2, 3),
-    .var.name = "density"
-  )
-  assert_choice(
-    tolower(stand),
-    c(
-      "deciduous",
-      "douglas-fir",
-      "mixedwood",
-      "pine",
-      "spruce",
-      "d",
-      "df",
-      "m",
-      "p",
-      "s"
-    ),
-    .var.name = "stand"
-  )
-  assert_choice(
-    tolower(model_mcsa),
-    c("original", "corrected"),
-    .var.name = "model_mcsa"
-  )
-  # Calculate
-  idx   <- fn_mcsa_idx(
-    FFMC       = FFMC,
-    season     = tolower(season),
-    density    = tolower(density),
-    stand      = tolower(stand),
+  # Validate input
+  fn_validate_input(
+    FFMC = FFMC,
+    DMC = DMC,
+    season = season,
+    density = density,
+    stand = stand,
     model_mcsa = model_mcsa
   )
-  mcF   <- fn_mcFFMC(FFMC)
+  # Calculate
+  idx <- fn_mcsa_idx(
+    FFMC = FFMC,
+    season = season,
+    density = density,
+    stand = stand,
+    model_mcsa = model_mcsa
+  )
+  mcF <- fn_mcFFMC(FFMC)
   mcDMC <- fn_mcDMC(DMC)
-  mcsa  <- fn_mcsa(idx, mcF, mcDMC)
-  # Output
-  out   <- round(mcsa, 2)
+  mcsa <- fn_mcsa(idx, mcF, mcDMC)
+  out <- round(mcsa, 2)
   return(out)
 }
 

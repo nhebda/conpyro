@@ -52,7 +52,7 @@ fn_validate_input <- function(...) {
     },
     "season" = function(name, coll) {
       assert_choice(
-        as.character(name),
+        tolower(as.character(name)),
         choices = c("spring","sp-su", "summer", "fall", "1", "1.5", "2", "3"),
         .var.name = "season",
         add = coll
@@ -60,7 +60,7 @@ fn_validate_input <- function(...) {
     },
     "density" = function(name, coll) {
       assert_choice(
-        as.character(name),
+        tolower(as.character(name)),
         choices = c("light", "moderate", "dense", "1", "2", "3"),
         .var.name = "density",
         add = coll
@@ -68,7 +68,7 @@ fn_validate_input <- function(...) {
     },
     "stand" = function(name, coll) {
       assert_choice(
-        name,
+        tolower(name),
         choices = c(
           "deciduous",
           "douglas-fir",
@@ -87,7 +87,7 @@ fn_validate_input <- function(...) {
     },
     "model_mcsa" = function(name, coll) {
       assert_choice(
-        name,
+        tolower(name),
         choices = c("original", "corrected"),
         .var.name = "model_mcsa",
         add = coll

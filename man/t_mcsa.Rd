@@ -4,14 +4,7 @@
 \alias{t_mcsa}
 \title{Estimate stand-adjusted fine dead litter moisture content}
 \usage{
-t_mcsa(
-  FFMC = 90,
-  DMC = 85,
-  season = 2,
-  density = 2,
-  stand = "p",
-  model_mcsa = "corrected"
-)
+t_mcsa(FFMC, DMC, season, density, stand, model_mcsa = "corrected")
 }
 \arguments{
 \item{FFMC}{A numeric value in \verb{[80, 99]}. The Fine Fuel Moisture Code (FFMC)
