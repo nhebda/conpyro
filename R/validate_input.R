@@ -29,14 +29,14 @@ fn_validate_input <- function(...) {
         add = coll
       )
     },
-    "ws_seq" = function(name, coll) {
+    "WS10" = function(name, coll) {
       assert_numeric(
         name,
         lower = 0,
         upper = 60,
         finite = TRUE,
         min.len = 1,
-        .var.name = "ws_seq",
+        .var.name = "WS10",
         add = coll
       )
     },
@@ -93,10 +93,18 @@ fn_validate_input <- function(...) {
         add = coll
       )
     },
-    "model_pCFO" = function(name, coll) {
+    "model_pCFO_mcF" = function(name, coll) {
       assert_choice(
         name,
-        choices = c(7L, 8L, 10L, 11L),
+        choices = c(7L, 10L),
+        .var.name = "model_pCFO",
+        add = coll
+      )
+    },
+    "model_pCFO_mcF" = function(name, coll) {
+      assert_choice(
+        name,
+        choices = c(8L, 11L),
         .var.name = "model_pCFO",
         add = coll
       )

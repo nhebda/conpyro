@@ -132,13 +132,13 @@ t_mcF <- function(FFMC) {
 #'
 #' @examples
 #' # Moist
-#' t_mcsa(80, 20, 1, 3, "s")
+#' t_mcsa(FFMC = 80, DMC = 20, season = 1, density = 3, stand = "s")
 #' # Moderate
-#' t_mcsa(84, 30, 1, 3, "p")
+#' t_mcsa(FFMC = 84, DMC = 30, season = 1, density = 3, stand = "p")
 #' # Dry
-#' t_mcsa(89, 40, 2, 2, "p")
+#' t_mcsa(FFMC = 89, DMC = 40, season = 2, density = 2, stand = "p")
 #' # Very dry
-#' t_mcsa(92, 60, 2, 1, "p")
+#' t_mcsa(FFMC = 92, DMC = 60, season = 2, density = 1, stand = "p")
 #'
 t_mcsa <- function(
     FFMC,
@@ -179,6 +179,7 @@ t_mcsa <- function(
 #' fuel and fire weather conditions using the Conifer Pyrometrics (ConPyro) fire
 #' behaviour modelling system. See Perrakis et al. (2023) for details.
 #'
+#' @param ws A numeric value in `[0, 60]`. Wind speed in km/h.
 #' @param mcsa A numeric value in `[3, 20]`. Fine dead surface litter moisture
 #'   content calculated using the stand-adjusted model (mcsa). May be estimated
 #'   using [t_mcsa()]. If `mcF` is anything other than `NULL`, it will override
@@ -192,7 +193,7 @@ t_mcsa <- function(
 #'   mid-story ladder fuels.
 #' @param SFC A numeric value in `[0.1, 6]`. Surface fuel consumption in kg/m^2.
 #'   May be estimated using [t_SFC_FBP()] or [t_SFC_deGroot()].
-#' @param ws A numeric value in `[0, 60]`. Wind speed in km/h.
+#' @param ... Additional arguments to be passed to nested functions.
 #'
 #' @returns A numeric value giving probability of crown fire occurrence in the
 #'   range of `[0, 1]`.
@@ -200,33 +201,80 @@ t_mcsa <- function(
 #'
 #' @examples
 #' # Low probability
-#' t_pCFO(mcsa = 10, FSG = 6, SFC = 2, ws = 11)
+#' t_pCFO(ws = 11, mcsa = 10, FSG = 6, SFC = 2)
 #' # Moderate probability
-#' t_pCFO(mcsa = 9, FSG = 6, SFC = 2, ws = 12)
+#' t_pCFO(ws = 12, mcsa = 9, FSG = 6, SFC = 2)
 #' # High probability
-#' t_pCFO(mcsa = 8, FSG = 6, SFC = 2, ws = 13)
+#' t_pCFO(ws = 13, mcsa = 8, FSG = 6, SFC = 2)
 #' # Using t_McF()
-#' t_pCFO(mcF = t_mcF(89), FSG = 6, SFC = 2, ws = 13)
+#' t_pCFO(ws = 13, mcF = t_mcF(89), FSG = 6, SFC = 2)
 #' # Using t_mcsa()
-#' t_pCFO(mcsa = t_mcsa(89, 40, 2, 2, "p"), FSG = 6, SFC = 2, ws = 13)
+#' t_pCFO(
+#'   ws = 13,
+#'   mcsa = t_mcsa(
+#'     FFMC = 89,
+#'     DMC = 40,
+#'     season = 2,
+#'     density = 2,
+#'     stand = "p"
+#'   ),
+#'   FSG = 6,
+#'   SFC = 2
+#' )
 #'
 #' @importFrom checkmate assert_number
 #'
-t_pCFO <- function(mcsa = 10, mcF = NULL, FSG = 6, SFC = 2, ws = 12) {
-  # Check input
-  assert_number(mcsa, lower = 3, upper = 20, null.ok = TRUE)
-  assert_number(mcF, lower = 3, upper = 20, null.ok = TRUE)
-  assert_number(FSG, lower = 0.5, upper = 20)
-  assert_number(SFC, lower = 0.1, upper = 6)
-  assert_number(ws, lower = 0, upper = 60)
-  if (is.null(mcsa) & is.null(mcF)) {
+t_pCFO <- function(ws, mcsa, mcF = NULL, FSG, SFC, ...) {
+  # Capture extra arguments
+  extra_args <- list(...)
+  # Validate input
+  fn_validate_input(
+    ws_seq = ws,
+    mc = if (is.null(mcF)) mcsa else mcF,
+    FSG = FSG,
+    SFC = SFC
+  )
+  if ("model_pCFO_mcF" %in% names(extra_args)) {
+    fn_validate_input(model_pCFO_mcF = extra_args[[model_pCFO_mcF]])
+  }
+  if ("model_pCFO_mcsa" %in% names(extra_args)) {
+    fn_validate_input(model_pCFO_mcsa = extra_args[[model_pCFO_mcsa]])
+  }
+  # assert_number(mcsa, lower = 3, upper = 20, null.ok = TRUE)
+  # assert_number(mcF, lower = 3, upper = 20, null.ok = TRUE)
+  # assert_number(FSG, lower = 0.5, upper = 20)
+  # assert_number(SFC, lower = 0.1, upper = 6)
+  # assert_number(ws, lower = 0, upper = 60)
+  if (is.null(mcsa) && is.null(mcF)) {
     stop("Either `mcsa` or `mcF` must be non-NULL.")
   }
   # Calculate
-  model <- ifelse(is.null(mcF), 11, 10)
-  mc    <- ifelse(is.null(mcF), mcsa, mcF)
-  pCFO  <- fn_pCFO(model, ws, FSG, SFC, mc)
-  # Output
+  if (is.null(mcF)) {
+    mc <- mcsa
+    mc_type <- "mcsa"
+  } else {
+    mc <- mcF
+    mc_type <- "mcF"
+  }
+  model_pCFO_mcF <- if ("model_pCFO_mcF" %in% names(extra_args)) {
+    extra_args[[model_pCFO_mcF]]
+  } else {
+    10L
+  }
+  model_pCFO_mcsa <- if ("model_pCFO_mcsa" %in% names(extra_args)) {
+    extra_args[[model_pCFO_mcsa]]
+  } else {
+    11L
+  }
+  pCFO <- fn_pCFO(
+    ws_seq = ws,
+    mc = mc,
+    FSG = FSG,
+    SFC = SFC,
+    mc_type = mc_type,
+    model_pCFO_mcF = model_pCFO_mcF,
+    model_pCFO_mcsa = model_pCFO_mcsa
+  )
   out <- round(pCFO, 2)
   return(out)
 }

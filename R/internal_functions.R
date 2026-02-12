@@ -163,16 +163,16 @@ fn_pCFO <- function(
   FSG <- as.numeric(FSG)
   SFC <- as.numeric(SFC)
   mc_type <- as.character(mc_type)
-  model_pCFO_mcF <- as.numeric(model_pCFO_mcF)
-  model_pCFO_mcsa <- as.numeric(model_pCFO_mcsa)
-  # Validate input
-  fn_validate_input(
-    model_pCFO = model_pCFO,
-    ws_seq = ws_seq,
-    FSG = FSG,
-    SFC = SFC,
-    mc = MC
-  )
+  model_pCFO_mcF <- as.integer(model_pCFO_mcF)
+  model_pCFO_mcsa <- as.integer(model_pCFO_mcsa)
+  # # Validate input
+  # fn_validate_input(
+  #   model_pCFO = model_pCFO,
+  #   ws_seq = ws_seq,
+  #   FSG = FSG,
+  #   SFC = SFC,
+  #   mc = MC
+  # )
   # Calculate
   coefs <- sysdata$coefs_pCFO
   row <- match(model_pCFO, coefs[[1L]])
@@ -181,7 +181,7 @@ fn_pCFO <- function(
   b2 <- coefs[row, 4L]
   b3 <- coefs[row, 5L]
   b4 <- coefs[row, 6L]
-  gx <- b0 + b1 * ws_seq + b2 * FSG^1.5 + b4 * log(SFC) + b3 * MC * ws_seq
+  gx <- b0 + b1 * ws_seq + b2 * FSG^1.5 + b4 * log(SFC) + b3 * mc * ws_seq
   pCFO <- exp(gx) / (1 + exp(gx))
   return(pCFO)
 }

@@ -142,9 +142,9 @@
 #'
 conpyro <- function(
     input,
-    ws = c(0, 40),
-    FFMC = 91,
-    DMC = 70,
+    WS10,
+    FFMC,
+    DMC,
     model_mcsa = "corrected",
     smooth_CFO = FALSE,
     CF_thresh = 0.5,
@@ -153,25 +153,15 @@ conpyro <- function(
     ...
 ) {
   # Prepare input ----
-  # __ Validate input ----
-  # Validate input data frame
+  # __ Validate input structure ----
   assert_data_frame(
     input,
     col.names = "named"
   )
-  # Required columns
-  required_col_names <- c(
-    "id",
-    "season",
-    "density",
-    "stand",
-    "fsg",
-    "sfc",
-    "cbd"
-  )
   # Normalize case
   input_col_names <- tolower(names(input))
-  required_col_names <- tolower(required_col_names)
+  # Required columns
+  required_col_names <- c("fsg", "sfc", "cbd")
   # Identify missing columns
   missing_cols <- setdiff(required_col_names, input_col_names)
   if (length(missing_cols) > 0) {
@@ -182,7 +172,7 @@ conpyro <- function(
       )
     )
   }
-  # Normalize character columns to lowercase, except ID, if present
+  # Normalize input character columns to lowercase, except ID, if present
   names(input) <- tolower(names(input))
   cols_to_modify <- if ("id" %in% names(input)) {
     setdiff(names(input), "id")
@@ -195,26 +185,27 @@ conpyro <- function(
   # If ID column exists, ensure that IDs are unique
   if ("id" %in% names(input)) {
     assert_true(
-      length(input$id) == length(unique(input$id)),
+      length(input[["id"]]) == length(unique(input[["id"]])),
       .var.name = "Input IDs must be unique"
     )
   }
+  # __ Validate input values ----
   assert_numeric(
-    input$fsg,
+    input[["fsg"]],
     lower = 0.5,
     upper = 20,
     .var.name = "FSG",
     any.missing = FALSE
   )
   assert_numeric(
-    input$sfc,
+    input[["sfc"]],
     lower = 0.1,
     upper = 6,
     .var.name = "SFC",
     any.missing = FALSE
   )
   assert_numeric(
-    input$cbd,
+    input[["cbd"]],
     lower = 0.01,
     upper = 0.8,
     .var.name = "CBD",
@@ -285,17 +276,17 @@ conpyro <- function(
     season <- if("season" %in% names(input)) input$season[[i]] else NA
     density <- if("density" %in% names(input)) input$density[[i]] else NA
     stand <- if("stand" %in% names(input)) input$stand[[i]] else NA
-    FSG           <- input$fsg[i]
-    SFC           <- input$sfc[i]
-    CBD           <- input$cbd[i]
-    smooth_CFO    <- if ("smooth_cfo" %in% names(input)) {
+    FSG <- input$fsg[i]
+    SFC <- input$sfc[i]
+    CBD <- input$cbd[i]
+    smooth_CFO <- if ("smooth_cfo" %in% names(input)) {
       input$smooth_cfo[i]
     } else {
       smooth_CFO
     }
-    ws_seq        <- if ("ws" %in% names(input)) {
+    ws_seq <- if ("ws" %in% names(input)) {
       input$ws[i]
-    } else if ("ws_min" %in% names(input) & "ws_max" %in% names(input)) {
+    } else if ("ws_min" %in% names(input) && "ws_max" %in% names(input)) {
       seq(input$ws_min[i], input$ws_max[i], 1)
     } else {
       if (length(ws) == 1) {
