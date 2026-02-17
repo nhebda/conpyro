@@ -9,12 +9,24 @@ fn_validate_input <- function(...) {
   coll <- makeAssertCollection()
   # List validation rules as functions
   rules <- list(
+    "WS10" = function(name, coll) {
+      assert_numeric(
+        name,
+        lower = 0,
+        upper = 60,
+        finite = TRUE,
+        min.len = 1,
+        .var.name = "WS10",
+        add = coll
+      )
+    },
     "FFMC" = function(name, coll) {
-      assert_number(
+      assert_numeric(
         name,
         lower = 80,
         upper = 99,
         finite = TRUE,
+        min.len = 1,
         .var.name = "FFMC",
         add = coll
       )
@@ -26,17 +38,6 @@ fn_validate_input <- function(...) {
         upper = 250,
         finite = TRUE,
         .var.name = "DMC",
-        add = coll
-      )
-    },
-    "WS10" = function(name, coll) {
-      assert_numeric(
-        name,
-        lower = 0,
-        upper = 60,
-        finite = TRUE,
-        min.len = 1,
-        .var.name = "WS10",
         add = coll
       )
     },
@@ -109,6 +110,7 @@ fn_validate_input <- function(...) {
         add = coll
       )
     },
+    # FSG scalar
     "FSG" = function(name, coll) {
       assert_number(
         name,
@@ -119,6 +121,18 @@ fn_validate_input <- function(...) {
         add = coll
       )
     },
+    # FSG vector
+    "FSG_vec" = function(name, coll) {
+      assert_numeric(
+        name,
+        lower = 0.5,
+        upper = 20,
+        finite = TRUE,
+        .var.name = "FSG",
+        add = coll
+      )
+    },
+    # SFC scalar
     "SFC" = function(name, coll) {
       assert_number(
         name,
@@ -126,6 +140,28 @@ fn_validate_input <- function(...) {
         upper = 6,
         finite = TRUE,
         .var.name = "SFC",
+        add = coll
+      )
+    },
+    # SFC vector
+    "SFC_vec" = function(name, coll) {
+      assert_numeric(
+        name,
+        lower = 0.1,
+        upper = 6,
+        finite = TRUE,
+        .var.name = "SFC",
+        add = coll
+      )
+    },
+    # CBD vector
+    "CBD_vec" = function(name, coll) {
+      assert_numeric(
+        name,
+        lower = 0.01,
+        upper = 0.8,
+        finite = TRUE,
+        .var.name = "CBD",
         add = coll
       )
     },

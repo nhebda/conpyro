@@ -190,30 +190,31 @@ conpyro <- function(
     )
   }
   # __ Validate input values ----
-  assert_numeric(
-    input[["fsg"]],
-    lower = 0.5,
-    upper = 20,
-    .var.name = "FSG",
-    any.missing = FALSE
+
+
+
+
+
+  cols <- names(input) # this could happen earlier
+  fn_validate_input(
+    WS10 = if ("ws10" %in% cols) input[[ws10]] else WS10,
+    FFMC = if ("ffmc" %in% cols) input[[ffmc]] else FFMC,
+    DMC = if ("dmc" %in% cols) input[[dmc]] else DMC,
   )
-  assert_numeric(
-    input[["sfc"]],
-    lower = 0.1,
-    upper = 6,
-    .var.name = "SFC",
-    any.missing = FALSE
+
+  # Required columns
+  fn_validate_input(
+    FSG_vec = input[["fsg"]],
+    SFC_vec = input[["sfc"]],
+    CBD_vec = input[["cbd"]]
   )
-  assert_numeric(
-    input[["cbd"]],
-    lower = 0.01,
-    upper = 0.8,
-    .var.name = "CBD",
-    any.missing = FALSE
-  )
+  # Optional columns
   if ("smooth_cfo" %in% names(input)) {
     assert_logical(input$smooth_cfo, .var.name = "smooth_CFO")
   }
+
+
+
   if ("ws_min" %in% names(input)) {
     assert_integerish(input$ws_min, lower = 0, upper = 59, .var.name = "ws_min")
   }
@@ -762,7 +763,7 @@ fn_SROS <- function(model, ws_seq, mc, SFC) {
 # Active crown fire rate of spread (CROS_A)
 fn_CROS_A <- function(model, MC, ws_seq, CBD) {
   if (model == 1) {
-    effm_mod <- 0.0079 + 3.6059 * log(MC)
+    effm_mod <- -0.4812 + 3.8842 * log(mc) # Coefficients updated 2026/02/13
     CROS_A <- 11.02 * (ws_seq^0.9) * CBD^0.19 * exp(-0.17 * effm_mod)
   } else if (model == 2) {
     CROS_A <- 0.084 * ws_seq * 1000 / 60

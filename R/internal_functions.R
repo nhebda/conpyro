@@ -21,6 +21,13 @@ fn_ISI <- function(ws_seq, mc) {
   return(ISI)
 }
 
+# Helper functions ----
+
+#' @keywords internal
+fn_resolve_WS10 <- function(WS10 = NULL, data = NULL, col = "ws10") {
+
+}
+
 # Fuel moisture content estimates ----
 
 # Follows Eq. 2b in Van Wagner (1987). A more precise multiplier (e.g.,
