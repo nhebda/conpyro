@@ -21,11 +21,46 @@ fn_ISI <- function(ws_seq, mc) {
   return(ISI)
 }
 
-# Helper functions ----
+# Internal helper functions ----
 
+# Decide where input values come from and which take precedence
 #' @keywords internal
-fn_resolve_WS10 <- function(WS10 = NULL, data = NULL, col = "ws10") {
-
+resolve_input <- function(arg = NULL, data = NULL, name, required = TRUE) {
+  if (!is.null(data)) {
+    assert_data_frame(data)
+    names(data) <- tolower(names(data))
+  }
+  has_arg <- !is.null(arg)
+  has_col <- !is.null(data) && (tolower(name) %in% names(data))
+  if (has_arg && has_col) {
+    stop(
+      paste0("`", name, "`", " was supplied both as an argument and in ",
+        "`", match.call()[["data"]], "`",
+        ". Please supply it in only one place."
+      ),
+      call. = FALSE
+    )
+  }
+  if (has_col) {
+    out <- data[[tolower(name)]]
+    test <- match.call()[["name"]]
+    validate_input(test = out)
+    return(out)
+  }
+  if (has_arg) {
+    out <- arg
+    validate_input("FFMC" = out)
+    return(out)
+  }
+  if (isTRUE(required)) {
+    stop(
+      paste0(
+        "Missing required input: please supply ", "`", name, "`",
+        " as an argument or as a column in `data`."
+      ),
+      call. = FALSE
+    )
+  }
 }
 
 # Fuel moisture content estimates ----

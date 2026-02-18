@@ -141,10 +141,10 @@
 #' @importFrom utils read.csv
 #'
 conpyro <- function(
-    input,
-    WS10,
-    FFMC,
-    DMC,
+    data,
+    WS10 = NULL,
+    FFMC = NULL,
+    DMC = NULL,
     model_mcsa = "corrected",
     smooth_CFO = FALSE,
     CF_thresh = 0.5,
@@ -189,8 +189,27 @@ conpyro <- function(
       .var.name = "Input IDs must be unique"
     )
   }
-  # __ Validate input values ----
+  # __ Resolve inputs ----
+  WS10 <- resolve_input(
+    arg = WS10,
+    data = data,
+    name = "WS10"
+  )
+  FFMC <- resolve_input(
+    arg = FFMC,
+    data = data,
+    name = "FFMC"
+  )
+  DMC <- resolve_input(
+    arg = DMC,
+    data = data,
+    name = "DMC"
+  )
 
+  # __ Validate inputs ----
+  validate_input(
+    WS10 = WS10
+  )
 
 
 

@@ -4,7 +4,7 @@
 #' @importFrom checkmate assert_number assert_numeric assert_choice
 #'   assert_integerish
 #'
-fn_validate_input <- function(...) {
+validate_input <- function(...) {
   input <- list(...)
   coll <- makeAssertCollection()
   # List validation rules as functions
@@ -14,8 +14,7 @@ fn_validate_input <- function(...) {
         name,
         lower = 0,
         upper = 60,
-        finite = TRUE,
-        min.len = 1,
+        min.len = 1L,
         .var.name = "WS10",
         add = coll
       )
@@ -25,8 +24,7 @@ fn_validate_input <- function(...) {
         name,
         lower = 80,
         upper = 99,
-        finite = TRUE,
-        min.len = 1,
+        min.len = 1L,
         .var.name = "FFMC",
         add = coll
       )
