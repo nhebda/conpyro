@@ -41,17 +41,8 @@ resolve_input <- function(arg = NULL, data = NULL, name, required = TRUE) {
       call. = FALSE
     )
   }
-  if (has_col) {
-    out <- data[[tolower(name)]]
-    test <- match.call()[["name"]]
-    validate_input(test = out)
-    return(out)
-  }
-  if (has_arg) {
-    out <- arg
-    validate_input("FFMC" = out)
-    return(out)
-  }
+  if (has_col) return(data[[tolower(name)]])
+  if (has_arg) return(rep(arg, times = nrow(data)))
   if (isTRUE(required)) {
     stop(
       paste0(

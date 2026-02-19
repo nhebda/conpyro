@@ -205,10 +205,33 @@ conpyro <- function(
     data = data,
     name = "DMC"
   )
+  model_mcsa <- resolve_input(
+    arg = model_mcsa,
+    data = data,
+    name = "model_mcsa"
+  )
+  season <- if("season" %in% names(data)) {
+    data[["season"]]
+  } else {
+    rep(NA, times = nrow(data))
+  }
+  density <- if("density" %in% names(data)) {
+    data[["density"]]
+  } else {
+    rep(NA, times = nrow(data))
+  }
+  stand <- if("stand" %in% names(data)) {
+    data[["stand"]]
+  } else {
+    rep(NA, times = nrow(data))
+  }
+  FSG <- data[["fsg"]]
+  SFC <- data[["sfc"]]
+  CBD <- data[["cbd"]]
+
 
   # __ Validate inputs ----
   validate_input(
-    WS10 = WS10,
     FFMC = FFMC
   )
 
