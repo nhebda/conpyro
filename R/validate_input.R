@@ -24,6 +24,7 @@ validate_input <- function(...) {
         name,
         lower = 80,
         upper = 99,
+        any.missing = FALSE,
         min.len = 1L,
         .var.name = "FFMC",
         add = coll
@@ -189,6 +190,7 @@ validate_input <- function(...) {
       )
     }
   )
+
   # Check assertions by calling relevant rules functions and add to collection
   input_names <- names(input)
   rules_names <- names(rules)
@@ -197,12 +199,15 @@ validate_input <- function(...) {
   invisible(lapply(matched_names, function(name) {
     rules[[name]](input[[name]], coll)
   }))
+
+  # Diagnostic use only; remove from final version
   if (length(unmatched_names) > 0) {
     warning(
       "The following elements have no validation rules: ",
       paste(unmatched_names, collapse = ", ")
     )
   }
+
   tryCatch(
     reportAssertions(coll),
     error = function(e) {

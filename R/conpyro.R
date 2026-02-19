@@ -208,10 +208,9 @@ conpyro <- function(
 
   # __ Validate inputs ----
   validate_input(
-    WS10 = WS10
+    WS10 = WS10,
+    FFMC = FFMC
   )
-
-
 
 
   cols <- names(input) # this could happen earlier
