@@ -9,6 +9,7 @@ validate_input <- function(...) {
   coll <- makeAssertCollection()
   # List validation rules as functions
   rules <- list(
+    # Required
     "WS10" = function(name, coll) {
       assert_numeric(
         name,
@@ -31,43 +32,79 @@ validate_input <- function(...) {
       )
     },
     "DMC" = function(name, coll) {
-      assert_number(
+      assert_numeric(
         name,
         lower = 5,
         upper = 250,
-        finite = TRUE,
+        any.missing = FALSE,
+        min.len = 1L,
         .var.name = "DMC",
         add = coll
       )
     },
-    "mc" = function(name, coll) {
-      assert_number(
+    "FSG" = function(name, coll) {
+      assert_numeric(
         name,
-        lower = 0,
-        upper = 80,
-        finite = TRUE,
-        .var.name = "mc",
+        lower = 0.5,
+        upper = 20,
+        any.missing = FALSE,
+        min.len = 1L,
+        .var.name = "FSG",
         add = coll
       )
     },
+    "SFC" = function(name, coll) {
+      assert_numeric(
+        name,
+        lower = 0.1,
+        upper = 6,
+        any.missing = FALSE,
+        min.len = 1L,
+        .var.name = "SFC",
+        add = coll
+      )
+    },
+    "CBD" = function(name, coll) {
+      assert_numeric(
+        name,
+        lower = 0.01,
+        upper = 0.8,
+        any.missing = FALSE,
+        min.len = 1L,
+        .var.name = "CBD",
+        add = coll
+      )
+    },
+
+    # Optional, no defaults
     "season" = function(name, coll) {
-      assert_choice(
+      assert_subset(
         tolower(as.character(name)),
-        choices = c("spring","sp-su", "summer", "fall", "1", "1.5", "2", "3"),
+        choices = c(
+          "spring",
+          "sp-su",
+          "summer",
+          "fall",
+          "1",
+          "1.5",
+          "2",
+          "3",
+          NA
+        ),
         .var.name = "season",
         add = coll
       )
     },
     "density" = function(name, coll) {
-      assert_choice(
+      assert_subset(
         tolower(as.character(name)),
-        choices = c("light", "moderate", "dense", "1", "2", "3"),
+        choices = c("light", "moderate", "dense", "1", "2", "3", NA),
         .var.name = "density",
         add = coll
       )
     },
     "stand" = function(name, coll) {
-      assert_choice(
+      assert_subset(
         tolower(name),
         choices = c(
           "deciduous",
@@ -79,91 +116,75 @@ validate_input <- function(...) {
           "df",
           "m",
           "p",
-          "s"
+          "s",
+          NA
         ),
         .var.name = "stand",
         add = coll
       )
     },
+
+    # Optional, with defaults
+    "CF_thresh" = function(name, coll) {
+      assert_numeric(
+        name,
+        lower = 0,
+        upper = 100,
+        null.ok = TRUE,
+        .var.name = "CF_thresh",
+        add = coll
+      )
+    },
     "model_mcsa" = function(name, coll) {
-      assert_choice(
+      assert_subset(
         tolower(name),
         choices = c("original", "corrected"),
         .var.name = "model_mcsa",
         add = coll
       )
     },
-    "model_pCFO_mcF" = function(name, coll) {
-      assert_choice(
-        name,
-        choices = c(7L, 10L),
-        .var.name = "model_pCFO",
+    "model_pCFO" = function(name, coll) {
+      assert_subset(
+        tolower(name),
+        choices = c(7L, 8L, 10L, 11L),
+        .var.name = "model_mcsa",
         add = coll
       )
     },
-    "model_pCFO_mcF" = function(name, coll) {
-      assert_choice(
-        name,
-        choices = c(8L, 11L),
-        .var.name = "model_pCFO",
+    "model_sROS" = function(name, coll) {
+      assert_subset(
+        tolower(name),
+        choices = c(1L, 2L, 3L, 4L),
+        .var.name = "model_sROS",
         add = coll
       )
     },
-    # FSG scalar
-    "FSG" = function(name, coll) {
-      assert_number(
-        name,
-        lower = 0.5,
-        upper = 20,
-        finite = TRUE,
-        .var.name = "FSG",
+    "model_cROS" = function(name, coll) {
+      assert_subset(
+        tolower(name),
+        choices = c(1L, 2L),
+        .var.name = "model_cROS",
         add = coll
       )
     },
-    # FSG vector
-    "FSG_vec" = function(name, coll) {
-      assert_numeric(
-        name,
-        lower = 0.5,
-        upper = 20,
-        finite = TRUE,
-        .var.name = "FSG",
-        add = coll
-      )
-    },
-    # SFC scalar
-    "SFC" = function(name, coll) {
-      assert_number(
-        name,
-        lower = 0.1,
-        upper = 6,
-        finite = TRUE,
-        .var.name = "SFC",
-        add = coll
-      )
-    },
-    # SFC vector
-    "SFC_vec" = function(name, coll) {
-      assert_numeric(
-        name,
-        lower = 0.1,
-        upper = 6,
-        finite = TRUE,
-        .var.name = "SFC",
-        add = coll
-      )
-    },
-    # CBD vector
-    "CBD_vec" = function(name, coll) {
-      assert_numeric(
-        name,
-        lower = 0.01,
-        upper = 0.8,
-        finite = TRUE,
-        .var.name = "CBD",
-        add = coll
-      )
-    },
+    # "model_pCFO_mcF" = function(name, coll) {
+    #   assert_choice(
+    #     name,
+    #     choices = c(7L, 10L),
+    #     .var.name = "model_pCFO",
+    #     add = coll
+    #   )
+    # },
+    # "model_pCFO_mcF" = function(name, coll) {
+    #   assert_choice(
+    #     name,
+    #     choices = c(8L, 11L),
+    #     .var.name = "model_pCFO",
+    #     add = coll
+    #   )
+    # },
+
+    # Tools-specific inputs
     "month" = function(name, coll) {
       assert_integerish(
         name,
@@ -186,6 +207,16 @@ validate_input <- function(...) {
         lower = 20,
         upper = 100,
         .var.name = "canopy_closure",
+        add = coll
+      )
+    },
+    "mc" = function(name, coll) {
+      assert_number(
+        name,
+        lower = 0,
+        upper = 80,
+        finite = TRUE,
+        .var.name = "mc",
         add = coll
       )
     }

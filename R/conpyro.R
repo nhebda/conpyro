@@ -190,37 +190,44 @@ conpyro <- function(
     )
   }
   # __ Resolve inputs ----
+  args_list <- introspect_args()
+
+  cols <- names(data)
+
   WS10 <- resolve_input(
     arg = WS10,
     data = data,
     name = "WS10"
   )
+
   FFMC <- resolve_input(
-    arg = FFMC,
+    args_list = args_list,
     data = data,
     name = "FFMC"
   )
   DMC <- resolve_input(
-    arg = DMC,
+    args_list = args_list,
     data = data,
     name = "DMC"
   )
   model_mcsa <- resolve_input(
-    arg = model_mcsa,
+    args_list = args_list,
     data = data,
-    name = "model_mcsa"
+    name = "model_mcsa",
+    required = FALSE
   )
-  season <- if("season" %in% names(data)) {
+
+  season <- if("season" %in% cols) {
     data[["season"]]
   } else {
     rep(NA, times = nrow(data))
   }
-  density <- if("density" %in% names(data)) {
+  density <- if("density" %in% cols) {
     data[["density"]]
   } else {
     rep(NA, times = nrow(data))
   }
-  stand <- if("stand" %in% names(data)) {
+  stand <- if("stand" %in% cols) {
     data[["stand"]]
   } else {
     rep(NA, times = nrow(data))

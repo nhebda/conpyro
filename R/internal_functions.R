@@ -23,14 +23,42 @@ fn_ISI <- function(ws_seq, mc) {
 
 # Internal helper functions ----
 
+# Collect a named list of arguments from a parent function, including dots
+#' @keywords internal
+introspect_args <- function(
+    .env = parent.frame(),
+    .fn = sys.function(sys.parent())
+) {
+  # Evaluate named dots
+  dots <- evalq(list(...), envir = .env)
+  dots <- dots[nzchar(names(dots))]
+  # Start with dots
+  out <- dots
+  # Override / add formals
+  formal_names <- setdiff(names(formals(.fn)), "...")
+  for (nm in formal_names) {
+    val <- tryCatch(
+      get(nm, envir = .env, inherits = FALSE),
+      error = function(e) NULL
+    )
+    if (!is.null(val)) out[[nm]] <- val
+  }
+  return(out)
+}
+
 # Decide where input values come from and which take precedence
 #' @keywords internal
-resolve_input <- function(arg = NULL, data = NULL, name, required = TRUE) {
+resolve_input <- function(
+    args_list,
+    data = NULL,
+    name,
+    required = TRUE
+) {
   if (!is.null(data)) {
     assert_data_frame(data)
     names(data) <- tolower(names(data))
   }
-  has_arg <- !is.null(arg)
+  has_arg <- name %in% names(args_list) && !is.null(args_list[[name]])
   has_col <- !is.null(data) && (tolower(name) %in% names(data))
   if (has_arg && has_col) {
     stop(
@@ -42,7 +70,9 @@ resolve_input <- function(arg = NULL, data = NULL, name, required = TRUE) {
     )
   }
   if (has_col) return(data[[tolower(name)]])
-  if (has_arg) return(rep(arg, times = nrow(data)))
+  if (has_arg) return(
+    rep(args_list[[name]], times = if (!is.null(data)) nrow(data) else 1)
+  )
   if (isTRUE(required)) {
     stop(
       paste0(
@@ -62,7 +92,7 @@ resolve_input <- function(arg = NULL, data = NULL, name, required = TRUE) {
 # here to ensure consistency with other implementations, giving a scale length
 # of ~249.89
 #' @keywords internal
-fn_mcFFMC <- function(FFMC) {
+mcFFMC <- function(FFMC) {
   FFMC <- as.numeric(FFMC)
   mcFFMC <- 147.2 * (101 - FFMC) / (59.5 + FFMC)
   return(mcFFMC)
@@ -70,7 +100,7 @@ fn_mcFFMC <- function(FFMC) {
 
 # Follows Eq. 16 in Van Wagner (1987)
 #' @keywords internal
-fn_mcDMC <- function(DMC) {
+mcDMC <- function(DMC) {
   DMC <- as.numeric(DMC)
   mcDMC <- 20 + exp(-(DMC - 244.72) / 43.43)
   return(mcDMC)
@@ -78,7 +108,7 @@ fn_mcDMC <- function(DMC) {
 
 # Convert combinations of stand attributes to numeric codes
 #' @keywords internal
-fn_mcsa_idx <- function(
+mcsa_idx <- function(
     FFMC,
     season,
     density,
@@ -92,7 +122,7 @@ fn_mcsa_idx <- function(
   stand <- tolower(as.character(stand))
   model_mcsa <- tolower(model_mcsa)
   # Validate input
-  fn_validate_input(
+  validate_input(
     FFMC = FFMC,
     season = season,
     density = density,
