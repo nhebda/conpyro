@@ -1,30 +1,9 @@
-# General ----
+# Helper functions ----
 
-# Follows the FWI System ISI formulation (Van Wagner, 1987) with the addition of
-# the FBP System modification for WS > 40 (ST-X-3 Eq. 53a)
+#' Collect a named list of arguments from a parent function, including dots
+#'
 #' @keywords internal
-fn_ISI <- function(ws_seq, mc) {
-  # Normalize
-  ws_seq <- as.numeric(ws_seq)
-  mc <- as.numeric(mc)
-  # Validate
-  fn_validate_input(ws_seq = ws_seq, mc = mc)
-  # Calculate
-  fw_low <- exp(0.05039 * ws_seq)
-  fw_high <- 12 * (1 - exp(-0.0818 *(ws_seq - 28)))
-  ff <- 91.9 * exp(-0.1386 * mc) * (1 + (mc^5.31) / 4.93e+07)
-  ISI <- numeric(length(ws_seq))
-  low <- ws_seq <= 40
-  high <- !low
-  ISI[low] <- 0.208 * fw_low[low] * ff
-  ISI[high] <- 0.208 * fw_high[high] * ff
-  return(ISI)
-}
-
-# Internal helper functions ----
-
-# Collect a named list of arguments from a parent function, including dots
-#' @keywords internal
+#'
 introspect_args <- function(
     .env = parent.frame(),
     .fn = sys.function(sys.parent())
@@ -32,8 +11,10 @@ introspect_args <- function(
   # Evaluate named dots
   dots <- evalq(list(...), envir = .env)
   dots <- dots[nzchar(names(dots))]
+
   # Start with dots
   out <- dots
+
   # Override / add formals
   formal_names <- setdiff(names(formals(.fn)), "...")
   for (nm in formal_names) {
@@ -43,11 +24,14 @@ introspect_args <- function(
     )
     if (!is.null(val)) out[[nm]] <- val
   }
+
   return(out)
 }
 
-# Decide where input values come from and which take precedence
+#' Decide where input values come from and which take precedence
+#'
 #' @keywords internal
+#'
 resolve_input <- function(
     args_list,
     data = NULL,
@@ -70,9 +54,7 @@ resolve_input <- function(
     )
   }
   if (has_col) return(data[[tolower(name)]])
-  if (has_arg) return(
-    rep(args_list[[name]], times = if (!is.null(data)) nrow(data) else 1)
-  )
+  if (has_arg) return(args_list[[name]])
   if (isTRUE(required)) {
     stop(
       paste0(
@@ -82,32 +64,87 @@ resolve_input <- function(
       call. = FALSE
     )
   }
+  return(NA)
 }
 
-# Fuel moisture content estimates ----
-
-# Follows Eq. 2b in Van Wagner (1987). A more precise multiplier (e.g.,
-# 147.2772277228) could be used to ensure a scale length closer to exactly 250,
-# but the standard value of 147.2, as specified in NOR-X-424 (2015), is used
-# here to ensure consistency with other implementations, giving a scale length
-# of ~249.89
+#' Determine common input length with strict recycling rules
+#'
+#' All inputs must have length 1 or the common length `n`. Otherwise, an error
+#' is thrown.
+#'
+#' @param ... One or more input objects.
+#'
+#' @returns Integer scalar giving the common length.
 #' @keywords internal
+#'
+check_common_length <- function(...) {
+  inputs <- list(...)
+  lengths <- vapply(inputs, length, integer(1))
+  n <- max(lengths)
+  bad <- lengths != 1L & lengths != n & !is.null(lengths)
+  if (any(bad)) {
+    stop(
+      "Inputs must have length 1 or length ", n, ". Got: ",
+      paste(names(lengths), "=", lengths, collapse = ", "),
+      call. = FALSE
+    )
+  }
+  return(n)
+}
+
+#' Follows the FWI System ISI formulation (Van Wagner, 1987) with the addition
+#' of the FBP System modification for WS > 40 (ST-X-3 Eq. 53a)
+#'
+#' @keywords internal
+#'
+ISI <- function(WS10, mc) {
+  # Normalize inputs
+  WS10 <- as.numeric(WS10)
+  mc <- as.numeric(mc)
+
+  # Calculate
+  fw_low <- exp(0.05039 * WS10)
+  fw_high <- 12 * (1 - exp(-0.0818 *(WS10 - 28)))
+  ff <- 91.9 * exp(-0.1386 * mc) * (1 + (mc^5.31) / 4.93e+07)
+  ISI <- numeric(length(WS10))
+  low <- WS10 <= 40
+  high <- !low
+  ISI[low] <- 0.208 * fw_low[low] * ff
+  ISI[high] <- 0.208 * fw_high[high] * ff
+
+  return(ISI)
+}
+
+# Fuel moisture content ----
+
+#' Follows Eq. 2b in Van Wagner (1987). A more precise multiplier (e.g.,
+#' 147.2772277228) could be used to ensure a scale length closer to exactly 250,
+#' but the standard value of 147.2, as specified in NOR-X-424 (2015), is used
+#' here to ensure consistency with other implementations, giving a scale length
+#' of ~249.89
+#'
+#' @keywords internal
+#'
 mcFFMC <- function(FFMC) {
   FFMC <- as.numeric(FFMC)
   mcFFMC <- 147.2 * (101 - FFMC) / (59.5 + FFMC)
   return(mcFFMC)
 }
 
-# Follows Eq. 16 in Van Wagner (1987)
+#' Follows Eq. 16 in Van Wagner (1987)
+#'
 #' @keywords internal
+#'
 mcDMC <- function(DMC) {
   DMC <- as.numeric(DMC)
   mcDMC <- 20 + exp(-(DMC - 244.72) / 43.43)
   return(mcDMC)
 }
 
-# Convert combinations of stand attributes to numeric codes
+#' Convert combinations of stand attributes to numeric codes
+#'
 #' @keywords internal
+#'
 mcsa_idx <- function(
     FFMC,
     season,
@@ -115,20 +152,13 @@ mcsa_idx <- function(
     stand,
     model_mcsa
 ) {
-  # Normalize input
+  # Normalize inputs
   FFMC <- as.numeric(FFMC)
   season <- tolower(as.character(season))
   density <- tolower(as.character(density))
   stand <- tolower(as.character(stand))
   model_mcsa <- tolower(model_mcsa)
-  # Validate input
-  validate_input(
-    FFMC = FFMC,
-    season = season,
-    density = density,
-    stand = stand,
-    model_mcsa = model_mcsa
-  )
+
   # Map codes
   season_map <- c(
     "spring" = 1, "1" = 1,
@@ -148,104 +178,232 @@ mcsa_idx <- function(
     "pine" = 4, "p" = 4,
     "spruce" = 5, "s" = 5
   )
+
   # Assign codes
   season_code <- season_map[[season]]
   density_code <- density_map[[density]]
   stand_code <- stand_map[[stand]]
+
   # Density adjustment
   density_adj <- density_code
   if (model_mcsa == "corrected") {
     if (density_code == 1 && FFMC > 96.15) density_adj <- 2
     if (density_code == 3 && FFMC > 92.93) density_adj <- 2
   }
+
   # Encode
-  idx <- as.numeric(
+  idx <- as.integer(
     paste0(season_code, density_adj, stand_code)
   )
+
   return(idx)
 }
 
-# Calculate stand-adjusted moisture content
+#' Calculate stand-adjusted moisture content with sp-su seasonal averaging
+#'
 #' @keywords internal
-fn_idx2mcsa <- function(idx, mcFFMC, mcDMC, coefs, c_dmc) {
-  row <- match(idx, coefs[[1L]])
-  a <- coefs[row, 2L]
-  b <- coefs[row, 3L]
-  mcsa <- exp(a + b * log(mcFFMC) + c_dmc * mcDMC)
-  return(mcsa)
-}
-
-# Calculate stand-adjusted moisture content
-#' @keywords internal
-fn_mcsa <- function(idx, mcFFMC, mcDMC) {
-  # Normalize
+#'
+mcsa <- function(idx, mcFFMC, mcDMC, coefs) {
+  # Normalize inputs
   idx <- as.integer(idx)
   mcFFMC <- as.numeric(mcFFMC)
   mcDMC <- as.numeric(mcDMC)
+  coefs <- as.data.frame(coefs)
+
   # Validate
-  assert_int(idx, lower = 111, upper = 435)
   season <- idx %/% 100
   density <- (idx %% 100) %/% 10
   stand <- idx %% 10
   assert_choice(season, c(1L, 2L, 3L, 4L))
   assert_choice(density, c(1L, 2L, 3L))
   assert_choice(stand, c(1L, 2L, 3L, 4L, 5L))
-  assert_number(mcFFMC, lower = 1.85, upper = 22.16, finite = TRUE)
-  assert_number(mcDMC, lower = 20, upper = 270, finite = TRUE)
+
   # Calculate
-  coefs <- sysdata$coefs_MCSA
   c_dmc <- 0.002232
   if (season < 4L) {
-    mcsa <- fn_idx2mcsa(idx, mcFFMC, mcDMC, coefs, c_dmc)
+    mcsa <- idx_to_mcsa(idx, mcFFMC, mcDMC, coefs, c_dmc)
   } else {
     base <- idx %% 100
     mcsa <- mean(
       c(
-        fn_idx2mcsa(100L + base, mcFFMC, mcDMC, coefs, c_dmc),
-        fn_idx2mcsa(200L + base, mcFFMC, mcDMC, coefs, c_dmc)
+        idx_to_mcsa(100L + base, mcFFMC, mcDMC, coefs, c_dmc),
+        idx_to_mcsa(200L + base, mcFFMC, mcDMC, coefs, c_dmc)
       )
     )
   }
+
   return(mcsa)
 }
 
-# Probability of crown fire occurrence (pCFO) ----
+#' Calculate stand-adjusted moisture content
+#'
 #' @keywords internal
-fn_pCFO <- function(
-    ws_seq,
+#'
+idx_to_mcsa <- function(idx, mcFFMC, mcDMC, coefs, c_dmc) {
+  # Normalize inputs
+  idx <- as.integer(idx)
+  mcFFMC <- as.numeric(mcFFMC)
+  mcDMC <- as.numeric(mcDMC)
+  coefs <- as.data.frame(coefs)
+  c_dmc <- as.numeric(c_dmc)
+
+  # Calculate
+  row <- match(idx, coefs[[1L]])
+  a <- coefs[row, 2L]
+  b <- coefs[row, 3L]
+  mcsa <- exp(a + b * log(mcFFMC) + c_dmc * mcDMC)
+
+  return(mcsa)
+}
+
+# Crown fire probability ----
+
+#' Probability of crown fire occurrence
+#'
+#' @keywords internal
+#'
+pCFO <- function(
+    WS10,
     mc,
     FSG,
     SFC,
-    mc_type,
-    model_pCFO_mcF,
-    model_pCFO_mcsa
+    model_pCFO,
+    coefs
 ) {
-  # Normalize input
-  ws_seq <- as.numeric(ws_seq)
+  # Normalize inputs
+  WS10 <- as.numeric(WS10)
   mc <- as.numeric(mc)
   FSG <- as.numeric(FSG)
   SFC <- as.numeric(SFC)
-  mc_type <- as.character(mc_type)
-  model_pCFO_mcF <- as.integer(model_pCFO_mcF)
-  model_pCFO_mcsa <- as.integer(model_pCFO_mcsa)
-  # # Validate input
-  # fn_validate_input(
-  #   model_pCFO = model_pCFO,
-  #   ws_seq = ws_seq,
-  #   FSG = FSG,
-  #   SFC = SFC,
-  #   mc = MC
-  # )
+  model_pCFO <- as.integer(model_pCFO)
+  coefs <- as.data.frame(coefs)
+
   # Calculate
-  coefs <- sysdata$coefs_pCFO
   row <- match(model_pCFO, coefs[[1L]])
   b0 <- coefs[row, 2L]
   b1 <- coefs[row, 3L]
   b2 <- coefs[row, 4L]
   b3 <- coefs[row, 5L]
   b4 <- coefs[row, 6L]
-  gx <- b0 + b1 * ws_seq + b2 * FSG^1.5 + b4 * log(SFC) + b3 * mc * ws_seq
+  gx <- b0 + b1 * WS10 + b2 * FSG^1.5 + b4 * log(SFC) + b3 * mc * WS10
   pCFO <- exp(gx) / (1 + exp(gx))
+
   return(pCFO)
 }
 
+# Rate of spread ----
+
+#' Surface fire rate of spread
+#'
+#' @keywords internal
+#'
+sROS <- function(WS10, mc, SFC, model_sROS) {
+  # Normalize inputs
+  WS10 <- as.numeric(WS10)
+  mc <- as.numeric(mc)
+  SFC <- as.numeric(SFC)
+  model_sROS <- as.integer(model_sROS)
+
+  # Calculate
+  ISI <- ISI(WS10 = WS10, mc = mc)
+  sROS <- switch(
+    as.character(model_sROS),
+    # FBPS aggregated surf. V4
+    "1" = 25 * (1 - exp(-0.035177 * ISI))^1.9875, # ST-X-3 Eq. 26
+    # FBPS D-1 (no BE)
+    "2" = 30 * (1 - exp(-0.0232 * ISI))^1.6, # ST-X-3 Eq. 26 & Tbl. 6
+    # FBPS C-6 (surface only, no BE)
+    "3" = 30 * (1 - exp(-0.08 * ISI))^3, # ST-X-3 Eq. 62
+    # ISI2SFC
+    "4" = 0.015822 * ISI^2 + 0.344379 * SFC,
+    # m12 sl.con.ISI (Perrakis et al., 2026): default for mcFFMC
+    "12" = (0.15 * ISI + 13) * (1-exp(-0.13498 * ISI))^5.773107, # Tbls. 1 & A2
+    # m13 sl.con.isim (Perrakis et al., 2026): default for mcsa
+    "13" = (0.15 * ISI + 13) * (1-exp(-0.101379 * ISI))^4.164469 # Tbls. 1 & A2
+  )
+
+  return(sROS)
+}
+
+#' Active crown fire rate of spread
+#'
+#' @keywords internal
+#'
+cROS_A <- function(WS10, mc, CBD, model_cROS) {
+  # Normalize inputs
+  WS10 <- as.numeric(WS10)
+  mc <- as.numeric(mc)
+  CBD <- as.numeric(CBD)
+  model_cROS <- as.integer(model_cROS)
+
+  # Calculate
+  if (model_cROS == 1) {
+    effm_mod <- -0.4812 + 3.8842 * log(mc) # Coefficients updated 2026/02/13
+    out <- 11.02 * (WS10^0.9) * CBD^0.19 * exp(-0.17 * effm_mod)
+  } else if (model_cROS == 2) {
+    out <- 0.084 * WS10 * 1000 / 60
+  } else if (model_cROS == 3) {
+    out <- 0.1 * WS10 * 1000 / 60
+  }
+
+  return(out)
+}
+
+#' Criteria for active crowning
+#'
+#' @keywords internal
+#'
+CAC <- function(cROS_A, CBD) {
+  # Normalize inputs
+  cROS_A <- as.numeric(cROS_A)
+  CBD <- as.numeric(CBD)
+
+  # Calculate
+  out <- cROS_A / (3 / CBD)
+  return(out)
+}
+
+#' Passive crown fire rate of spread
+#'
+#' @keywords internal
+#'
+cROS_P <- function(cROS_A, CAC) {
+  # Normalize inputs
+  cROS_A <- as.numeric(cROS_A)
+  CAC <- as.numeric(CAC)
+
+  # Calculate
+  out <- cROS_A * exp(-CAC)
+
+  return(out)
+}
+
+# Smooth crown fire occurrence ----
+
+#' Smooth transition from surface rate of spread to passive or active crowning
+#'
+#' @keywords internal
+#'
+ROS_smooth <- function(
+    pCFO,
+    passive_crowning,
+    sROS,
+    cROS_P,
+    cROS_A
+) {
+  # Normalize input
+  pCFO <- as.numeric(pCFO)
+  passive_crowning <- as.logical(passive_crowning)
+  sROS <- as.numeric(sROS)
+  cROS_P <- as.numeric(cROS_P)
+  cROS_A <- as.numeric(cROS_A)
+
+  # Calculate
+  out <- if (any(passive_crowning)) {
+    sROS * (1 - pCFO) + cROS_P * pCFO
+  } else {
+    sROS * (1 - pCFO) + cROS_A * pCFO
+  }
+
+  return(out)
+}

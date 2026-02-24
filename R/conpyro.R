@@ -786,59 +786,6 @@ fn_CF_CI <- function(ws_seq, pCFO, CI = 90) {
   return(out)
 }
 
-# __Surface fire rate of spread (sROS) ----
-fn_SROS <- function(model, ws_seq, mc, SFC) {
-  ISI  <- fn_ISI(ws_seq = ws_seq, mc = mc)
-  sROS <- switch(
-    as.character(model),
-    # FBPS aggregated surf. V4
-    "1"  = 25 * (1 - exp(-0.035177 * ISI))^1.9875, # ST-X-3 Eq. 26
-    # FBPS D-1 (no BE)
-    "2"  = 30 * (1 - exp(-0.0232 * ISI))^1.6, # ST-X-3 Eq. 26 & Tbl. 6
-    # FBPS C-6 (surface only, no BE)
-    "3"  = 30 * (1 - exp(-0.08 * ISI))^3, # ST-X-3 Eq. 62
-    # ISI2SFC
-    "4"  = 0.015822 * ISI^2 + 0.344379 * SFC,
-    # m12 sl.con.ISI (Perrakis et al., 2026): default for mcFFMC
-    "12" = (0.15 * ISI + 13) * (1-exp(-0.13498 * ISI))^5.773107, # Tbls. 1 & A2
-    # m13 sl.con.isim (Perrakis et al., 2026): default for mcsa
-    "13" = (0.15 * ISI + 13) * (1-exp(-0.101379 * ISI))^4.164469 # Tbls. 1 & A2
-  )
-  return(sROS)
-}
-
-# __Crown fire rate of spread (CROS) ----
-# Active crown fire rate of spread (CROS_A)
-fn_CROS_A <- function(model, MC, ws_seq, CBD) {
-  if (model == 1) {
-    effm_mod <- -0.4812 + 3.8842 * log(mc) # Coefficients updated 2026/02/13
-    CROS_A <- 11.02 * (ws_seq^0.9) * CBD^0.19 * exp(-0.17 * effm_mod)
-  } else if (model == 2) {
-    CROS_A <- 0.084 * ws_seq * 1000 / 60
-  } else if (model == 3) {
-    CROS_A <- 0.1 * ws_seq * 1000 / 60
-  }
-  return(CROS_A)
-}
-# Criteria for active crowning (CAC)
-fn_CAC <- function(CROS_A, CBD) {CROS_A / (3 / CBD)}
-# Passive crown fire rate of spread (CROS_P)
-fn_CROS_P <- function(CROS_A, CAC) {CROS_A * exp(-CAC)}
-
-# __Smooth crown fire initiation ----
-fn_SROS_smooth <- function(CROS_P, pCFO, CF_thresh, CAC, SROS, CROS_A) {
-  if (sum(CROS_P[which(pCFO >= CF_thresh & CAC < 1)]) > 0) {
-    (SROS * (1 - pCFO)) + (CROS_P * pCFO)
-  } else {
-    (SROS * (1 - pCFO)) + (CROS_A * pCFO)
-  }
-}
-fn_CROS_P_smooth <- function(SROS, pCFO, CROS_P) {
-  (SROS * (1 - pCFO)) + (CROS_P * pCFO)
-}
-fn_CROS_A_smooth <- function(SROS, pCFO, CROS_A) {
-  (SROS * (1 - pCFO)) + (CROS_A * pCFO)
-}
 
 # __Final outputs ----
 # Output SROS when p(CFO) < CF_thresh

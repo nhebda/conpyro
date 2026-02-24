@@ -31,17 +31,6 @@ validate_input <- function(...) {
         add = coll
       )
     },
-    "DMC" = function(name, coll) {
-      assert_numeric(
-        name,
-        lower = 5,
-        upper = 250,
-        any.missing = FALSE,
-        min.len = 1L,
-        .var.name = "DMC",
-        add = coll
-      )
-    },
     "FSG" = function(name, coll) {
       assert_numeric(
         name,
@@ -77,6 +66,15 @@ validate_input <- function(...) {
     },
 
     # Optional, no defaults
+    "DMC" = function(name, coll) {
+      assert_numeric(
+        name,
+        lower = 5,
+        upper = 250,
+        .var.name = "DMC",
+        add = coll
+      )
+    },
     "season" = function(name, coll) {
       assert_subset(
         tolower(as.character(name)),
@@ -125,6 +123,14 @@ validate_input <- function(...) {
     },
 
     # Optional, with defaults
+    "smooth_CFO" = function(name, coll) {
+      assert_logical(
+        name,
+        null.ok = TRUE,
+        .var.name = "smooth_CFO",
+        add = coll
+      )
+    },
     "CF_thresh" = function(name, coll) {
       assert_numeric(
         name,
@@ -138,7 +144,7 @@ validate_input <- function(...) {
     "model_mcsa" = function(name, coll) {
       assert_subset(
         tolower(name),
-        choices = c("original", "corrected"),
+        choices = c("original", "corrected", NA),
         .var.name = "model_mcsa",
         add = coll
       )
@@ -146,15 +152,15 @@ validate_input <- function(...) {
     "model_pCFO" = function(name, coll) {
       assert_subset(
         tolower(name),
-        choices = c(7L, 8L, 10L, 11L),
-        .var.name = "model_mcsa",
+        choices = c(7L, 8L, 10L, 11L, NA),
+        .var.name = "model_pCFO",
         add = coll
       )
     },
     "model_sROS" = function(name, coll) {
       assert_subset(
         tolower(name),
-        choices = c(1L, 2L, 3L, 4L),
+        choices = c(1L, 2L, 3L, 4L, NA),
         .var.name = "model_sROS",
         add = coll
       )
@@ -162,27 +168,11 @@ validate_input <- function(...) {
     "model_cROS" = function(name, coll) {
       assert_subset(
         tolower(name),
-        choices = c(1L, 2L),
+        choices = c(1L, 2L, NA),
         .var.name = "model_cROS",
         add = coll
       )
     },
-    # "model_pCFO_mcF" = function(name, coll) {
-    #   assert_choice(
-    #     name,
-    #     choices = c(7L, 10L),
-    #     .var.name = "model_pCFO",
-    #     add = coll
-    #   )
-    # },
-    # "model_pCFO_mcF" = function(name, coll) {
-    #   assert_choice(
-    #     name,
-    #     choices = c(8L, 11L),
-    #     .var.name = "model_pCFO",
-    #     add = coll
-    #   )
-    # },
 
     # Tools-specific inputs
     "month" = function(name, coll) {
