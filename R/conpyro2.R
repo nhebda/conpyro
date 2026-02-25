@@ -8,6 +8,7 @@ conpyro2 <- function(
     SFC,
     CBD,
     smooth_CFO,
+    plot = NULL,
     ...
 ) {
   # Get arguments
@@ -255,6 +256,16 @@ conpyro2 <- function(
     } else {
       NA
     }
+    cROS_P_thresh <- if (any(passive_crowning)) {
+      WS10[match(TRUE, passive_crowning)]
+    } else {
+      NA
+    }
+    cROS_A_thresh <- if (any(active_crowning)) {
+      WS10[match(TRUE, active_crowning)]
+    } else {
+      NA
+    }
     ROS_smooth_val <- if (isTRUE(smooth_CFO_val)) {
       ROS_smooth(
         pCFO = pCFO_val,
@@ -284,15 +295,24 @@ conpyro2 <- function(
 
     # Add list of results to output list
     out[[i]] <- list(
-      mcFFMC = round(mcFFMC_val, 1),
-      mcsa = round(mcsa_val, 1),
-      WS10 = WS10,
-      pCFO = round(pCFO_val, 2),
-      surface_fire = any(surface_fire),
-      passive_crowning = any(passive_crowning),
-      active_crowning = any(active_crowning),
-      iROS = round(iROS_out, 1)
+      "mcFFMC (%)" = round(mcFFMC_val, 1),
+      "mcsa (%)" = round(mcsa_val, 1),
+      "WS10 (km/h)" = WS10,
+      "Crown Fire Occurrence Probability" = round(pCFO_val, 2),
+      "Passive Crown Fire WS10 Threshold (km/h)" = cROS_P_thresh,
+      "Active Crown Fire WS10 Threshold (km/h)" = cROS_A_thresh,
+      "Integrated Rate of Spread (m/min)" = round(iROS_out, 1)
     )
+
+    # Optional plot preparation
+    if (!is.null(plot)) {
+      if (plot == "pCFO") {
+        ggdata_pCFO <- prep_ggdata(i, "pCFO", WS10, pCFO_val)
+      }
+      if (plot == "ROS") {
+        ggdata_ROS <- prep_ggdata(i, "ROS", WS10, iROS_out)
+      }
+    }
   }
 
   # Prepare output

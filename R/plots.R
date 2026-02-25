@@ -1,11 +1,16 @@
+#' Internal plotting helper functions
+#'
+#' @keywords internal
+#'
 #' @importFrom ggplot2 ggplot geom_line aes geom_point labs xlab ylab
 #'   scale_color_viridis_d
-fn_prep_ggdata <- function(ID, ws_seq, var) {
+#'
+prep_ggdata <- function(ID, name, WS10, data) {
   data.frame(
-    ID  = rep(as.character(ID), times = length(ws_seq)),
-    var = rep(deparse(substitute(var)), times = length(ws_seq)),
-    ws  = ws_seq,
-    val = var
+    ID = rep(as.character(ID), length.out = length(WS10)),
+    name = rep(deparse(substitute(name)), times = length(WS10)),
+    WS10 = WS10,
+    val = data
   )
 }
 

@@ -92,6 +92,28 @@ check_common_length <- function(...) {
   return(n)
 }
 
+#' Enforce strict input length
+#'
+#' All inputs must have length `n`. Otherwise, an error is thrown.
+#'
+#' @param n A single integer; the length to enforce.
+#' @param ... One or more input objects.
+#'
+#' @keywords internal
+#'
+check_length <- function(n, ...) {
+  inputs <- list(...)
+  lengths <- vapply(inputs, length, integer(1))
+  bad <- lengths > as.numeric(n)
+  if (any(bad)) {
+    stop(
+      "Inputs must have length ", n, ". Got: ",
+      paste(names(lengths), "=", lengths, collapse = ", "),
+      call. = FALSE
+    )
+  }
+}
+
 #' Follows the FWI System ISI formulation (Van Wagner, 1987) with the addition
 #' of the FBP System modification for WS > 40 (ST-X-3 Eq. 53a)
 #'

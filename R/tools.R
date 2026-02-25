@@ -27,14 +27,17 @@
 #' t_mcSeason(9, 24)
 #'
 t_mcSeason <- function(month, day) {
-  # Validate input
-  fn_validate_input(month = month, day = day)
+  # Validate inputs
+  validate_input(month = month, day = day)
+  check_length(n = 1L, month = month, day = day)
+
   # Validate calendar date using a leap year (allows Feb 29)
   year <- 2024
   date <- as.Date(paste(year, month, day, sep = "-"), optional = TRUE)
   if (is.na(date)) {
     stop("Invalid month/day combination.", call. = FALSE)
   }
+
   # Calculate
   md <- month * 100L + day
   season <- if (md < 601L) {
@@ -46,6 +49,7 @@ t_mcSeason <- function(month, day) {
   } else {
     3
   }
+
   return(season)
 }
 
@@ -70,7 +74,9 @@ t_mcSeason <- function(month, day) {
 #'
 t_mcDensity <- function(canopy_closure) {
   # Validate input
-  fn_validate_input(canopy_closure = canopy_closure)
+  validate_input(canopy_closure = canopy_closure)
+  check_length(n = 1L, canopy_closure = canopy_closure)
+
   # Calculate
   dens <- if (canopy_closure <= 45) {
     1
@@ -79,6 +85,7 @@ t_mcDensity <- function(canopy_closure) {
   } else {
     3
   }
+
   return(dens)
 }
 
@@ -105,10 +112,12 @@ t_mcDensity <- function(canopy_closure) {
 #' t_mcF(92)
 #'
 t_mcF <- function(FFMC) {
-  # Validate input
-  fn_validate_input(FFMC = FFMC)
+  # Validate inputs
+  validate_input(FFMC = FFMC)
+  check_length(n = 1L, FFMC = FFMC)
+
   # Calculate
-  mcF <- fn_mcFFMC(FFMC)
+  mcF <- mcFFMC(FFMC)
   out <- round(mcF, 2)
   return(out)
 }
@@ -146,29 +155,54 @@ t_mcsa <- function(
     season,
     density,
     stand,
-    model_mcsa = "corrected"
+    ...
 ) {
-  # Validate input
-  fn_validate_input(
+  # Validate required inputs
+  validate_input(
     FFMC = FFMC,
     DMC = DMC,
     season = season,
     density = density,
-    stand = stand,
-    model_mcsa = model_mcsa
+    stand = stand
   )
+  check_length(
+    n = 1L,
+    FFMC = FFMC,
+    DMC = DMC,
+    season = season,
+    density = density,
+    stand = stand
+  )
+
+  # Resolve and validate optional inputs
+  extra_args <- list(...)
+  if ("model_mcsa" %in% names(extra_args)) {
+    model_mcsa <- extra_args[["model_mcsa"]]
+    validate_input(model_mcsa = model_mcsa)
+    check_length(n = 1L, model_mcsa = model_mcsa)
+  } else {
+    model_mcsa <- "corrected"
+  }
+
   # Calculate
-  idx <- fn_mcsa_idx(
+  coefs_mcsa <- sysdata$coefs_MCSA
+  idx <- mcsa_idx(
     FFMC = FFMC,
     season = season,
     density = density,
     stand = stand,
     model_mcsa = model_mcsa
   )
-  mcF <- fn_mcFFMC(FFMC)
-  mcDMC <- fn_mcDMC(DMC)
-  mcsa <- fn_mcsa(idx, mcF, mcDMC)
+  mcF <- mcFFMC(FFMC)
+  mcDMC <- mcDMC(DMC)
+  mcsa <- mcsa(
+    idx = idx,
+    mcF = mcF,
+    mcDMC = mcDMC,
+    coefs = coefs_mcsa
+  )
   out <- round(mcsa, 2)
+
   return(out)
 }
 
@@ -179,7 +213,7 @@ t_mcsa <- function(
 #' fuel and fire weather conditions using the Conifer Pyrometrics (ConPyro) fire
 #' behaviour modelling system. See Perrakis et al. (2023) for details.
 #'
-#' @param ws A numeric value in `[0, 60]`. Wind speed in km/h.
+#' @param WS10 A numeric value in `[0, 60]`. Wind speed in km/h.
 #' @param mcsa A numeric value in `[3, 20]`. Fine dead surface litter moisture
 #'   content calculated using the stand-adjusted model (mcsa). May be estimated
 #'   using [t_mcsa()]. If `mcF` is anything other than `NULL`, it will override
@@ -224,31 +258,18 @@ t_mcsa <- function(
 #'
 #' @importFrom checkmate assert_number
 #'
-t_pCFO <- function(ws, mcsa, mcF = NULL, FSG, SFC, ...) {
-  # Capture extra arguments
-  extra_args <- list(...)
-  # Validate input
-  fn_validate_input(
-    ws_seq = ws,
-    mc = if (is.null(mcF)) mcsa else mcF,
-    FSG = FSG,
-    SFC = SFC
-  )
-  if ("model_pCFO_mcF" %in% names(extra_args)) {
-    fn_validate_input(model_pCFO_mcF = extra_args[[model_pCFO_mcF]])
-  }
-  if ("model_pCFO_mcsa" %in% names(extra_args)) {
-    fn_validate_input(model_pCFO_mcsa = extra_args[[model_pCFO_mcsa]])
-  }
-  # assert_number(mcsa, lower = 3, upper = 20, null.ok = TRUE)
-  # assert_number(mcF, lower = 3, upper = 20, null.ok = TRUE)
-  # assert_number(FSG, lower = 0.5, upper = 20)
-  # assert_number(SFC, lower = 0.1, upper = 6)
-  # assert_number(ws, lower = 0, upper = 60)
+t_pCFO <- function(
+    WS10,
+    mcsa = NULL,
+    mcF = NULL,
+    FSG,
+    SFC,
+    ...
+) {
+  # Resolve and validate required inputs
   if (is.null(mcsa) && is.null(mcF)) {
     stop("Either `mcsa` or `mcF` must be non-NULL.")
   }
-  # Calculate
   if (is.null(mcF)) {
     mc <- mcsa
     mc_type <- "mcsa"
@@ -256,26 +277,42 @@ t_pCFO <- function(ws, mcsa, mcF = NULL, FSG, SFC, ...) {
     mc <- mcF
     mc_type <- "mcF"
   }
-  model_pCFO_mcF <- if ("model_pCFO_mcF" %in% names(extra_args)) {
-    extra_args[[model_pCFO_mcF]]
+  validate_input(
+    WS10 = WS10,
+    mc = mc,
+    FSG = FSG,
+    SFC = SFC
+  )
+  check_length(
+    n = 1L,
+    WS10 = WS10,
+    mc = mc,
+    FSG = FSG,
+    SFC = SFC
+  )
+
+  # Resolve and validate optional inputs
+  extra_args <- list(...)
+  if ("model_pCFO" %in% names(extra_args)) {
+    model_pCFO <- extra_args[["model_pCFO"]]
+    validate_input(model_pCFO = model_pCFO)
+    check_length(n = 1L, model_pCFO = model_pCFO)
   } else {
-    10L
+    model_pCFO <- if (mc_type == "mcF") 10L else if (mc_type == "mcsa") 11L
   }
-  model_pCFO_mcsa <- if ("model_pCFO_mcsa" %in% names(extra_args)) {
-    extra_args[[model_pCFO_mcsa]]
-  } else {
-    11L
-  }
-  pCFO <- fn_pCFO(
-    ws_seq = ws,
+
+  # Calculate
+  coefs_pCFO <- sysdata$coefs_pCFO
+  pCFO <- pCFO(
+    WS10 = WS10,
     mc = mc,
     FSG = FSG,
     SFC = SFC,
-    mc_type = mc_type,
-    model_pCFO_mcF = model_pCFO_mcF,
-    model_pCFO_mcsa = model_pCFO_mcsa
+    model_pCFO = model_pCFO,
+    coefs = coefs_pCFO
   )
   out <- round(pCFO, 2)
+
   return(out)
 }
 
@@ -309,50 +346,91 @@ t_pCFO <- function(ws, mcsa, mcF = NULL, FSG, SFC, ...) {
 #' @importFrom checkmate assert_number
 #'
 t_FT <- function(
-    mcsa      = 10,
-    mcF       = NULL,
-    FSG       = 6,
-    SFC       = 2,
-    CBD       = 0.16,
-    ws        = 12,
-    CF_thresh = 0.5,
+    WS10,
+    mcsa = NULL,
+    mcF = NULL,
+    FSG,
+    SFC,
+    CBD,
     ...
 ) {
-  # Check input
-  assert_number(mcsa, lower = 3, upper = 20, null.ok = TRUE)
-  assert_number(mcF, lower = 3, upper = 20, null.ok = TRUE)
-  assert_number(FSG, lower = 0.5, upper = 20)
-  assert_number(SFC, lower = 0.1, upper = 6)
-  assert_number(CBD, lower = 0.01, upper = 0.8)
-  assert_number(ws, lower = 0, upper = 60)
-  assert_number(CF_thresh, lower = 0, upper = 1)
+  # Resolve and validate required inputs
   if (is.null(mcsa) & is.null(mcF)) {
     stop("Either `mcsa` or `mcF` must be non-NULL.")
   }
+  if (is.null(mcF)) {
+    mc <- mcsa
+    mc_type <- "mcsa"
+  } else {
+    mc <- mcF
+    mc_type <- "mcF"
+  }
+  validate_input(
+    WS10 = WS10,
+    mc = mc,
+    FSG = FSG,
+    SFC = SFC,
+    CBD = CBD
+  )
+  check_length(
+    n = 1L,
+    WS10 = WS10,
+    mc = mc,
+    FSG = FSG,
+    SFC = SFC,
+    CBD = CBD
+  )
+
+  # Resolve and validate optional inputs
+  extra_args <- list(...)
+  if ("model_pCFO" %in% names(extra_args)) {
+    model_pCFO <- extra_args[["model_pCFO"]]
+    validate_input(model_pCFO = model_pCFO)
+    check_length(n = 1L, model_pCFO = model_pCFO)
+  } else {
+    model_pCFO <- if (mc_type == "mcF") 10L else if (mc_type == "mcsa") 11L
+  }
+  if ("model_cROS" %in% names(extra_args)) {
+    model_cROS <- extra_args[["model_cROS"]]
+    validate_input(model_cROS = model_cROS)
+    check_length(n = 1L, model_cROS = model_cROS)
+  } else {
+    model_cROS <- 1L
+  }
+  if ("CF_thresh" %in% names(extra_args)) {
+    CF_thresh <- extra_args[["CF_thresh"]]
+    validate_input(CF_thresh = CF_thresh)
+    check_length(n = 1L, CF_thresh = CF_thresh)
+  } else {
+    CF_thresh <- 0.5
+  }
+
   # Calculate
-  extra_args    <- list(...)
-  mc            <- ifelse(is.null(mcF), mcsa, mcF)
-  model_conpyro <- ifelse(
-    "model_conpyro" %in% names(extra_args),
-    extra_args$model_conpyro,
-    ifelse(is.null(mcF), 11, 10)
+  coefs_pCFO <- sysdata$coefs_pCFO
+  pCFO_val <- pCFO(
+    WS10 = WS10,
+    mc = mc,
+    FSG = FSG,
+    SFC = SFC,
+    model_pCFO = model_pCFO,
+    coefs = coefs_pCFO
   )
-  model_CROS_A  <- ifelse(
-    "model_CROS_A" %in% names(extra_args),
-    extra_args$model_CROS_A,
-    1
+  cROS_A_val <- cROS_A(
+    WS10 = WS10,
+    mc = mc,
+    CBD = CBD,
+    model_cROS = model_cROS
   )
-  pCFO          <- fn_pCFO(model_conpyro, ws, FSG, SFC, mc)
-  CROS_A        <- fn_CROS_A(model_CROS_A, mc, ws, CBD)
-  CAC           <- fn_CAC(CROS_A, CBD)
-  FT            <- if (pCFO < CF_thresh) {
+  CAC_val <- CAC(cROS_A = cROS_A_val, CBD = CBD)
+  out <- if (pCFO_val < CF_thresh) {
     "S"
-  } else if (pCFO >= CF_thresh & CAC < 1) {
+  } else if (pCFO_val >= CF_thresh & CAC_val < 1) {
     "PC"
   } else {
     "AC"
   }
-  return(FT)
+
+  return(out)
 }
 
 #' Calculate rate of spread (ROS) for a single set of conditions
@@ -389,70 +467,123 @@ t_FT <- function(
 #' @importFrom checkmate assert_number assert_logical
 #'
 t_ROS <- function(
-    mcsa       = 10,
-    mcF        = NULL,
-    FSG        = 6,
-    SFC        = 2,
-    CBD        = 0.16,
-    ws         = 12,
-    CF_thresh  = 0.5,
+    WS10,
+    mcsa = NULL,
+    mcF = NULL,
+    FSG,
+    SFC,
+    CBD,
     smooth_CFO = FALSE,
     ...
 ) {
-  # Check input
-  assert_number(mcsa, lower = 3, upper = 20, null.ok = TRUE)
-  assert_number(mcF, lower = 3, upper = 20, null.ok = TRUE)
-  assert_number(FSG, lower = 0.5, upper = 20)
-  assert_number(SFC, lower = 0.1, upper = 6)
-  assert_number(CBD, lower = 0.01, upper = 0.8)
-  assert_number(ws, lower = 0, upper = 60)
-  assert_number(CF_thresh, lower = 0, upper = 1)
-  assert_logical(smooth_CFO)
+  # Resolve and validate required inputs
   if (is.null(mcsa) & is.null(mcF)) {
     stop("Either `mcsa` or `mcF` must be non-NULL.")
   }
-  # Calculate
-  extra_args    <- list(...)
-  mc            <- ifelse(is.null(mcF), mcsa, mcF)
-  model_conpyro <- ifelse(
-    "model_conpyro" %in% names(extra_args),
-    extra_args$model_conpyro,
-    ifelse(is.null(mcF), 11, 10)
-  )
-  model_SROS    <- ifelse(
-    "model_SROS" %in% names(extra_args),
-    extra_args$model_SROS,
-    ifelse(is.null(mcF), 13, 12)
-  )
-  model_CROS_A  <- ifelse(
-    "model_CROS_A" %in% names(extra_args),
-    extra_args$model_CROS_A,
-    1
-  )
-  pCFO          <- fn_pCFO(model_conpyro, ws, FSG, SFC, mc)
-  SROS          <- fn_SROS(model = model_SROS, ws_seq = ws, mc = mc, SFC = SFC)
-  CROS_A        <- fn_CROS_A(model_CROS_A, mc, ws, CBD)
-  CAC           <- fn_CAC(CROS_A, CBD)
-  CROS_P        <- fn_CROS_P(CROS_A, CAC)
-  if (isTRUE(smooth_CFO)) {
-    SROS_smooth   <- fn_SROS_smooth(CROS_P, pCFO, CF_thresh, CAC, SROS, CROS_A)
-    CROS_P_smooth <- fn_CROS_P_smooth(SROS, pCFO, CROS_P)
-    CROS_A_smooth <- fn_CROS_A_smooth(SROS, pCFO, CROS_A)
+  if (is.null(mcF)) {
+    mc <- mcsa
+    mc_type <- "mcsa"
+  } else {
+    mc <- mcF
+    mc_type <- "mcF"
   }
-  if (pCFO < CF_thresh) {
-    ROS <- ifelse(isTRUE(smooth_CFO), SROS_smooth, SROS)
-    FT  <- "S"
-  } else if (pCFO >= CF_thresh & CAC < 1) {
-    ROS <- ifelse(isTRUE(smooth_CFO), CROS_P_smooth, CROS_P)
+  validate_input(
+    WS10 = WS10,
+    mc = mc,
+    FSG = FSG,
+    SFC = SFC,
+    CBD = CBD,
+    smooth_CFO = smooth_CFO
+  )
+  check_length(
+    n = 1L,
+    WS10 = WS10,
+    mc = mc,
+    FSG = FSG,
+    SFC = SFC,
+    CBD = CBD,
+    smooth_CFO = smooth_CFO
+  )
+
+  # Resolve and validate optional inputs
+  extra_args <- list(...)
+  if ("model_pCFO" %in% names(extra_args)) {
+    model_pCFO <- extra_args[["model_pCFO"]]
+    validate_input(model_pCFO = model_pCFO)
+    check_length(n = 1L, model_pCFO = model_pCFO)
+  } else {
+    model_pCFO <- if (mc_type == "mcF") 10L else if (mc_type == "mcsa") 11L
+  }
+  if ("model_sROS" %in% names(extra_args)) {
+    model_sROS <- extra_args[["model_sROS"]]
+    validate_input(model_sROS = model_sROS)
+    check_length(n = 1L, model_sROS = model_sROS)
+  } else {
+    model_sROS <- if (mc_type == "mcF") 12L else if (mc_type == "mcsa") 13L
+  }
+  if ("model_cROS" %in% names(extra_args)) {
+    model_cROS <- extra_args[["model_cROS"]]
+    validate_input(model_cROS = model_cROS)
+    check_length(n = 1L, model_cROS = model_cROS)
+  } else {
+    model_cROS <- 1L
+  }
+  if ("CF_thresh" %in% names(extra_args)) {
+    CF_thresh <- extra_args[["CF_thresh"]]
+    validate_input(CF_thresh = CF_thresh)
+    check_length(n = 1L, CF_thresh = CF_thresh)
+  } else {
+    CF_thresh <- 0.5
+  }
+
+  # Calculate
+  coefs_pCFO <- sysdata$coefs_pCFO
+  pCFO_val <- pCFO(
+    WS10 = WS10,
+    mc = mc,
+    FSG = FSG,
+    SFC = SFC,
+    model_pCFO = model_pCFO,
+    coefs = coefs_pCFO
+  )
+  sROS_val <- sROS(
+    WS10 = WS10,
+    mc = mc,
+    SFC = SFC,
+    model_sROS = model_sROS
+  )
+  cROS_A_val <- cROS_A(
+    WS10 = WS10,
+    mc = mc,
+    CBD = CBD,
+    model_cROS = model_cROS
+  )
+  CAC_val <- CAC(cROS_A = cROS_A_val, CBD = CBD)
+  passive_crowning <- pCFO_val >= CF_thresh & CAC_val < 1
+  cROS_P_val <- cROS_P(cROS_A = cROS_A_val, CAC = CAC_val)
+  if (isTRUE(smooth_CFO)) {
+    ROS_smooth_val <- ROS_smooth(
+      pCFO = pCFO_val,
+      passive_crowning = passive_crowning,
+      sROS = sROS_val,
+      cROS_P = cROS_P_val,
+      cROS_A = cROS_A_val
+    )
+  }
+  if (pCFO_val < CF_thresh) {
+    ROS <- if (isTRUE(smooth_CFO)) ROS_smooth_val else sROS_val
+    FT <- "S"
+  } else if (pCFO_val >= CF_thresh & CAC_val < 1) {
+    ROS <- if (isTRUE(smooth_CFO)) ROS_smooth_val else cROS_P_val
     FT  <- "PC"
   } else {
-    ROS <- ifelse(isTRUE(smooth_CFO), CROS_A_smooth, CROS_A)
+    ROS <- if (isTRUE(smooth_CFO)) ROS_smooth_val else cROS_A_val
     FT  <- "AC"
   }
-  # Output
+
   out <- list(
-    "Predicted rate of spread (m/min)" = round(ROS, 2),
-    "Type of fire" = FT
+    "Type of fire" = FT,
+    "Rate of spread (m/min)" = round(ROS, 1)
   )
   return(out)
 }
