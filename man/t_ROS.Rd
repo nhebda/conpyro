@@ -4,47 +4,39 @@
 \alias{t_ROS}
 \title{Calculate rate of spread (ROS) for a single set of conditions}
 \usage{
-t_ROS(
-  mcsa = 10,
-  mcF = NULL,
-  FSG = 6,
-  SFC = 2,
-  CBD = 0.16,
-  ws = 12,
-  CF_thresh = 0.5,
-  smooth_CFO = FALSE,
-  ...
-)
+t_ROS(WS10, mcF = NULL, mcsa = NULL, FSG, SFC, CBD, smooth_CFO = FALSE, ...)
 }
 \arguments{
-\item{mcsa}{A numeric value in \verb{[3, 20]}. Fine dead surface litter moisture
-content calculated using the stand-adjusted model (mcsa). May be estimated
-using \code{\link[=t_mcsa]{t_mcsa()}}. If \code{mcF} is anything other than \code{NULL}, it will override
-\code{mcsa}.}
+\item{WS10}{Required. A numeric value in \verb{[0, 60]}. Standard 10-m open wind
+speed in km/h.}
 
-\item{mcF}{A numeric value in \verb{[3, 20]}. Fine dead surface litter moisture
-content calculated using the Fine Fuel Moisture Code (FFMC). May be
-estimated using \code{\link[=t_mcF]{t_mcF()}}. If \code{NULL}, \code{mcsa} will be used instead.}
+\item{mcF}{Optional. A numeric value in \verb{[3, 20]}. Fine dead surface litter
+moisture content in percent, calculated using the Fine Fuel Moisture Code
+(FFMC). May be estimated using \code{\link[=t_mcF]{t_mcF()}}. If \code{NULL}, \code{mcsa} will be used
+instead.}
 
-\item{FSG}{A numeric value in \verb{[0.5, 20]}. Fuel strata gap in metres. The
-vertical distance between the top of the surface fuels and the lower limit
-of the canopy fuels. Analogous to crown base height in the absence of
-mid-story ladder fuels.}
+\item{mcsa}{Optional. A numeric value in \verb{[3, 20]}. Fine dead surface litter
+moisture content in percent, calculated using the stand-adjusted model. May
+be estimated using \code{\link[=t_mcsa]{t_mcsa()}}. If \code{mcF} is anything other than \code{NULL}, it
+will override \code{mcsa}.}
 
-\item{SFC}{A numeric value in \verb{[0.1, 6]}. Surface fuel consumption in kg/m^2.
-May be estimated using \code{\link[=t_SFC_FBP]{t_SFC_FBP()}} or \code{\link[=t_SFC_deGroot]{t_SFC_deGroot()}}.}
+\item{FSG}{Required. A numeric value in \verb{[0.5, 20]}. Fuel strata gap in
+metres, representing the vertical distance between the top of the surface
+fuels and the lower limit of the canopy fuels. Analogous to crown base
+height in the absence of mid-story ladder fuels.}
 
-\item{CBD}{A numeric value in \verb{[0.01, 0.8]}. Crown bulk density in kg/m^3.}
+\item{SFC}{Required. A numeric value in \verb{[0.1, 6]}. Surface fuel consumption
+in kg/m^2. May be estimated using \code{\link[=t_SFC_FBP]{t_SFC_FBP()}} or \code{\link[=t_SFC_deGroot]{t_SFC_deGroot()}}.}
 
-\item{ws}{A numeric value in \verb{[0, 60]}. Wind speed in km/h.}
+\item{CBD}{Required. A numeric value in \verb{[0.01, 0.8]}. Crown bulk density in
+kg/m^3.}
 
-\item{CF_thresh}{A numeric value in \verb{[0, 1]}. Defines the pCFO threshold at
-which crown fire occurs.}
+\item{smooth_CFO}{Optional. A logical vector that defines whether crown fire
+occurrence is modeled as a smooth transition (\code{TRUE}) or an instantaneous
+event (\code{FALSE}). Default is \code{FALSE}.}
 
-\item{smooth_CFO}{Defines whether crown fire initiation is modeled as a
-smooth transition (\code{TRUE}) or an instantaneous occurrence (\code{FALSE}).}
-
-\item{...}{Additional arguments to be passed to nested functions.}
+\item{...}{Optional. Additional advanced arguments to be passed to nested
+functions.}
 }
 \value{
 A list of length 2 consisting of:
@@ -62,16 +54,35 @@ multiple scenarios or plot output, use \code{\link[=conpyro]{conpyro()}} instead
 }
 \examples{
 # Surface fire
-t_ROS(mcsa = 9, FSG = 6, SFC = 2, CBD = 0.1, ws = 11)
+t_ROS(WS10 = 11, mcsa = 9, FSG = 6, SFC = 2, CBD = 0.1)
 # Passive crown fire
-t_ROS(mcsa = 8, FSG = 6, SFC = 2, CBD = 0.1, ws = 11)
+t_ROS(WS10 = 11, mcsa = 8, FSG = 6, SFC = 2, CBD = 0.1)
 # Active crown fire
-t_ROS(mcsa = 8, FSG = 6, SFC = 2, CBD = 0.2, ws = 11)
+t_ROS(WS10 = 11, mcsa = 8, FSG = 6, SFC = 2, CBD = 0.2)
 # Active crown fire with smooth initiation
-t_ROS(mcsa = 8, FSG = 6, SFC = 2, CBD = 0.2, ws = 11, smooth_CFO = TRUE)
+t_ROS(
+  WS10 = 11,
+  mcsa = 8,
+  FSG = 6,
+  SFC = 2,
+  CBD = 0.2,
+  smooth_CFO = TRUE
+)
 # Using t_mcF()
-t_ROS(mcF = t_mcF(91), FSG = 6, SFC = 2, CBD = 0.2, ws = 13)
+t_ROS(WS10 = 13, mcF = t_mcF(91), FSG = 6, SFC = 2, CBD = 0.2)
 # Using t_mcsa()
-t_ROS(mcsa = t_mcsa(91, 60, 2, 2, "p"), FSG = 6, SFC = 2, CBD = 0.2, ws = 13)
+t_ROS(
+  WS10 = 13,
+  mcsa = t_mcsa(
+    FFMC = 91,
+    DMC = 60,
+    season = 2,
+    density = 2,
+    stand = "p"
+  ),
+  FSG = 6,
+  SFC = 2,
+  CBD = 0.2
+)
 
 }

@@ -5,27 +5,32 @@
 \title{Calculate probability of crown fire occurrence (pCFO) for a single set of
 conditions}
 \usage{
-t_pCFO(mcsa = 10, mcF = NULL, FSG = 6, SFC = 2, ws = 12)
+t_pCFO(WS10, mcF = NULL, mcsa = NULL, FSG, SFC, ...)
 }
 \arguments{
-\item{mcsa}{A numeric value in \verb{[3, 20]}. Fine dead surface litter moisture
-content calculated using the stand-adjusted model (mcsa). May be estimated
-using \code{\link[=t_mcsa]{t_mcsa()}}. If \code{mcF} is anything other than \code{NULL}, it will override
-\code{mcsa}.}
+\item{WS10}{Required. A numeric value in \verb{[0, 60]}. Standard 10-m open wind
+speed in km/h.}
 
-\item{mcF}{A numeric value in \verb{[3, 20]}. Fine dead surface litter moisture
-content calculated using the Fine Fuel Moisture Code (FFMC). May be
-estimated using \code{\link[=t_mcF]{t_mcF()}}. If \code{NULL}, \code{mcsa} will be used instead.}
+\item{mcF}{Optional. A numeric value in \verb{[3, 20]}. Fine dead surface litter
+moisture content in percent, calculated using the Fine Fuel Moisture Code
+(FFMC). May be estimated using \code{\link[=t_mcF]{t_mcF()}}. If \code{NULL}, \code{mcsa} will be used
+instead.}
 
-\item{FSG}{A numeric value in \verb{[0.5, 20]}. Fuel strata gap in metres. The
-vertical distance between the top of the surface fuels and the lower limit
-of the canopy fuels. Analogous to crown base height in the absence of
-mid-story ladder fuels.}
+\item{mcsa}{Optional. A numeric value in \verb{[3, 20]}. Fine dead surface litter
+moisture content in percent, calculated using the stand-adjusted model. May
+be estimated using \code{\link[=t_mcsa]{t_mcsa()}}. If \code{mcF} is anything other than \code{NULL}, it
+will override \code{mcsa}.}
 
-\item{SFC}{A numeric value in \verb{[0.1, 6]}. Surface fuel consumption in kg/m^2.
-May be estimated using \code{\link[=t_SFC_FBP]{t_SFC_FBP()}} or \code{\link[=t_SFC_deGroot]{t_SFC_deGroot()}}.}
+\item{FSG}{Required. A numeric value in \verb{[0.5, 20]}. Fuel strata gap in
+metres, representing the vertical distance between the top of the surface
+fuels and the lower limit of the canopy fuels. Analogous to crown base
+height in the absence of mid-story ladder fuels.}
 
-\item{ws}{A numeric value in \verb{[0, 60]}. Wind speed in km/h.}
+\item{SFC}{Required. A numeric value in \verb{[0.1, 6]}. Surface fuel consumption
+in kg/m^2. May be estimated using \code{\link[=t_SFC_FBP]{t_SFC_FBP()}} or \code{\link[=t_SFC_deGroot]{t_SFC_deGroot()}}.}
+
+\item{...}{Optional. Additional advanced arguments to be passed to nested
+functions.}
 }
 \value{
 A numeric value giving probability of crown fire occurrence in the
@@ -38,14 +43,25 @@ behaviour modelling system. See Perrakis et al. (2023) for details.
 }
 \examples{
 # Low probability
-t_pCFO(mcsa = 10, FSG = 6, SFC = 2, ws = 11)
+t_pCFO(WS10 = 11, mcsa = 10, FSG = 6, SFC = 2)
 # Moderate probability
-t_pCFO(mcsa = 9, FSG = 6, SFC = 2, ws = 12)
+t_pCFO(WS10 = 12, mcsa = 9, FSG = 6, SFC = 2)
 # High probability
-t_pCFO(mcsa = 8, FSG = 6, SFC = 2, ws = 13)
-# Using t_McF()
-t_pCFO(mcF = t_mcF(89), FSG = 6, SFC = 2, ws = 13)
+t_pCFO(WS10 = 13, mcsa = 8, FSG = 6, SFC = 2)
+# Using t_mcF()
+t_pCFO(WS10 = 13, mcF = t_mcF(89), FSG = 6, SFC = 2)
 # Using t_mcsa()
-t_pCFO(mcsa = t_mcsa(89, 40, 2, 2, "p"), FSG = 6, SFC = 2, ws = 13)
+t_pCFO(
+  WS10 = 13,
+  mcsa = t_mcsa(
+    FFMC = 89,
+    DMC = 40,
+    season = 2,
+    density = 2,
+    stand = "p"
+  ),
+  FSG = 6,
+  SFC = 2
+)
 
 }

@@ -1,1 +1,1 @@
-utils::globalVariables(c("ID", "val", "var", "ws"))
+utils::globalVariables(c("ID", "name", "WS10", "val"))

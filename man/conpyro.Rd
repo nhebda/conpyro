@@ -6,169 +6,144 @@
 and rate of spread (ROS) for one or more scenarios}
 \usage{
 conpyro(
-  input,
-  ws = c(0, 40),
-  FFMC = 91,
-  DMC = 70,
-  model_mcsa = "corrected",
-  smooth_CFO = FALSE,
-  CF_thresh = 0.5,
-  ROS_output = "integrated",
+  data,
+  WS10,
+  FFMC,
+  FSG,
+  SFC,
+  CBD,
+  DMC,
+  season,
+  density,
+  stand,
+  smooth_CFO,
+  ID,
   plot = NULL,
   ...
 )
 }
 \arguments{
-\item{input}{A data frame of least \code{7} columns and \code{1} row. Each row defines
-a ConPyro prediction for a single set of fuel and fire weather conditions
-(a \emph{scenario}). Inputs are case-insensitive and columns may be in any
-order. Missing values are not permitted and will produce an error. Required
-columns are:
-\itemize{
-\item \code{ID}: Unique scenario identifier.
-\item \code{Season}: One of \verb{\{"spring", "sp-su", "summer", "fall"\}} or numeric
-equivalents \verb{\{1, 1.5, 2, 3\}}. See \code{\link[=t_mcSeason]{t_mcSeason()}}.
-\item \code{Density}: One of \verb{\{"light", "moderate", "dense"\}} or numeric equivalents
-\verb{\{1, 2, 3\}}.
-\item \code{Stand}: One of \verb{\{"pine", "spruce", "Douglas-fir", "deciduous",   "mixedwood"\}} or abbreviated equivalents \verb{\{"p", "s", "df", "d", "m"\}}.
-\item \code{FSG}: A numeric value in \verb{[0.5, 20]}. Fuel strata gap in metres. The
-vertical distance between the top of the surface fuels and the lower limit
-of the canopy fuels. Analogous to crown base height in the absence of
-mid-story ladder fuels.
-\item \code{SFC}: A numeric value in \verb{[0.1, 6]}. Surface fuel consumption in kg/m^2.
-May be estimated using \code{\link[=t_SFC_FBP]{t_SFC_FBP()}} or \code{\link[=t_SFC_deGroot]{t_SFC_deGroot()}}.
-\item \code{CBD}: A numeric value in \verb{[0.01, 0.8]}. Crown bulk density in kg/m^3.
-}
+\item{data}{Optional. A data frame of at least \code{1} row and \code{1} column.
+Columns must be named according to the parameter they supply.}
 
-Additionally, there are several optional columns:
+\item{WS10}{Required. A numeric vector in \verb{[0, 60]}. Standard 10-m open wind
+speed in km/h.}
+
+\item{FFMC}{Required. A numeric vector in \verb{[80, 99]}. The Fine Fuel Moisture
+Code as per the Canadian Fire Weather Index System.}
+
+\item{FSG}{Required. A numeric vector in \verb{[0.5, 20]}. Fuel strata gap in
+metres, representing the vertical distance between the top of the surface
+fuels and the lower limit of the canopy fuels. Analogous to crown base
+height in the absence of mid-story ladder fuels. Used in calculating crown
+fire probability (pCFO).}
+
+\item{SFC}{Required. A numeric vector in \verb{[0.1, 6]}. Surface fuel consumption
+in kg/m^2. Used in calculating crown fire probability (pCFO) and surface
+fire rate of spread (sROS). May be estimated using \code{\link[=t_SFC_FBP]{t_SFC_FBP()}} or
+\code{\link[=t_SFC_deGroot]{t_SFC_deGroot()}}.}
+
+\item{CBD}{Required. A numeric vector in \verb{[0.01, 0.8]}. Crown bulk density in
+kg/m^3. Used in calculating crown fire rate of spread (cROS).}
+
+\item{DMC}{Optional. A numeric vector in \verb{[5, 250]}. The Duff Moisture Code
+as per the Canadian Fire Weather Index System. Used in calculating
+stand-adjusted fine dead surface litter moisture content (\code{mcsa}). If \code{DMC}
+is not supplied, fine fuel moisture calculations will fall back on the
+FFMC-based model (\code{mcF}).}
+
+\item{season}{Optional. A vector comprising \verb{\{"spring", "sp-su", "summer", "fall"\}} or numeric equivalents \verb{\{1, 1.5, 2, 3\}}. See \code{\link[=t_mcSeason]{t_mcSeason()}}. Used
+in calculating stand-adjusted fine dead surface litter moisture content
+(\code{mcsa}). If \code{season} is not supplied, fine fuel moisture calculations will
+fall back on the FFMC-based model.}
+
+\item{density}{Optional. A vector comprising \verb{\{"light", "moderate", "dense"\}}
+or numeric equivalents \verb{\{1, 2, 3\}}. See \link{t_mcDensity}. Used in calculating
+stand-adjusted fine dead surface litter moisture content (\code{mcsa}). If
+\code{density} is not supplied, fine fuel moisture calculations will fall back
+on the FFMC-based model.}
+
+\item{stand}{Optional. A vector comprising \verb{\{"pine", "spruce", "Douglas-fir", "deciduous", "mixedwood"\}} or abbreviated equivalents \verb{\{"p", "s", "df", "d", "m"\}}. Used in calculating stand-adjusted fine dead surface litter
+moisture content (\code{mcsa}). If \code{stand} is not supplied, fine fuel moisture
+calculations will fall back on the FFMC-based model.}
+
+\item{smooth_CFO}{Optional. A logical vector that defines whether crown fire
+occurrence is modeled as a smooth transition (\code{TRUE}) or an instantaneous
+event (\code{FALSE}). Default is \code{FALSE}.}
+
+\item{ID}{Optional. A vector of unique scenario identifiers.}
+
+\item{plot}{Optional. A character vector to control plotting of output.
+Choose any of the following:
 \itemize{
-\item \code{smooth_CFO}: Defines whether crown fire initiation is modeled as a
-smooth transition (\code{TRUE}) or an instantaneous occurrence (\code{FALSE}). Allows
-this behaviour to be specified on a per-scenario basis. If this column is
-present, it will override the \code{smooth_CFI} argument.
-\item \code{ws_min}: A numeric value in \verb{[0, 60]}. Minimum wind speed in km/h.
-Allows wind speed to be specified on a per-scenario basis. If this column
-\emph{and} the \code{ws_max} column are present, they will override the \code{ws}
-argument.
-\item \code{ws_max}: A numeric value in \verb{[0, 60]}. Maximum wind speed in km/h.
-Allows wind speed to be specified on a per-scenario basis. If this column
-\emph{and} the \code{ws_min} column are present, they will override the \code{ws}
-argument.
-\item \code{FFMC}: A numeric value in \verb{[80, 99]}. The Fine Fuel Moisture Code (FFMC)
-as per the Canadian Forest Fire Weather Index (FWI) System. Allows FFMC to
-be specified on a per-scenario basis. If this column is present, it will
-override the \code{FFMC} argument.
-\item \code{DMC}: A numeric value in \verb{[5, 250]}. The Duff Moisture Code (DMC) as per
-the Canadian Forest Fire Weather Index (FWI) System. Allows DMC to be
-specified on a per-scenario basis. If this column is present, it will
-override the \code{DMC} argument.
-\item \code{model_conpyro}: One of \verb{\{7, 8, 10, 11\}}. The ConPyro model form used for
-calculations (see Perrakis et al., 2023). Models \code{7} and \code{10} use
-FFMC-based fine fuel moisture content (mcFFMC) while models \code{8} and \code{11}
-use stand-adjusted moisture content (mcsa). Default is \code{11}.
-\item \code{model_SROS}: One of \verb{\{1, 2, 3, 4\}}. The surface fire ROS model used for
-calculations.
-\itemize{
-\item \code{1}: Aggregated FBPS surf. V4 (default)
-\item \code{2}: D-1 FBPS
-\item \code{3}: C-6 (surface only) FBPS
-\item \code{4}: IsaSFC
-}
-\item \code{model_CROS}: One of \verb{\{1, 2\}}. The crown fire ROS model used for
-calculations.
-\itemize{
-\item \code{1}: Adapted Cruz, Alexander, & Wakimoto (2005): ws, MC, CBD (default)
-\item \code{2}: Adapted Cruz & Alexander (2019): ws only
-}
+\item \code{"pCFO"}: Crown fire occurrence probability.
+\item \code{"CAC"}: Criterion for active crowning.
+\item \code{"ROS"}: Composite rate of spread plot with crowning thresholds.
 }}
 
-\item{ws}{An ordered integer vector of length \code{2}, with each element being in
-\verb{[0, 60]}. The first value defines the minimum wind speed and the second
-defines the maximum, in km/h. Calculations are carried out on the sequence
-of integer values from the minimum to the maximum, inclusive.}
-
-\item{FFMC}{A numeric value in \verb{[80, 99]}. The Fine Fuel Moisture Code (FFMC)
-as per the Canadian Forest Fire Weather Index (FWI) System.}
-
-\item{DMC}{A numeric value in \verb{[5, 250]}. The Duff Moisture Code (DMC) as per
-the Canadian Forest Fire Weather Index (FWI) System.}
-
-\item{model_mcsa}{One of \verb{\{"original", "corrected"\}}. Defines whether the
-mcsa calculation uses the original version as per Wotton & Beverly (2007)
-or the updated version from Perrakis et al. (2023), which corrects certain
-illogical behaviours at high FFMC levels. Specifically, when \code{model_mcsa = "corrected"}, if \code{FFMC > 92.93} and \code{density = "dense"}, the density class
-will be adjusted to \code{"moderate"}. Similarly, if \code{FFMC > 96.15} and \code{density = "light"}, the density class will be adjusted to \code{"moderate"}. See
-Perrakis et al. (2023) Supplementary Material for details.}
-
-\item{smooth_CFO}{Defines whether crown fire initiation is modeled as a
-smooth transition (\code{TRUE}) or an instantaneous occurrence (\code{FALSE}).}
-
-\item{CF_thresh}{A numeric value in \verb{[0, 1]}. Defines the pCFO threshold at
-which crown fire occurs.}
-
-\item{ROS_output}{A character vector to control ROS output. Choose any of the
-following:
-\itemize{
-\item \code{SROS}: Surface fire rate of spread.
-\item \code{CROS_P}: Passive crown fire rate of spread.
-\item \code{CROS_A}: Active crown fire rate of spread.
-\item \code{integrated}: Complete composite rate of spread.
-}}
-
-\item{plot}{A character vector to control plotting of output. Choose any of
-the following:
-\itemize{
-\item \code{pCFO}: Crown fire occurrence probability.
-\item \code{SROS}: Surface fire rate of spread.
-\item \code{CROS_P}: Passive crown fire rate of spread.
-\item \code{CROS_A}: Active crown fire rate of spread.
-\item \code{CAC}: Criterion for active crowning.
-\item \code{ROS_integrated}: Complete composite rate of spread plot with crowning
-thresholds.
-}}
-
-\item{...}{Additional arguments to be passed to nested functions.}
+\item{...}{Optional. Additional advanced arguments to be passed to nested
+functions.}
 }
 \value{
 A list of lists, with each sub-list containing outputs for a single
-scenario (input row). Optionally plots output.
+ConPyro scenario. Optionally plots output.
 }
 \description{
 \code{conpyro()} calculates pCFO, crowning thresholds, and ROS for any number of
 fuel and fire weather configurations using the Conifer Pyrometrics (ConPyro)
 fire behaviour modelling system. See Perrakis et al. (2023) for details.
 }
+\details{
+Input can be supplied in two ways: either via data frame or via arguments.
+Any given input variable may only be supplied by one of these avenues, but
+different variables may be supplied by different methods in any combination.
+For example, attempting to supply \code{FFMC} via both data frame and argument
+will yield an error, but supplying \code{FFMC} via data frame and \code{FSG} via
+argument is supported. The sole exception is \code{WS10}, which can only be
+supplied via argument.
+
+When supplying input via data frame, the data frame must have at least \code{1}
+row and \code{1} column. Each row defines a ConPyro prediction for a single set of
+fuel and fire weather conditions (a \emph{scenario}), and each column represents a
+single input parameter. Columns must be named according to the parameter they
+supply. All inputs are case-insensitive and columns may be in any order.
+
+When using arguments, inputs must either be of length \code{1} or of the common
+length among all inputs. Length \code{1} inputs will be automatically recycled to
+the common length, thus applying to all scenarios. Function parameters are
+case-sensitive but arguments themselves are case-insensitive.
+}
 \examples{
 # Basic usage
-data(default_input)
-conpyro(default_input)
-# Smooth CFO for all scenarios
-data(default_input)
-conpyro(default_input, smooth_CFO = TRUE)
-# Per-scenario smooth CFO with plotting
-data(default_input)
-new_input <- cbind(default_input, smooth_CFO = c(TRUE, FALSE, TRUE))
-conpyro(new_input, plot = "ROS_integrated")
-# Per-scenario wind speed
-data(default_input)
-new_input <- cbind(
-  default_input,
-  ws_min = c(0, 10, 15),
-  ws_max = c(30, 40, 50)
+conpyro(
+  data = default_input,
+  WS10 = 0:40,
+  FFMC = 91,
+  DMC = 85
 )
-conpyro(new_input)
+# Smooth crown fire occurrence for all scenarios
+conpyro(
+  data = default_input,
+  WS10 = 0:40,
+  FFMC = 91,
+  DMC = 85,
+  smooth_CFO = TRUE
+)
 # Per-scenario FFMC
-data(default_input)
-new_input <- cbind(default_input, FFMC = c(89, 95, 91.4))
-conpyro(new_input)
-# Per-scenario ConPyro, SROS, and CROS models
-data(default_input)
-new_input <- cbind(
-  default_input,
-  model_conpyro = c(11, 10, 8),
-  model_SROS = c(1, 2, 4),
-  model_CROS = c(1, 1, 2)
+conpyro(
+  data = default_input,
+  WS10 = 0:40,
+  FFMC = c(90, 91, 92),
+  DMC = 85,
 )
-conpyro(new_input)
+# Per-scenario smooth crown fire occurrence, with plot
+conpyro(
+  data = default_input,
+  WS10 = 0:40,
+  FFMC = c(90, 91, 92),
+  DMC = 85,
+  smooth_CFO = c(TRUE, FALSE, TRUE),
+  plot = "ROS"
+)
 
 }

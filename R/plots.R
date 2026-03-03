@@ -1,21 +1,38 @@
-#' @importFrom ggplot2 ggplot geom_line aes geom_point labs xlab ylab
+# Internal plotting helper functions
+
+#' Format data for ggplot2
+#'
+#' @keywords internal
+#'
+#' @importFrom ggplot2 ggplot aes geom_line geom_point labs xlab ylab
 #'   scale_color_viridis_d
-fn_prep_ggdata <- function(ID, ws_seq, var) {
-  data.frame(
-    ID  = rep(as.character(ID), times = length(ws_seq)),
-    var = rep(deparse(substitute(var)), times = length(ws_seq)),
-    ws  = ws_seq,
-    val = var
+#'
+prep_ggdata <- function(ID, name, WS10, data) {
+  out <- data.frame(
+    ID = rep(as.character(ID), length.out = length(WS10)),
+    name = rep(name, times = length(WS10)),
+    WS10 = WS10,
+    val = data
   )
+
+  return(out)
 }
 
-fn_plot <- function(data, par, xlab, ylab) {
-  ## check for `ggplot2` and warn user if not installed
+
+#' Plot data using ggplot2
+#'
+#' @keywords internal
+#'
+#' @importFrom ggplot2 ggplot aes geom_line geom_point labs xlab ylab
+#'   scale_color_viridis_d
+#'
+plot_ggdata <- function(data, var, xlab, ylab) {
+  # Check for `ggplot2` and warn user if not installed
   if (requireNamespace("ggplot2", quietly = TRUE)) {
-    gginput <- subset(data, var == par)
+    gginput <- subset(data, name == var)
     p <- ggplot(
       gginput,
-      aes(ws, val, color = ID)
+      aes(WS10, val, color = ID)
     ) +
       geom_line(linewidth = 1.5) +
       labs(color = "Scenario") +
