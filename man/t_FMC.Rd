@@ -7,14 +7,17 @@
 t_FMC(LAT, LONG, ELV = NA, Dj)
 }
 \arguments{
-\item{LAT}{A numeric value in \verb{[41, 70]}. Latitude in decimal degrees.}
+\item{LAT}{Required. A numeric value in \verb{[41, 70]}. Latitude in decimal
+degrees.}
 
-\item{LONG}{A numeric value in \verb{[52, 141]}. Longitude in decimal degrees.}
+\item{LONG}{Required. A numeric value in \verb{[52, 141]}. Longitude in decimal
+degrees.}
 
-\item{ELV}{A numeric value in \verb{[0, 2500]} or \code{NA}. Elevation in metres above
-sea level. If \code{NA}, elevation will not be used in the calculation.}
+\item{ELV}{Optional. A numeric value in \verb{[0, 2500]} or \code{NA}. Elevation in
+metres above sea level. If \code{NA}, elevation will not be used in the
+calculation.}
 
-\item{Dj}{A numeric value in \verb{[1, 366]}. Julian day.}
+\item{Dj}{Required. A numeric value in \verb{[1, 366]}. Julian day.}
 }
 \value{
 A numeric value giving an estimate of foliar moisture content in

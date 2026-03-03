@@ -1,8 +1,10 @@
-#' Internal plotting helper functions
+# Internal plotting helper functions
+
+#' Format data for ggplot2
 #'
 #' @keywords internal
 #'
-#' @importFrom ggplot2 ggplot geom_line aes geom_point labs xlab ylab
+#' @importFrom ggplot2 ggplot aes geom_line geom_point labs xlab ylab
 #'   scale_color_viridis_d
 #'
 prep_ggdata <- function(ID, name, WS10, data) {
@@ -16,6 +18,14 @@ prep_ggdata <- function(ID, name, WS10, data) {
   return(out)
 }
 
+
+#' Plot data using ggplot2
+#'
+#' @keywords internal
+#'
+#' @importFrom ggplot2 ggplot aes geom_line geom_point labs xlab ylab
+#'   scale_color_viridis_d
+#'
 plot_ggdata <- function(data, var, xlab, ylab) {
   # Check for `ggplot2` and warn user if not installed
   if (requireNamespace("ggplot2", quietly = TRUE)) {

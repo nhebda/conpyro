@@ -7,16 +7,16 @@
 ladder_standing_dead(cons, cl, FSG)
 }
 \arguments{
-\item{cons}{A numeric value in \verb{[0.1, 10]}. Consumption of fine dead elevated
-wood in kg/m^2. Assumes continuity with surface fuels.}
+\item{cons}{Required. A numeric value in \verb{[0.1, 10]}. Consumption of fine
+dead elevated wood in kg/m^2. Assumes continuity with surface fuels.}
 
-\item{cl}{A numeric value in \verb{[0.5, 15]}. Mean centroid height of ladder
-fuels in metres.}
+\item{cl}{Required. A numeric value in \verb{[0.5, 15]}. Mean centroid height of
+ladder fuels in metres.}
 
-\item{FSG}{A numeric value in \verb{[0.5, 20]}. Fuel strata gap in metres. The
-vertical distance between the top of the surface fuels and the lower limit
-of the canopy fuels. Analogous to crown base height in the absence of
-mid-story ladder fuels.}
+\item{FSG}{Required. A numeric value in \verb{[0.5, 20]}. Fuel strata gap in
+metres, representing the vertical distance between the top of the surface
+fuels and the lower limit of the canopy fuels. Analogous to crown base
+height in the absence of mid-story ladder fuels.}
 }
 \value{
 A list of length \code{2} consisting of one numeric value named

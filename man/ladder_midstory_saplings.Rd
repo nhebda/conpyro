@@ -8,17 +8,18 @@ cohort}
 ladder_midstory_saplings(hs, zs, zp, lnfl, sapling_FMC, actual_SFC)
 }
 \arguments{
-\item{hs}{Sapling height in metres.}
+\item{hs}{Required. Sapling height in metres.}
 
-\item{zs}{Sapling lower crown base height (LCBH) in metres.}
+\item{zs}{Required. Sapling lower crown base height (LCBH) in metres.}
 
-\item{zp}{Overstory lower crown base height (LCBH) in metres.}
+\item{zp}{Required. Overstory lower crown base height (LCBH) in metres.}
 
-\item{lnfl}{Live needle fuel load in kg/m^2.}
+\item{lnfl}{Required. Live needle fuel load in kg/m^2.}
 
-\item{sapling_FMC}{Sapling foliar moisture content (FMC) in percent.}
+\item{sapling_FMC}{Required. Sapling foliar moisture content (FMC) in
+percent.}
 
-\item{actual_SFC}{Actual SFC in kg/m^2.}
+\item{actual_SFC}{Required. Actual SFC in kg/m^2.}
 }
 \value{
 A list of length \code{5} consisting of numeric values named

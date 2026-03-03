@@ -8,14 +8,14 @@ Prediction System (FBPS) equations}
 t_SFC_FBP(BUI = 85, FFMC = 91, PC = 40)
 }
 \arguments{
-\item{BUI}{A numeric value in \verb{[80, 200]}. The Buildup Index (BUI) as per the
-Canadian Forest Fire Weather Index (FWI) System.}
-
-\item{FFMC}{A numeric value in \verb{[80, 99]}. The Fine Fuel Moisture Code (FFMC)
+\item{BUI}{Required. A numeric value in \verb{[80, 200]}. The Buildup Index (BUI)
 as per the Canadian Forest Fire Weather Index (FWI) System.}
 
-\item{PC}{A numeric value in \verb{[0, 100]}. Percent conifer for M1/M2 fuel
-types.}
+\item{FFMC}{Required. A single numeric value in \verb{[80, 99]}. The Fine Fuel
+Moisture Code as per the Canadian Fire Weather Index System.}
+
+\item{PC}{Required. A numeric value in \verb{[0, 100]}. Percent conifer for M1/M2
+fuel types.}
 }
 \value{
 A list of length \code{10} consisting of named numeric values

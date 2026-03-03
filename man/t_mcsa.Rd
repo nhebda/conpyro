@@ -7,21 +7,22 @@
 t_mcsa(FFMC, DMC, season, density, stand, ...)
 }
 \arguments{
-\item{FFMC}{A numeric value in \verb{[80, 99]}. The Fine Fuel Moisture Code (FFMC)
-as per the Canadian Forest Fire Weather Index (FWI) System.}
+\item{FFMC}{Required. A single numeric value in \verb{[80, 99]}. The Fine Fuel
+Moisture Code as per the Canadian Fire Weather Index System.}
 
-\item{DMC}{A numeric value in \verb{[5, 250]}. The Duff Moisture Code (DMC) as per
-the Canadian Forest Fire Weather Index (FWI) System.}
+\item{DMC}{Required. A single numeric value in \verb{[5, 250]}. The Duff Moisture
+Code as per the Canadian Fire Weather Index System.}
 
-\item{season}{One of \verb{\{"spring", "sp-su", "summer", "fall"\}} or numeric
-equivalents \verb{\{1, 1.5, 2, 3\}}. See \code{\link[=t_mcSeason]{t_mcSeason()}}.}
+\item{season}{Required. One of \verb{\{"spring", "sp-su", "summer", "fall"\}} or
+numeric equivalents \verb{\{1, 1.5, 2, 3\}}. See \code{\link[=t_mcSeason]{t_mcSeason()}}.}
 
-\item{density}{One of \verb{\{"light", "moderate", "dense"\}} or numeric equivalents
-\verb{\{1, 2, 3\}}.}
+\item{density}{Required. One of \verb{\{"light", "moderate", "dense"\}} or numeric
+equivalents \verb{\{1, 2, 3\}}. See \link{t_mcDensity}.}
 
-\item{stand}{One of \verb{\{"pine", "spruce", "Douglas-fir", "deciduous", "mixedwood"\}} or abbreviated equivalents \verb{\{"p", "s", "df", "d", "m"\}}.}
+\item{stand}{Required. One of \verb{\{"pine", "spruce", "Douglas-fir", "deciduous", "mixedwood"\}} or abbreviated equivalents \verb{\{"p", "s", "df", "d", "m"\}}.}
 
-\item{...}{Additional arguments to be passed to nested functions.}
+\item{...}{Optional. Additional advanced arguments to be passed to nested
+functions.}
 }
 \value{
 A numeric value representing fine dead litter moisture content in

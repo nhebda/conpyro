@@ -4,31 +4,35 @@
 \alias{t_FT}
 \title{Calculate fire type}
 \usage{
-t_FT(WS10, mcsa = NULL, mcF = NULL, FSG, SFC, CBD, ...)
+t_FT(WS10, mcF = NULL, mcsa = NULL, FSG, SFC, CBD, ...)
 }
 \arguments{
-\item{WS10}{A numeric value in \verb{[0, 60]}. Wind speed in km/h.}
+\item{WS10}{Required. A numeric value in \verb{[0, 60]}. Standard 10-m open wind
+speed in km/h.}
 
-\item{mcsa}{A numeric value in \verb{[3, 20]}. Fine dead surface litter moisture
-content calculated using the stand-adjusted model (mcsa). May be estimated
-using \code{\link[=t_mcsa]{t_mcsa()}}. If \code{mcF} is anything other than \code{NULL}, it will override
-\code{mcsa}.}
+\item{mcF}{Optional. A numeric value in \verb{[3, 20]}. Fine dead surface litter
+moisture content in percent, calculated using the Fine Fuel Moisture Code
+(FFMC). May be estimated using \code{\link[=t_mcF]{t_mcF()}}. If \code{NULL}, \code{mcsa} will be used
+instead.}
 
-\item{mcF}{A numeric value in \verb{[3, 20]}. Fine dead surface litter moisture
-content calculated using the Fine Fuel Moisture Code (FFMC). May be
-estimated using \code{\link[=t_mcF]{t_mcF()}}. If \code{NULL}, \code{mcsa} will be used instead.}
+\item{mcsa}{Optional. A numeric value in \verb{[3, 20]}. Fine dead surface litter
+moisture content in percent, calculated using the stand-adjusted model. May
+be estimated using \code{\link[=t_mcsa]{t_mcsa()}}. If \code{mcF} is anything other than \code{NULL}, it
+will override \code{mcsa}.}
 
-\item{FSG}{A numeric value in \verb{[0.5, 20]}. Fuel strata gap in metres. The
-vertical distance between the top of the surface fuels and the lower limit
-of the canopy fuels. Analogous to crown base height in the absence of
-mid-story ladder fuels.}
+\item{FSG}{Required. A numeric value in \verb{[0.5, 20]}. Fuel strata gap in
+metres, representing the vertical distance between the top of the surface
+fuels and the lower limit of the canopy fuels. Analogous to crown base
+height in the absence of mid-story ladder fuels.}
 
-\item{SFC}{A numeric value in \verb{[0.1, 6]}. Surface fuel consumption in kg/m^2.
-May be estimated using \code{\link[=t_SFC_FBP]{t_SFC_FBP()}} or \code{\link[=t_SFC_deGroot]{t_SFC_deGroot()}}.}
+\item{SFC}{Required. A numeric value in \verb{[0.1, 6]}. Surface fuel consumption
+in kg/m^2. May be estimated using \code{\link[=t_SFC_FBP]{t_SFC_FBP()}} or \code{\link[=t_SFC_deGroot]{t_SFC_deGroot()}}.}
 
-\item{CBD}{A numeric value in \verb{[0.01, 0.8]}. Crown bulk density in kg/m^3.}
+\item{CBD}{Required. A numeric value in \verb{[0.01, 0.8]}. Crown bulk density in
+kg/m^3.}
 
-\item{...}{Additional arguments to be passed to nested functions.}
+\item{...}{Optional. Additional advanced arguments to be passed to nested
+functions.}
 }
 \value{
 A single character vector giving the fire type. One of \verb{\{"S", "PC", "AC"\}}, corresponding to surface fire, passive crown fire, or active crown
@@ -41,14 +45,26 @@ system. See Perrakis et al. (2023) for details.
 }
 \examples{
 # Surface fire
-t_FT(mcsa = 9, FSG = 6, SFC = 2, CBD = 0.1, ws = 11)
+t_FT(WS10 = 11, mcsa = 9, FSG = 6, SFC = 2, CBD = 0.1)
 # Passive crown fire
-t_FT(mcsa = 8, FSG = 6, SFC = 2, CBD = 0.1, ws = 11)
+t_FT(WS10 = 11, mcsa = 8, FSG = 6, SFC = 2, CBD = 0.1)
 # Active crown fire
-t_FT(mcsa = 8, FSG = 6, SFC = 2, CBD = 0.2, ws = 11)
+t_FT(WS10 = 11, mcsa = 8, FSG = 6, SFC = 2, CBD = 0.2)
 # Using t_mcF()
-t_FT(mcF = t_mcF(91), FSG = 6, SFC = 2, CBD = 0.2, ws = 13)
+t_FT(WS10 = 11, mcF = t_mcF(91), FSG = 6, SFC = 2, CBD = 0.2)
 # Using t_mcsa()
-t_FT(mcsa = t_mcsa(91, 60, 2, 2, "p"), FSG = 6, SFC = 2, CBD = 0.2, ws = 13)
+t_FT(
+  WS10 = 13,
+  mcsa = t_mcsa(
+    FFMC = 91,
+    DMC = 60,
+    season = 2,
+    density = 2,
+    stand = "p"
+  ),
+  FSG = 6,
+  SFC = 2,
+  CBD = 0.2
+)
 
 }

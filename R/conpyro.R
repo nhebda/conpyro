@@ -5,210 +5,196 @@
 #' fuel and fire weather configurations using the Conifer Pyrometrics (ConPyro)
 #' fire behaviour modelling system. See Perrakis et al. (2023) for details.
 #'
-#' @param input A data frame of least `7` columns and `1` row. Each row defines
-#'   a ConPyro prediction for a single set of fuel and fire weather conditions
-#'   (a *scenario*). Inputs are case-insensitive and columns may be in any
-#'   order. Missing values are not permitted and will produce an error. Required
-#'   columns are:
-#'   * `ID`: Unique scenario identifier.
-#'   * `Season`: One of `{"spring", "sp-su", "summer", "fall"}` or numeric
-#'   equivalents `{1, 1.5, 2, 3}`. See [t_mcSeason()].
-#'   * `Density`: One of `{"light", "moderate", "dense"}` or numeric equivalents
-#'   `{1, 2, 3}`.
-#'   * `Stand`: One of `{"pine", "spruce", "Douglas-fir", "deciduous",
-#'   "mixedwood"}` or abbreviated equivalents `{"p", "s", "df", "d", "m"}`.
-#'   * `FSG`: A numeric value in `[0.5, 20]`. Fuel strata gap in metres. The
-#'   vertical distance between the top of the surface fuels and the lower limit
-#'   of the canopy fuels. Analogous to crown base height in the absence of
-#'   mid-story ladder fuels.
-#'   * `SFC`: A numeric value in `[0.1, 6]`. Surface fuel consumption in kg/m^2.
-#'   May be estimated using [t_SFC_FBP()] or [t_SFC_deGroot()].
-#'   * `CBD`: A numeric value in `[0.01, 0.8]`. Crown bulk density in kg/m^3.
+#' Input can be supplied in two ways: either via data frame or via arguments.
+#' Any given input variable may only be supplied by one of these avenues, but
+#' different variables may be supplied by different methods in any combination.
+#' For example, attempting to supply `FFMC` via both data frame and argument
+#' will yield an error, but supplying `FFMC` via data frame and `FSG` via
+#' argument is supported. The sole exception is `WS10`, which can only be
+#' supplied via argument.
 #'
-#'   Additionally, there are several optional columns:
-#'   * `smooth_CFO`: Defines whether crown fire initiation is modeled as a
-#'   smooth transition (`TRUE`) or an instantaneous occurrence (`FALSE`). Allows
-#'   this behaviour to be specified on a per-scenario basis. If this column is
-#'   present, it will override the `smooth_CFI` argument.
-#'   * `ws_min`: A numeric value in `[0, 60]`. Minimum wind speed in km/h.
-#'   Allows wind speed to be specified on a per-scenario basis. If this column
-#'   *and* the `ws_max` column are present, they will override the `ws`
-#'   argument.
-#'   * `ws_max`: A numeric value in `[0, 60]`. Maximum wind speed in km/h.
-#'   Allows wind speed to be specified on a per-scenario basis. If this column
-#'   *and* the `ws_min` column are present, they will override the `ws`
-#'   argument.
-#'   * `FFMC`: A numeric value in `[80, 99]`. The Fine Fuel Moisture Code (FFMC)
-#'   as per the Canadian Forest Fire Weather Index (FWI) System. Allows FFMC to
-#'   be specified on a per-scenario basis. If this column is present, it will
-#'   override the `FFMC` argument.
-#'   * `DMC`: A numeric value in `[5, 250]`. The Duff Moisture Code (DMC) as per
-#'   the Canadian Forest Fire Weather Index (FWI) System. Allows DMC to be
-#'   specified on a per-scenario basis. If this column is present, it will
-#'   override the `DMC` argument.
-#'   * `model_conpyro`: One of `{7, 8, 10, 11}`. The ConPyro model form used for
-#'   calculations (see Perrakis et al., 2023). Models `7` and `10` use
-#'   FFMC-based fine fuel moisture content (mcFFMC) while models `8` and `11`
-#'   use stand-adjusted moisture content (mcsa). Default is `11`.
-#'   * `model_SROS`: One of `{1, 2, 3, 4}`. The surface fire ROS model used for
-#'   calculations.
-#'      * `1`: Aggregated FBPS surf. V4 (default)
-#'      * `2`: D-1 FBPS
-#'      * `3`: C-6 (surface only) FBPS
-#'      * `4`: IsaSFC
-#'   * `model_CROS`: One of `{1, 2, 3}`. The crown fire ROS model used for
-#'   calculations.
-#'      * `1`: Adapted Cruz, Alexander, & Wakimoto (2005): ws, MC, CBD (default)
-#'      * `2`: Adapted Cruz & Alexander (2019): ws only
-#'      * `3`: Adapted Cruz & Alexander (2019): ws only, 10%
-#' @param ws An ordered integer vector of length `2`, with each element being in
-#'   `[0, 60]`. The first value defines the minimum wind speed and the second
-#'   defines the maximum, in km/h. Calculations are carried out on the sequence
-#'   of integer values from the minimum to the maximum, inclusive.
-#' @param FFMC A numeric value in `[80, 99]`. The Fine Fuel Moisture Code (FFMC)
-#'   as per the Canadian Forest Fire Weather Index (FWI) System.
-#' @param DMC A numeric value in `[5, 250]`. The Duff Moisture Code (DMC) as per
-#'   the Canadian Forest Fire Weather Index (FWI) System.
-#' @param model_mcsa One of `{"original", "corrected"}`. Defines whether the
-#'   mcsa calculation uses the original version as per Wotton & Beverly (2007)
-#'   or the updated version from Perrakis et al. (2023), which corrects certain
-#'   illogical behaviours at high FFMC levels. Specifically, when `model_mcsa =
-#'   "corrected"`, if `FFMC > 92.93` and `density = "dense"`, the density class
-#'   will be adjusted to `"moderate"`. Similarly, if `FFMC > 96.15` and `density
-#'   = "light"`, the density class will be adjusted to `"moderate"`. See
-#'   Perrakis et al. (2023) Supplementary Material for details.
-#' @param smooth_CFO Defines whether crown fire initiation is modeled as a
-#'   smooth transition (`TRUE`) or an instantaneous occurrence (`FALSE`).
-#' @param CF_thresh A numeric value in `[0, 1]`. Defines the pCFO threshold at
-#'   which crown fire occurs.
-#' @param ROS_output A character vector to control ROS output. Choose any of the
-#'   following:
-#'   * `SROS`: Surface fire rate of spread.
-#'   * `CROS_P`: Passive crown fire rate of spread.
-#'   * `CROS_A`: Active crown fire rate of spread.
-#'   * `integrated`: Complete composite rate of spread.
-#' @param plot A character vector to control plotting of output. Choose any of
-#'   the following:
-#'   * `pCFO`: Crown fire occurrence probability.
-#'   * `SROS`: Surface fire rate of spread.
-#'   * `CROS_P`: Passive crown fire rate of spread.
-#'   * `CROS_A`: Active crown fire rate of spread.
-#'   * `CAC`: Criterion for active crowning.
-#'   * `ROS_integrated`: Complete composite rate of spread plot with crowning
-#'   thresholds.
-#' @param ... Additional arguments to be passed to nested functions.
+#' When supplying input via data frame, the data frame must have at least `1`
+#' row and `1` column. Each row defines a ConPyro prediction for a single set of
+#' fuel and fire weather conditions (a *scenario*), and each column represents a
+#' single input parameter. Columns must be named according to the parameter they
+#' supply. All inputs are case-insensitive and columns may be in any order.
+#'
+#' When using arguments, inputs must either be of length `1` or of the common
+#' length among all inputs. Length `1` inputs will be automatically recycled to
+#' the common length, thus applying to all scenarios. Function parameters are
+#' case-sensitive but arguments themselves are case-insensitive.
+#'
+#' @param data Optional. A data frame of at least `1` row and `1` column.
+#'   Columns must be named according to the parameter they supply.
+#' @param WS10 Required. A numeric vector in `[0, 60]`. Standard 10-m open wind
+#'   speed in km/h.
+#' @param FFMC Required. A numeric vector in `[80, 99]`. The Fine Fuel Moisture
+#'   Code as per the Canadian Fire Weather Index System.
+#' @param FSG Required. A numeric vector in `[0.5, 20]`. Fuel strata gap in
+#'   metres, representing the vertical distance between the top of the surface
+#'   fuels and the lower limit of the canopy fuels. Analogous to crown base
+#'   height in the absence of mid-story ladder fuels. Used in calculating crown
+#'   fire probability (pCFO).
+#' @param SFC Required. A numeric vector in `[0.1, 6]`. Surface fuel consumption
+#'   in kg/m^2. Used in calculating crown fire probability (pCFO) and surface
+#'   fire rate of spread (sROS). May be estimated using [t_SFC_FBP()] or
+#'   [t_SFC_deGroot()].
+#' @param CBD Required. A numeric vector in `[0.01, 0.8]`. Crown bulk density in
+#'   kg/m^3. Used in calculating crown fire rate of spread (cROS).
+#' @param DMC Optional. A numeric vector in `[5, 250]`. The Duff Moisture Code
+#'   as per the Canadian Fire Weather Index System. Used in calculating
+#'   stand-adjusted fine dead surface litter moisture content (`mcsa`). If `DMC`
+#'   is not supplied, fine fuel moisture calculations will fall back on the
+#'   FFMC-based model (`mcF`).
+#' @param season Optional. A vector comprising `{"spring", "sp-su", "summer",
+#'   "fall"}` or numeric equivalents `{1, 1.5, 2, 3}`. See [t_mcSeason()]. Used
+#'   in calculating stand-adjusted fine dead surface litter moisture content
+#'   (`mcsa`). If `season` is not supplied, fine fuel moisture calculations will
+#'   fall back on the FFMC-based model.
+#' @param density Optional. A vector comprising `{"light", "moderate", "dense"}`
+#'   or numeric equivalents `{1, 2, 3}`. See [t_mcDensity]. Used in calculating
+#'   stand-adjusted fine dead surface litter moisture content (`mcsa`). If
+#'   `density` is not supplied, fine fuel moisture calculations will fall back
+#'   on the FFMC-based model.
+#' @param stand Optional. A vector comprising `{"pine", "spruce", "Douglas-fir",
+#'   "deciduous", "mixedwood"}` or abbreviated equivalents `{"p", "s", "df",
+#'   "d", "m"}`. Used in calculating stand-adjusted fine dead surface litter
+#'   moisture content (`mcsa`). If `stand` is not supplied, fine fuel moisture
+#'   calculations will fall back on the FFMC-based model.
+#' @param smooth_CFO Optional. A logical vector that defines whether crown fire
+#'   occurrence is modeled as a smooth transition (`TRUE`) or an instantaneous
+#'   event (`FALSE`). Default is `FALSE`.
+#' @param ID Optional. A vector of unique scenario identifiers.
+#' @param plot Optional. A character vector to control plotting of output.
+#'   Choose any of the following:
+#'   * `"pCFO"`: Crown fire occurrence probability.
+#'   * `"CAC"`: Criterion for active crowning.
+#'   * `"ROS"`: Composite rate of spread plot with crowning thresholds.
+#' @param ... Optional. Additional advanced arguments to be passed to nested
+#'   functions.
 #'
 #' @returns A list of lists, with each sub-list containing outputs for a single
-#'   scenario (input row). Optionally plots output.
+#'   ConPyro scenario. Optionally plots output.
 #' @export
 #'
 #' @examples
 #' # Basic usage
-#' data(default_input)
-#' conpyro(default_input)
-#' # Smooth CFO for all scenarios
-#' data(default_input)
-#' conpyro(default_input, smooth_CFO = TRUE)
-#' # Per-scenario smooth CFO with plotting
-#' data(default_input)
-#' new_input <- cbind(default_input, smooth_CFO = c(TRUE, FALSE, TRUE))
-#' conpyro(new_input, plot = "ROS_integrated")
-#' # Per-scenario wind speed
-#' data(default_input)
-#' new_input <- cbind(
-#'   default_input,
-#'   ws_min = c(0, 10, 15),
-#'   ws_max = c(30, 40, 50)
+#' conpyro(
+#'   data = default_input,
+#'   WS10 = 0:40,
+#'   FFMC = 91,
+#'   DMC = 85
 #' )
-#' conpyro(new_input)
+#' # Smooth crown fire occurrence for all scenarios
+#' conpyro(
+#'   data = default_input,
+#'   WS10 = 0:40,
+#'   FFMC = 91,
+#'   DMC = 85,
+#'   smooth_CFO = TRUE
+#' )
 #' # Per-scenario FFMC
-#' data(default_input)
-#' new_input <- cbind(default_input, FFMC = c(89, 95, 91.4))
-#' conpyro(new_input)
-#' # Per-scenario ConPyro, SROS, and CROS models
-#' data(default_input)
-#' new_input <- cbind(
-#'   default_input,
-#'   model_conpyro = c(11, 10, 8),
-#'   model_SROS = c(1, 2, 4),
-#'   model_CROS = c(1, 1, 2)
+#' conpyro(
+#'   data = default_input,
+#'   WS10 = 0:40,
+#'   FFMC = c(90, 91, 92),
+#'   DMC = 85,
 #' )
-#' conpyro(new_input)
-#'
-#' @importFrom checkmate assert_data_frame assert_subset assert_true
-#'   assert_numeric assert_logical assert_integerish test_subset assert_number
-#'   assert_choice assert_int makeAssertCollection reportAssertions
-#' @importFrom utils read.csv
+#' # Per-scenario smooth crown fire occurrence, with plot
+#' conpyro(
+#'   data = default_input,
+#'   WS10 = 0:40,
+#'   FFMC = c(90, 91, 92),
+#'   DMC = 85,
+#'   smooth_CFO = c(TRUE, FALSE, TRUE),
+#'   plot = "ROS"
+#' )
 #'
 conpyro <- function(
     data,
-    WS10 = NULL,
-    FFMC = NULL,
-    DMC = NULL,
-    model_mcsa = "corrected",
-    smooth_CFO = FALSE,
-    CF_thresh = 0.5,
-    ROS_output = "integrated",
+    WS10,
+    FFMC,
+    FSG,
+    SFC,
+    CBD,
+    DMC,
+    season,
+    density,
+    stand,
+    smooth_CFO,
+    ID,
     plot = NULL,
     ...
 ) {
-  # Prepare input ----
-  # __ Validate input structure ----
-  assert_data_frame(
-    input,
-    col.names = "named"
-  )
-  # Normalize case
-  input_col_names <- tolower(names(input))
-  # Required columns
-  required_col_names <- c("fsg", "sfc", "cbd")
-  # Identify missing columns
-  missing_cols <- setdiff(required_col_names, input_col_names)
-  if (length(missing_cols) > 0) {
-    stop(
-      paste(
-        "Input data frame is missing the following required column(s):",
-        paste(missing_cols, collapse = ", ")
-      )
-    )
-  }
-  # Normalize input character columns to lowercase, except ID, if present
-  names(input) <- tolower(names(input))
-  cols_to_modify <- if ("id" %in% names(input)) {
-    setdiff(names(input), "id")
-  } else {
-    names(input)
-  }
-  input[cols_to_modify] <- lapply(input[cols_to_modify], function(x) {
-    if (is.character(x)) tolower(x) else x
-  })
-  # If ID column exists, ensure that IDs are unique
-  if ("id" %in% names(input)) {
-    assert_true(
-      length(input[["id"]]) == length(unique(input[["id"]])),
-      .var.name = "Input IDs must be unique"
-    )
-  }
-  # __ Resolve inputs ----
+  # Get arguments
   args_list <- introspect_args()
 
-  cols <- names(data)
-
-  WS10 <- resolve_input(
-    arg = WS10,
-    data = data,
-    name = "WS10"
-  )
-
+  # Resolve required inputs
   FFMC <- resolve_input(
     args_list = args_list,
     data = data,
     name = "FFMC"
   )
+  FSG <- resolve_input(
+    args_list = args_list,
+    data = data,
+    name = "FSG"
+  )
+  SFC <- resolve_input(
+    args_list = args_list,
+    data = data,
+    name = "SFC"
+  )
+  CBD <- resolve_input(
+    args_list = args_list,
+    data = data,
+    name = "CBD"
+  )
+
+  # Resolve optional inputs without defaults
   DMC <- resolve_input(
     args_list = args_list,
     data = data,
-    name = "DMC"
+    name = "DMC",
+    required = FALSE
+  )
+  season <- resolve_input(
+    args_list = args_list,
+    data = data,
+    name = "season",
+    required = FALSE
+  )
+  density <- resolve_input(
+    args_list = args_list,
+    data = data,
+    name = "density",
+    required = FALSE
+  )
+  stand <- resolve_input(
+    args_list = args_list,
+    data = data,
+    name = "stand",
+    required = FALSE
+  )
+
+  # Resolve optional inputs with defaults
+  smooth_CFO <- resolve_input(
+    args_list = args_list,
+    data = data,
+    name = "smooth_CFO",
+    required = FALSE
+  )
+  ID <- resolve_input(
+    args_list = args_list,
+    data = data,
+    name = "ID",
+    required = FALSE
+  )
+  CF_thresh <- resolve_input(
+    args_list = args_list,
+    data = data,
+    name = "CF_thresh",
+    required = FALSE
   )
   model_mcsa <- resolve_input(
     args_list = args_list,
@@ -216,619 +202,460 @@ conpyro <- function(
     name = "model_mcsa",
     required = FALSE
   )
+  model_pCFO <- resolve_input(
+    args_list = args_list,
+    data = data,
+    name = "model_pCFO",
+    required = FALSE
+  )
+  model_sROS <- resolve_input(
+    args_list = args_list,
+    data = data,
+    name = "model_sROS",
+    required = FALSE
+  )
+  model_cROS <- resolve_input(
+    args_list = args_list,
+    data = data,
+    name = "model_cROS",
+    required = FALSE
+  )
 
-  season <- if("season" %in% cols) {
-    data[["season"]]
-  } else {
-    rep(NA, times = nrow(data))
+  # Enforce strict common length among inputs
+  n <- check_common_length(
+    FFMC = FFMC,
+    FSG = FSG,
+    SFC = SFC,
+    CBD = CBD,
+    DMC = DMC,
+    season = season,
+    density = density,
+    stand = stand,
+    smooth_CFO = smooth_CFO,
+    ID = ID,
+    CF_thresh = CF_thresh,
+    model_mcsa = model_mcsa,
+    model_pCFO = model_pCFO,
+    model_sROS = model_sROS,
+    model_cROS = model_cROS
+  )
+  if (length(FFMC) != n) FFMC <- rep(FFMC, length.out = n)
+  if (length(FSG) != n) FSG <- rep(FSG, length.out = n)
+  if (length(SFC) != n) SFC <- rep(SFC, length.out = n)
+  if (length(CBD) != n) CBD <- rep(CBD, length.out = n)
+  if (length(DMC) != n) DMC <- rep(DMC, length.out = n)
+  if (length(season) != n) season <- rep(season, length.out = n)
+  if (length(density) != n) density <- rep(density, length.out = n)
+  if (length(stand) != n) stand <- rep(stand, length.out = n)
+  if (length(smooth_CFO) != n) smooth_CFO <- rep(smooth_CFO, length.out = n)
+  if (length(ID) != n) {
+    if (!is.na(ID)) {
+      ID <- paste0(ID, "_", 1:n)
+    } else {
+      ID <- 1:n
+    }
   }
-  density <- if("density" %in% cols) {
-    data[["density"]]
-  } else {
-    rep(NA, times = nrow(data))
-  }
-  stand <- if("stand" %in% cols) {
-    data[["stand"]]
-  } else {
-    rep(NA, times = nrow(data))
-  }
-  FSG <- data[["fsg"]]
-  SFC <- data[["sfc"]]
-  CBD <- data[["cbd"]]
+  if (length(CF_thresh) != n) CF_thresh <- rep(CF_thresh, length.out = n)
+  if (length(model_mcsa) != n) model_mcsa <- rep(model_mcsa, length.out = n)
+  if (length(model_pCFO) != n) model_pCFO <- rep(model_pCFO, length.out = n)
+  if (length(model_sROS) != n) model_sROS <- rep(model_sROS, length.out = n)
+  if (length(model_cROS) != n) model_cROS <- rep(model_cROS, length.out = n)
 
-
-  # __ Validate inputs ----
+  # Validate inputs
   validate_input(
-    FFMC = FFMC
+    WS10 = WS10,
+    FFMC = FFMC,
+    FSG = FSG,
+    SFC = SFC,
+    CBD = CBD,
+    DMC = DMC,
+    season = season,
+    density = density,
+    stand = stand,
+    smooth_CFO = smooth_CFO,
+    ID = ID,
+    CF_thresh = CF_thresh,
+    model_mcsa = model_mcsa,
+    model_pCFO = model_pCFO,
+    model_sROS = model_sROS,
+    model_cROS = model_cROS
   )
 
+  # Load coefficients
+  coefs_mcsa <- sysdata$coefs_MCSA
+  coefs_pCFO <- sysdata$coefs_pCFO
 
-  cols <- names(input) # this could happen earlier
-  fn_validate_input(
-    WS10 = if ("ws10" %in% cols) input[[ws10]] else WS10,
-    FFMC = if ("ffmc" %in% cols) input[[ffmc]] else FFMC,
-    DMC = if ("dmc" %in% cols) input[[dmc]] else DMC,
-  )
-
-  # Required columns
-  fn_validate_input(
-    FSG_vec = input[["fsg"]],
-    SFC_vec = input[["sfc"]],
-    CBD_vec = input[["cbd"]]
-  )
-  # Optional columns
-  if ("smooth_cfo" %in% names(input)) {
-    assert_logical(input$smooth_cfo, .var.name = "smooth_CFO")
-  }
-
-
-
-  if ("ws_min" %in% names(input)) {
-    assert_integerish(input$ws_min, lower = 0, upper = 59, .var.name = "ws_min")
-  }
-  if ("ws_max" %in% names(input)) {
-    assert_integerish(input$ws_max, lower = 1, upper = 60, .var.name = "ws_max")
-  }
-  if ("ffmc" %in% names(input)) {
-    assert_numeric(input$ffmc, lower = 80, upper = 99, .var.name = "FFMC")
-  }
-  if ("dmc" %in% names(input)) {
-    assert_numeric(input$ffmc, lower = 5, upper = 250, .var.name = "DMC")
-  }
-  if ("model_conpyro" %in% names(input)) {
-    assert_subset(input$model_conpyro, choices = c(7, 8, 10, 11))
-  }
-  if ("model_sros" %in% names(input)) {
-    assert_subset(input$model_sros, choices = c(1, 2, 3, 4, 12, 13))
-  }
-  if ("model_cros" %in% names(input)) {
-    assert_subset(input$model_cros, choices = c(1, 2, 3))
-  }
-  if (length(ws) == 1) {
-    assert_integerish(ws, lower = 0, upper = 60)
-  } else if (length(ws) > 1) {
-    assert_integerish(
-      ws,
-      lower  = 0,
-      upper  = 60,
-      unique = TRUE,
-      len    = 2,
-      sorted = TRUE
-    )
-  }
-  assert_logical(smooth_CFO, .var.name = "smooth_CFO")
-  assert_number(CF_thresh, lower = 0, upper = 1)
-  assert_subset(ROS_output, c("SROS", "CROS_P", "CROS_A", "integrated"))
-  assert_subset(
-    plot,
-    c(
-      "pCFO",
-      "SROS",
-      "CROS_P",
-      "CROS_A",
-      "CAC",
-      # "SROS_smooth",
-      # "CROS_P_smooth",
-      # "CROS_A_smooth",
-      # "ROS_AIO",
-      "ROS_integrated"
-    )
-  )
-  # Initialize data structures
+  # Initialize outputs list
   out <- list()
   ggdata <- data.frame()
-  # Loop through input rows (scenarios)
-  for (i in 1:nrow(input)) {
-    # Assign inputs to vars ----
-    extra_args <- list(...)
-    ID <- if("id" %in% names(input)) input$id[[i]] else i
-    season <- if("season" %in% names(input)) input$season[[i]] else NA
-    density <- if("density" %in% names(input)) input$density[[i]] else NA
-    stand <- if("stand" %in% names(input)) input$stand[[i]] else NA
-    FSG <- input$fsg[i]
-    SFC <- input$sfc[i]
-    CBD <- input$cbd[i]
-    smooth_CFO <- if ("smooth_cfo" %in% names(input)) {
-      input$smooth_cfo[i]
-    } else {
-      smooth_CFO
-    }
-    ws_seq <- if ("ws" %in% names(input)) {
-      input$ws[i]
-    } else if ("ws_min" %in% names(input) && "ws_max" %in% names(input)) {
-      seq(input$ws_min[i], input$ws_max[i], 1)
-    } else {
-      if (length(ws) == 1) {
-        ws
-      } else {
-        seq(ws[1], ws[2], 1)
-      }
-    }
-    FFMC          <- if ("ffmc" %in% names(input)) {
-      input$ffmc[i]
-    } else {
-      FFMC
-    }
-    DMC           <- if ("dmc" %in% names(input)) {
-      input$dmc[i]
-    } else {
-      DMC
-    }
-    model_conpyro <- if ("model_conpyro" %in% names(input)) {
-      input$model_conpyro[i]
-    } else {
-      11
-    }
-    model_SROS    <- if ("model_sros" %in% names(input)) {
-      input$model_sros[i]
-    } else if ("model_SROS" %in% names(extra_args)) {
-      extra_args$model_SROS
-    } else {
-      if (NA %in% c(season, density, stand)) 12 else 13
-    }
-    model_CROS    <- if ("model_cros" %in% names(input)) {
-      input$model_cros[i]
-    } else {
-      1
-    }
-    # Do calculations
-    mcFFMC        <- fn_mcFFMC(FFMC)
-    mcDMC         <- fn_mcDMC(DMC)
-    if (!NA %in% c(season, density, stand)) {
-      idx         <- fn_mcsa_idx(FFMC, season, density, stand, model_mcsa)
-      mcsa        <- fn_mcsa(idx, mcFFMC, mcDMC)
-      MC          <- switch(
-        as.character(model_conpyro),
-        "7"  = mcFFMC,
-        "8"  = mcsa,
-        "10" = mcFFMC,
-        "11" = mcsa
-      )
-    } else {
-      mcsa = NA
-      MC   = mcFFMC
-      if (!model_conpyro %in% c(7, 10)) model_conpyro <- 10
-      message(
-        "Missing value(s) detected in ",
-        ID,
-        ", using mcFFMC with ConPyro Model ",
-        model_conpyro,
-        "."
-      )
-    }
-    pCFO          <- fn_pCFO(model_conpyro, ws_seq, FSG, SFC, MC)
-    CF_CI         <- fn_CF_CI(ws_seq, pCFO)
-    SROS          <- fn_SROS(
-      model  = model_SROS,
-      ws_seq = ws_seq,
-      mc     = MC,
-      SFC    = SFC
-    )
-    CROS_A        <- fn_CROS_A(model_CROS, MC, ws_seq, CBD)
-    CAC           <- fn_CAC(CROS_A, CBD)
-    CROS_P        <- fn_CROS_P(CROS_A, CAC)
-    SROS_smooth   <- fn_SROS_smooth(CROS_P, pCFO, CF_thresh, CAC, SROS, CROS_A)
-    CROS_P_smooth <- fn_CROS_P_smooth(SROS, pCFO, CROS_P)
-    CROS_A_smooth <- fn_CROS_A_smooth(SROS, pCFO, CROS_A)
-    SROS_out      <- fn_SROS_out(pCFO, smooth_CFO, CF_thresh, SROS_smooth, SROS)
-    CROS_P_out    <- fn_CROS_P_out(
-      pCFO,
-      CAC,
-      smooth_CFO,
-      CF_thresh,
-      CROS_P_smooth,
-      CROS_P
-    )
-    CROS_A_out    <- fn_CROS_A_out(
-      pCFO,
-      CAC,
-      smooth_CFO,
-      CF_thresh,
-      CROS_P,
-      CROS_A_smooth,
-      CROS_A
-    )
-    ROS_AIO       <- c(SROS_out, CROS_P_out, CROS_A_out)
-    # Prepare output data
-    results <- list(
-      "mcFFMC" = round(mcFFMC, 2),
-      "mcsa" = round(mcsa, 2),
-      "Wind Speed (km/h)" = ws_seq,
-      "Crown Fire Occurrence Probability (pCFO)" = round(pCFO, 2)
-    )
-    if ("SROS" %in% ROS_output) {
-      results[["Surface Fire Rate of Spread (m/min)"]] = round(SROS, 2)
-    }
-    if ("CROS_P" %in% ROS_output) {
-      results[["Crown Fire (Passive) Rate of Spread (m/min)"]] =
-        round(CROS_P, 2)
-    }
-    if ("CROS_A" %in% ROS_output) {
-      results[["Crown Fire (Active) Rate of Spread (m/min)"]] =
-        round(CROS_A, 2)
-    }
-    if ("integrated" %in% ROS_output) {
-      results[["Integrated Rate of Spread (m/min)"]] = round(ROS_AIO, 2)
-    }
-    if (length(SROS_out) > 0 & length(CROS_P_out > 0)) {
-      results[["Crown Fire (Passive) Wind Speed Threshold (km/h)"]] =
-        ws_seq[length(SROS_out) + 1]
-    }
-    if (
-      (length(SROS_out) > 0 | length(CROS_P_out > 0)) & length(CROS_A_out) > 0
+
+  # Loop through scenarios and do calculations
+  for (i in 1:n) {
+    # Assign scenario values, including defaults
+    FFMC_val <- FFMC[[i]]
+    FSG_val <- FSG[[i]]
+    SFC_val <- SFC[[i]]
+    CBD_val <- CBD[[i]]
+    DMC_val <- DMC[[i]]
+    season_val <- season[[i]]
+    density_val <- density[[i]]
+    stand_val <- stand[[i]]
+    mc_type <- if (
+      is.na(DMC_val) ||
+      is.na(season_val) ||
+      is.na(density_val) ||
+      is.na(stand_val)
     ) {
-      results[["Crown Fire (Active) Wind Speed Threshold (km/h)"]] =
-        ws_seq[length(ws_seq) - length(CROS_A_out) + 1]
+      "mcF"
+    } else {
+      "mcsa"
     }
-    if (!is.na(CF_CI[1]) & length(ws_seq) > 1) {
-      results[["Crown Fire Wind Speed Threshold Lower Bound (km/h)"]] = CF_CI[1]
+    smooth_CFO_val <- if (is.na(smooth_CFO[[i]])) FALSE else smooth_CFO[[i]]
+    ID_val <- ID[[i]]
+    CF_thresh_val <- if (is.na(CF_thresh[[i]])) 0.5 else CF_thresh[[i]]
+    model_mcsa_val <- if (is.na(model_mcsa[[i]])) {
+      "corrected"
+    } else {
+      model_mcsa[[i]]
     }
-    if (!is.na(CF_CI[2]) & length(ws_seq) > 1) {
-      results[["Crown Fire Wind Speed Threshold Upper Bound (km/h)"]] = CF_CI[2]
+    model_pCFO_val <- if (is.na(model_pCFO[[i]])) {
+      if (mc_type == "mcF") 10L else if (mc_type == "mcsa") 11L
+    } else {
+      model_pCFO[[i]]
     }
-    out[[i]] <- results
+    model_sROS_val <- if (is.na(model_sROS[[i]])) {
+      if (mc_type == "mcF") 12L else if (mc_type == "mcsa") 13L
+    } else {
+      model_sROS[[i]]
+    }
+    model_cROS_val <- if (is.na(model_cROS[[i]])) 1L else model_cROS[[i]]
+
+    # Do calculations
+    mcFFMC_val <- mcFFMC(FFMC = FFMC_val)
+    if (mc_type == "mcF") {
+      mcDMC_val <- NA
+      mcsa_idx_val <- NA
+      mcsa_val <- NA
+      mc_val <- mcFFMC_val
+    } else if (mc_type == "mcsa") {
+      mcDMC_val <- mcDMC(DMC = DMC_val)
+      mcsa_idx_val <- mcsa_idx(
+        FFMC = FFMC_val,
+        season = season_val,
+        density = density_val,
+        stand = stand_val,
+        model_mcsa = model_mcsa_val
+      )
+      mcsa_val <- mcsa(
+        idx = mcsa_idx_val,
+        mcFFMC = mcFFMC_val,
+        mcDMC = mcDMC_val,
+        coefs = coefs_mcsa
+      )
+      mc_val <- mcsa_val
+    }
+    pCFO_val <- pCFO(
+      WS10 = WS10,
+      mc = mc_val,
+      FSG = FSG_val,
+      SFC = SFC_val,
+      model_pCFO = model_pCFO_val,
+      coefs = coefs_pCFO
+    )
+    surface_fire <- pCFO_val < CF_thresh_val
+    sROS_val <- sROS(
+      WS10 = WS10,
+      mc = mc_val,
+      SFC = SFC_val,
+      model_sROS_val
+    )
+    crown_fire <- pCFO_val >= CF_thresh_val
+    cROS_A_val <- cROS_A(
+      WS10 = WS10,
+      mc = mc_val,
+      CBD = CBD_val,
+      model_cROS = model_cROS_val
+    )
+    CAC_val <- CAC(
+      cROS_A = cROS_A_val,
+      CBD = CBD_val
+    )
+    passive_crowning <- pCFO_val >= CF_thresh_val & CAC_val < 1
+    active_crowning <- pCFO_val >= CF_thresh_val & CAC_val >= 1
+    cROS_P_val <- if (any(passive_crowning)) {
+      cROS_P(
+        cROS_A = cROS_A_val,
+        CAC = CAC_val
+      )
+    } else {
+      NA
+    }
+    cROS_P_thresh <- if (any(passive_crowning)) {
+      WS10[match(TRUE, passive_crowning)]
+    } else {
+      NA
+    }
+    cROS_A_thresh <- if (any(active_crowning)) {
+      WS10[match(TRUE, active_crowning)]
+    } else {
+      NA
+    }
+    ROS_smooth_val <- if (isTRUE(smooth_CFO_val)) {
+      ROS_smooth(
+        pCFO = pCFO_val,
+        passive_crowning = passive_crowning,
+        sROS = sROS_val,
+        cROS_P = cROS_P_val,
+        cROS_A = cROS_A_val
+      )
+    } else {
+      NA
+    }
+    if (isTRUE(smooth_CFO_val)) {
+      sROS_out <- ROS_smooth_val[surface_fire]
+      if (any(passive_crowning)) {
+        cROS_P_out <- ROS_smooth_val[passive_crowning]
+        cROS_A_out <- cROS_A_val[active_crowning]
+      } else {
+        cROS_P_out <- NULL
+        cROS_A_out <- ROS_smooth_val[active_crowning]
+      }
+    } else {
+      sROS_out <- sROS_val[surface_fire]
+      cROS_P_out <- cROS_P_val[passive_crowning]
+      cROS_A_out <- cROS_A_val[active_crowning]
+    }
+    iROS_out <- c(sROS_out, cROS_P_out, cROS_A_out)
+
+    # Add list of results to output list
+    out[[as.character(ID_val)]] <- list(
+      "mcFFMC (%)" = round(mcFFMC_val, 1),
+      "mcsa (%)" = round(mcsa_val, 1),
+      "WS10 (km/h)" = WS10,
+      "Crown Fire Occurrence Probability" = round(pCFO_val, 2),
+      "Passive Crown Fire WS10 Threshold (km/h)" = cROS_P_thresh,
+      "Active Crown Fire WS10 Threshold (km/h)" = cROS_A_thresh,
+      "Composite Rate of Spread (m/min)" = round(iROS_out, 1)
+    )
+
     # Prepare plotting data
     if (!is.null(plot)) {
-      ggdata_pCFO          <- fn_prep_ggdata(ID, ws_seq, pCFO)
-      ggdata_SROS          <- fn_prep_ggdata(ID, ws_seq, SROS)
-      ggdata_CROS_A        <- fn_prep_ggdata(ID, ws_seq, CROS_A)
-      ggdata_CAC           <- fn_prep_ggdata(ID, ws_seq, CAC)
-      ggdata_CROS_P        <- fn_prep_ggdata(ID, ws_seq, CROS_P)
-      ggdata_SROS_smooth   <- fn_prep_ggdata(ID, ws_seq, SROS_smooth)
-      ggdata_CROS_P_smooth <- fn_prep_ggdata(ID, ws_seq, CROS_P_smooth)
-      ggdata_CROS_A_smooth <- fn_prep_ggdata(ID, ws_seq, CROS_A_smooth)
-      ggdata_SROS_out      <- fn_prep_ggdata(
-        ID,
-        ws_seq[which(pCFO < CF_thresh)],
-        SROS_out
-      )
-      ggdata_CROS_P_out    <- fn_prep_ggdata(
-        ID,
-        ws_seq[which(pCFO >= CF_thresh & CAC < 1)],
-        CROS_P_out
-      )
-      ggdata_CROS_A_out    <- fn_prep_ggdata(
-        ID,
-        ws_seq[which(pCFO >= CF_thresh & CAC > 1)],
-        CROS_A_out
-      )
-      ggdata_CF_CI         <- if (!NA %in% CF_CI) {
-        data.frame(
-          ID  = rep(ID, times = 2),
-          var = rep("CF_CI", times = 2),
-          ws  = CF_CI,
-          val = if (length(CROS_P_out) > 0) {
-            rep(CROS_P_out[1], times = 2)
-          } else if (length(CROS_A_out) > 0) {
-            rep(CROS_A_out[1], times = 2)
-          } else NULL
+      if ("pCFO" %in% plot) {
+        ggdata_pCFO <- prep_ggdata(
+          ID = ID_val,
+          name = "pCFO",
+          WS10 = WS10,
+          data = pCFO_val
         )
+
+        ggdata <- rbind(ggdata, ggdata_pCFO)
       }
-      ggdata_ROS_AIO       <- fn_prep_ggdata(ID, ws_seq, ROS_AIO)
-      ggdata_SROS_CROS_P   <- if (
-        length(SROS_out) > 0 & length(CROS_P_out) > 0
-      ) {
-        data.frame(
-          ID  = rep(ID, times = 2),
-          var = rep("SROS_CROS_P", times = 2),
-          ws  = ws_seq[c(length(SROS_out), length(SROS_out) + 1)],
-          val = c(max(SROS_out), min(CROS_P_out))
+
+      if ("CAC" %in% plot) {
+        ggdata_CAC <- prep_ggdata(
+          ID = ID_val,
+          name = "CAC",
+          WS10 = WS10,
+          data = CAC_val
         )
-      } else {
-        NULL
+
+        ggdata <- rbind(ggdata, ggdata_CAC)
       }
-      ggdata_SROS_CROS_A   <- if (
-        length(SROS_out) > 0 & length(CROS_A_out) > 0 & length(CROS_P_out) == 0
-      ) {
-        data.frame(
-          ID  = rep(ID, times = 2),
-          var = rep("SROS_CROS_A", times = 2),
-          ws  = ws_seq[c(length(SROS_out), length(SROS_out) + 1)],
-          val = c(max(SROS_out), min(CROS_A_out))
+
+      if ("ROS" %in% plot) {
+        ggdata_sROS <- prep_ggdata(
+          ID = ID_val,
+          name = "sROS",
+          WS10 = WS10[surface_fire],
+          data = sROS_out
         )
-      } else {
-        NULL
-      }
-      ggdata_CROS_P_CROS_A <- if (
-        length(CROS_P_out) > 0 & length(CROS_A_out) > 0
-      ) {
-        data.frame(
-          ID  = rep(ID, times = 2),
-          var = rep("CROS_P_CROS_A", times = 2),
-          ws  = ws_seq[c(
-            length(ws_seq) - length(CROS_A_out),
-            length(ws_seq) - length(CROS_A_out) + 1
-          )],
-          val = c(max(CROS_P_out), min(CROS_A_out))
+        ggdata_cROS_P <- prep_ggdata(
+          ID = ID_val,
+          name = "cROS_P",
+          WS10 = WS10[passive_crowning],
+          data = cROS_P_out
         )
-      } else {
-        NULL
-      }
-      ggdata_cf_pt_scp  <- if (
-        length(SROS_out) > 0 & length(CROS_P_out) > 0
-      ) {
-        data.frame(
-          ID  = ID,
-          var = "cf_pt_scp",
-          ws  = ggdata_SROS_CROS_P[2, 3],
-          val = ggdata_SROS_CROS_P[2, 4]
+        ggdata_cROS_A <- prep_ggdata(
+          ID = ID_val,
+          name = "cROS_A",
+          WS10 = WS10[active_crowning],
+          data = cROS_A_out
         )
-      } else {
-        NULL
-      }
-      ggdata_cf_pt_sca  <- if (
-        length(SROS_out) > 0 & length(CROS_A_out) > 0 & length(CROS_P_out) == 0
-      ) {
-        data.frame(
-          ID  = ID,
-          var = "cf_pt_sca",
-          ws  = ggdata_SROS_CROS_A[2, 3],
-          val = ggdata_SROS_CROS_A[2, 4]
+        # sROS to cROS_P transition
+        if (any(surface_fire) && any(passive_crowning)) {
+          ggdata_sROS_cROS_P <- data.frame(
+            ID = c(ID_val, ID_val),
+            name = rep("sROS_cROS_P", times = 2),
+            WS10 = WS10[c(
+              max(which(surface_fire)),
+              min(which(passive_crowning))
+            )],
+            val = c(max(sROS_out), min(cROS_P_out))
+          )
+          ggdata_cf_pt_scp <- data.frame(
+            ID = ID_val,
+            name = "cf_pt_scp",
+            WS10 = WS10[min(which(passive_crowning))],
+            val = cROS_P_out[[1]]
+          )
+        } else {
+          ggdata_sROS_cROS_P <- NULL
+          ggdata_cf_pt_scp <- NULL
+        }
+        # sROS to cROS_A transition
+        if (
+          any(surface_fire) &&
+          any(active_crowning) &&
+          !any(passive_crowning)
+        ) {
+          ggdata_sROS_cROS_A <- data.frame(
+            ID = c(ID_val, ID_val),
+            name = rep("sROS_cROS_A", times = 2),
+            WS10 = WS10[c(
+              max(which(surface_fire)),
+              min(which(active_crowning))
+            )],
+            val = c(max(sROS_out), min(cROS_A_out))
+          )
+          ggdata_cf_pt_sca <- data.frame(
+            ID = ID_val,
+            name = "cf_pt_sca",
+            WS10 = WS10[min(which(active_crowning))],
+            val = cROS_A_out[[1]]
+          )
+        } else {
+          ggdata_sROS_cROS_A <- NULL
+          ggdata_cf_pt_sca <- NULL
+        }
+        # cROS_P to cROS_A transition
+        if (any(passive_crowning) && any(active_crowning)) {
+          ggdata_cROS_P_cROS_A <- data.frame(
+            ID = c(ID_val, ID_val),
+            name = rep("cROS_P_cROS_A", times = 2),
+            WS10 = WS10[c(
+              max(which(passive_crowning)),
+              min(which(active_crowning))
+            )],
+            val = c(max(cROS_P_out), min(cROS_A_out))
+          )
+          ggdata_cf_pt_cpca <- data.frame(
+            ID = ID_val,
+            name = "cf_pt_cpca",
+            WS10 = WS10[min(which(active_crowning))],
+            val = cROS_A_out[[1]]
+          )
+        } else {
+          ggdata_cROS_P_cROS_A <- NULL
+          ggdata_cf_pt_cpca <- NULL
+        }
+
+        ggdata <- rbind(
+          ggdata,
+          ggdata_sROS,
+          ggdata_cROS_P,
+          ggdata_cROS_A,
+          ggdata_sROS_cROS_P,
+          ggdata_cf_pt_scp,
+          ggdata_sROS_cROS_A,
+          ggdata_cf_pt_sca,
+          ggdata_cROS_P_cROS_A,
+          ggdata_cf_pt_cpca
         )
-      } else {
-        NULL
+
       }
-      ggdata_cf_pt_cpca <- if (
-        length(CROS_P_out) > 0 & length(CROS_A_out) > 0
-      ) {
-        data.frame(
-          ID  = ID,
-          var = "cf_pt_cpca",
-          ws  = ggdata_CROS_P_CROS_A[2, 3],
-          val = ggdata_CROS_P_CROS_A[2, 4]
-        )
-      } else {
-        NULL
-      }
-      ggdata <- rbind(
-        ggdata,
-        ggdata_pCFO,
-        ggdata_SROS,
-        ggdata_CROS_A,
-        ggdata_CAC,
-        ggdata_CROS_P,
-        ggdata_SROS_smooth,
-        ggdata_CROS_P_smooth,
-        ggdata_CROS_A_smooth,
-        ggdata_SROS_out,
-        ggdata_CROS_P_out,
-        ggdata_CROS_A_out,
-        ggdata_CF_CI,
-        ggdata_ROS_AIO,
-        ggdata_SROS_CROS_P,
-        ggdata_SROS_CROS_A,
-        ggdata_CROS_P_CROS_A,
-        ggdata_cf_pt_scp,
-        ggdata_cf_pt_sca,
-        ggdata_cf_pt_cpca
-      )
     }
   }
+
   # Plotting
-  if ("pCFO" %in% plot) {
-    fig_pCFO <- fn_plot(
-      ggdata,
-      "pCFO",
-      "Wind Speed [km/h]",
-      "Probability of Crown Fire Occurrence [0-1]"
-    )
-    print(fig_pCFO)
+  if (!is.null(plot)) {
+    if ("pCFO" %in% plot) {
+      fig_pCFO <- plot_ggdata(
+        data = ggdata,
+        var = "pCFO",
+        xlab = "Wind Speed (km/h)",
+        ylab = "Crown Fire Occurrence Probability"
+      )
+
+      print(fig_pCFO)
+    }
+
+    if ("CAC" %in% plot) {
+      fig_CAC <- plot_ggdata(
+        data = ggdata,
+        var = "CAC",
+        xlab = "Wind Speed (km/h)",
+        ylab = "Criterion for Active Crowning"
+      )
+
+      print(fig_CAC)
+    }
+
+    if ("ROS" %in% plot) {
+      fig_ROS <- ggplot() +
+        # sROS
+        geom_line(
+          data = subset(ggdata, name == "sROS"),
+          mapping = aes(WS10, val, color = ID),
+          linewidth = 1.5
+        ) +
+        # cROS_P
+        geom_line(
+          data = subset(ggdata, name == "cROS_P"),
+          mapping = aes(WS10, val, color = ID),
+          linewidth = 1.5
+        ) +
+        # cROS_A
+        geom_line(
+          data = subset(ggdata, name == "cROS_A"),
+          mapping = aes(WS10, val, color = ID),
+          linewidth = 1.5
+        ) +
+        # Transition lines
+        geom_line(
+          data = subset(ggdata, name == "sROS_cROS_P"),
+          mapping = aes(WS10, val, color = ID),
+          linewidth = 1.5,
+          linetype = "dotted"
+        ) +
+        geom_line(
+          data = subset(ggdata, name == "sROS_cROS_A"),
+          mapping = aes(WS10, val, color = ID),
+          linewidth = 1.5,
+          linetype = "dotted"
+        ) +
+        geom_line(
+          data = subset(ggdata, name == "cROS_P_cROS_A"),
+          mapping = aes(WS10, val, color = ID),
+          linewidth = 1.5,
+          linetype = "dotted"
+        ) +
+        # Transition points
+        geom_point(
+          data = subset(ggdata, name == "cf_pt_scp"),
+          mapping = aes(WS10, val, color = ID),
+          shape = 16,
+          size = 4
+        ) +
+        geom_point(
+          data = subset(ggdata, name == "cf_pt_sca"),
+          mapping = aes(WS10, val, color = ID),
+          shape = 15,
+          size = 4
+        ) +
+        geom_point(
+          data = subset(ggdata, name == "cf_pt_cpca"),
+          mapping = aes(WS10, val, color = ID),
+          shape = 15,
+          size = 4
+        ) +
+        labs(color = "Scenario") +
+        xlab("Wind Speed (km/h)") +
+        ylab("Equilibrium Rate of Spread (m/min)") +
+        scale_color_viridis_d()
+
+      print(fig_ROS)
+    }
   }
-  if ("SROS" %in% plot) {
-    fig_SROS <- fn_plot(
-      ggdata,
-      "SROS",
-      "Wind Speed [km/h]",
-      "Equilibrium Surface Fire Rate of Spread [m/min]"
-    )
-    print(fig_SROS)
-  }
-  if ("CROS_A" %in% plot) {
-    fig_CROS_A <- fn_plot(
-      ggdata,
-      "CROS_A",
-      "Wind Speed [km/h]",
-      "Equilibrium Active Crown Fire Rate of Spread [m/min]"
-    )
-    print(fig_CROS_A)
-  }
-  if ("CAC" %in% plot) {
-    fig_CAC <- fn_plot(
-      ggdata,
-      "CAC",
-      "Wind Speed [km/h]",
-      "Criterion for Active Crowning [0-1]"
-    )
-    print(fig_CAC)
-  }
-  if ("CROS_P" %in% plot) {
-    fig_CROS_P <- fn_plot(
-      ggdata,
-      "CROS_P",
-      "Wind Speed [km/h]",
-      "Equilibrium Passive Crown Fire Rate of Spread [m/min]"
-    )
-    print(fig_CROS_P)
-  }
-  if ("SROS_smooth" %in% plot) {
-    fig_SROS_smooth <- fn_plot(
-      ggdata,
-      "SROS_smooth",
-      "Wind Speed [km/h]",
-      "SROS_smooth"
-    )
-    print(fig_SROS_smooth)
-  }
-  if ("CROS_P_smooth" %in% plot) {
-    fig_CROS_P_smooth <- fn_plot(
-      ggdata,
-      "CROS_P_smooth",
-      "Wind Speed [km/h]",
-      "CROS_P_smooth"
-    )
-    print(fig_CROS_P_smooth)
-  }
-  if ("CROS_A_smooth" %in% plot) {
-    fig_CROS_A_smooth <- fn_plot(
-      ggdata,
-      "CROS_A_smooth",
-      "Wind Speed [km/h]",
-      "CROS_A_smooth"
-    )
-    print(fig_CROS_A_smooth)
-  }
-  if ("ROS_AIO" %in% plot) {
-    fig_ROS_AIO <- fn_plot(
-      ggdata,
-      "ROS_AIO",
-      "Wind Speed [km/h]",
-      "Equilibrium Rate of Spread [m/min]"
-    )
-    print(fig_ROS_AIO)
-  }
-  # Main ROS plot
-  if ("ROS_integrated" %in% plot) {
-    fig_ROS_integrated <- ggplot() +
-      # SROS
-      geom_line(
-        data = subset(ggdata, var == "SROS_out"),
-        mapping = aes(ws, val, color = ID),
-        linewidth = 1.5
-      ) +
-      # CROSp
-      geom_line(
-        data = subset(ggdata, var == "CROS_P_out"),
-        mapping = aes(ws, val, color = ID),
-        linewidth = 1.5
-      ) +
-      # CROSa
-      geom_line(
-        data = subset(ggdata, var == "CROS_A_out"),
-        mapping = aes(ws, val, color = ID),
-        linewidth = 1.5
-      ) +
-      # Transition lines
-      geom_line(
-        data = subset(ggdata, var == "SROS_CROS_P"),
-        mapping = aes(ws, val, color = ID),
-        linewidth = 1.5,
-        linetype = "dotted"
-      ) +
-      geom_line(
-        data = subset(ggdata, var == "SROS_CROS_A"),
-        mapping = aes(ws, val, color = ID),
-        linewidth = 1.5,
-        linetype = "dotted"
-      ) +
-      geom_line(
-        data = subset(ggdata, var == "CROS_P_CROS_A"),
-        mapping = aes(ws, val, color = ID),
-        linewidth = 1.5,
-        linetype = "dotted"
-      ) +
-      # CF confidence intervals
-      geom_line(
-        data = subset(ggdata, var == "CF_CI"),
-        mapping = aes(ws, val, color = ID),
-        linewidth = 1,
-        alpha = 0.5
-      ) +
-      # Transition points
-      # Crown fire point SROS CROS_P
-      geom_point(
-        data = subset(ggdata, var == "cf_pt_scp"),
-        mapping = aes(ws, val, color = ID),
-        shape = 16,
-        size = 4
-      ) +
-      # Crown fire point SROS CROS_A
-      geom_point(
-        data = subset(ggdata, var == "cf_pt_sca"),
-        mapping = aes(ws, val, color = ID),
-        shape = 15,
-        size = 4
-      ) +
-      # Crown fire point CROS_P CROS_A
-      geom_point(
-        data = subset(ggdata, var == "cf_pt_cpca"),
-        mapping = aes(ws, val, color = ID),
-        shape = 15,
-        size = 4
-      ) +
-      # scale_x_continuous(breaks = seq(0, 60, 5), limits = c(0, 60)) +
-      # scale_y_continuous(breaks = seq(0, 120, 10), limits = c(0, 110)) +
-      labs(color = "Scenario") +
-      xlab("Wind Speed [km/h]") +
-      ylab("Equilibrium Rate of Spread [m/min]") +
-      scale_color_viridis_d()
-    print(fig_ROS_integrated)
-  }
-  # Output
-  names(out) <- input$id
+
   return(out)
-}
-
-# Internal functions ----
-
-# __Confidence intervals
-fn_CF_CI <- function(ws_seq, pCFO, CI = 90) {
-  lower <- if (any(pCFO > (0.5 - (CI / 200)))) {
-    ws_seq[min(which(pCFO > (0.5 - (CI / 200))))]
-  } else {
-    NA
-  }
-  upper <- if (any(pCFO > (0.5 + (CI / 200)))) {
-    ws_seq[min(which(pCFO > (0.5 + (CI / 200))))]
-  } else {
-    NA
-  }
-  out   <- c(lower, upper)
-  return(out)
-}
-
-
-# __Final outputs ----
-# Output SROS when p(CFO) < CF_thresh
-fn_SROS_out <- function(pCFO, smooth_CFO, CF_thresh, SROS_smooth, SROS) {
-  ROS <- if (isTRUE(smooth_CFO)) {
-    SROS_smooth[which(pCFO < CF_thresh)]
-  } else {
-    SROS[which(pCFO < CF_thresh)]
-  }
-  return(ROS)
-}
-# Output CROS_P when p(CFO) >= CF_thresh and CAC < 1
-fn_CROS_P_out <- function(
-    pCFO,
-    CAC,
-    smooth_CFO,
-    CF_thresh,
-    CROS_P_smooth,
-    CROS_P
-) {
-  ROS <- if (isTRUE(smooth_CFO)) {
-    CROS_P_smooth[which(pCFO >= CF_thresh & CAC < 1)]
-  } else {
-    CROS_P[which(pCFO >= CF_thresh & CAC < 1)]
-  }
-  return(ROS)
-}
-# Output CROS_A if p(CFO) >= CF_thresh and CAC > 1
-fn_CROS_A_out <- function(
-    pCFO,
-    CAC,
-    smooth_CFO,
-    CF_thresh,
-    CROS_P,
-    CROS_A_smooth,
-    CROS_A
-) {
-  ROS <- if (
-    isTRUE(smooth_CFO) & sum(CROS_P[which(pCFO >= CF_thresh & CAC < 1)]) == 0
-  ) {
-    CROS_A_smooth[which(pCFO >= CF_thresh & CAC > 1)]
-  } else {
-    CROS_A[which(pCFO >= CF_thresh & CAC > 1)]
-  }
-  return(ROS)
 }

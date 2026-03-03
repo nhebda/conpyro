@@ -2,8 +2,8 @@
 #'
 #' @keywords internal
 #' @importFrom checkmate assert assert_character assert_choice assert_integerish
-#'   assert_number assert_numeric check_character check_numeric
-#'
+#'   assert_logical assert_number assert_numeric assert_subset check_character
+#'   check_numeric makeAssertCollection reportAssertions
 #'
 validate_input <- function(...) {
   input <- list(...)
@@ -124,6 +124,14 @@ validate_input <- function(...) {
     },
 
     # Optional, with defaults
+    "smooth_CFO" = function(name, coll) {
+      assert_logical(
+        name,
+        null.ok = TRUE,
+        .var.name = "smooth_CFO",
+        add = coll
+      )
+    },
     "ID" = function(name, coll) {
       assert(
         check_character(
@@ -138,14 +146,6 @@ validate_input <- function(...) {
         ),
         combine = "or",
         .var.name = "ID",
-        add = coll
-      )
-    },
-    "smooth_CFO" = function(name, coll) {
-      assert_logical(
-        name,
-        null.ok = TRUE,
-        .var.name = "smooth_CFO",
         add = coll
       )
     },

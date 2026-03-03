@@ -7,8 +7,8 @@
 t_mcF(FFMC)
 }
 \arguments{
-\item{FFMC}{A numeric value in \verb{[80, 99]}. The Fine Fuel Moisture Code (FFMC)
-as per the Canadian Forest Fire Weather Index (FWI) System.}
+\item{FFMC}{Required. A single numeric value in \verb{[80, 99]}. The Fine Fuel
+Moisture Code as per the Canadian Fire Weather Index System.}
 }
 \value{
 A numeric value representing fine dead litter moisture content in
@@ -16,8 +16,7 @@ percent.
 }
 \description{
 \code{t_mcF()} estimates fine dead surface litter moisture content based on the
-Fine Fuel Moisture Code (FFMC) of the Canadian Fire Weather Index (FWI)
-system.
+Fine Fuel Moisture Code (FFMC) of the Canadian Fire Weather Index System.
 }
 \examples{
 # Moist

@@ -3,6 +3,7 @@
 #' Collect a named list of arguments from a parent function, including dots
 #'
 #' @keywords internal
+#' @importFrom checkmate assert_choice assert_data_frame
 #'
 introspect_args <- function(
     .env = parent.frame(),
