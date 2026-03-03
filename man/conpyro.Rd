@@ -6,10 +6,10 @@
 and rate of spread (ROS) for one or more scenarios}
 \usage{
 conpyro(
-  input,
-  ws = c(0, 40),
-  FFMC = 91,
-  DMC = 70,
+  data,
+  WS10 = NULL,
+  FFMC = NULL,
+  DMC = NULL,
   model_mcsa = "corrected",
   smooth_CFO = FALSE,
   CF_thresh = 0.5,
@@ -19,6 +19,48 @@ conpyro(
 )
 }
 \arguments{
+\item{FFMC}{A numeric value in \verb{[80, 99]}. The Fine Fuel Moisture Code (FFMC)
+as per the Canadian Forest Fire Weather Index (FWI) System.}
+
+\item{DMC}{A numeric value in \verb{[5, 250]}. The Duff Moisture Code (DMC) as per
+the Canadian Forest Fire Weather Index (FWI) System.}
+
+\item{model_mcsa}{One of \verb{\{"original", "corrected"\}}. Defines whether the
+mcsa calculation uses the original version as per Wotton & Beverly (2007)
+or the updated version from Perrakis et al. (2023), which corrects certain
+illogical behaviours at high FFMC levels. Specifically, when \code{model_mcsa = "corrected"}, if \code{FFMC > 92.93} and \code{density = "dense"}, the density class
+will be adjusted to \code{"moderate"}. Similarly, if \code{FFMC > 96.15} and \code{density = "light"}, the density class will be adjusted to \code{"moderate"}. See
+Perrakis et al. (2023) Supplementary Material for details.}
+
+\item{smooth_CFO}{Defines whether crown fire initiation is modeled as a
+smooth transition (\code{TRUE}) or an instantaneous occurrence (\code{FALSE}).}
+
+\item{CF_thresh}{A numeric value in \verb{[0, 1]}. Defines the pCFO threshold at
+which crown fire occurs.}
+
+\item{ROS_output}{A character vector to control ROS output. Choose any of the
+following:
+\itemize{
+\item \code{SROS}: Surface fire rate of spread.
+\item \code{CROS_P}: Passive crown fire rate of spread.
+\item \code{CROS_A}: Active crown fire rate of spread.
+\item \code{integrated}: Complete composite rate of spread.
+}}
+
+\item{plot}{A character vector to control plotting of output. Choose any of
+the following:
+\itemize{
+\item \code{pCFO}: Crown fire occurrence probability.
+\item \code{SROS}: Surface fire rate of spread.
+\item \code{CROS_P}: Passive crown fire rate of spread.
+\item \code{CROS_A}: Active crown fire rate of spread.
+\item \code{CAC}: Criterion for active crowning.
+\item \code{ROS_integrated}: Complete composite rate of spread plot with crowning
+thresholds.
+}}
+
+\item{...}{Additional arguments to be passed to nested functions.}
+
 \item{input}{A data frame of least \code{7} columns and \code{1} row. Each row defines
 a ConPyro prediction for a single set of fuel and fire weather conditions
 (a \emph{scenario}). Inputs are case-insensitive and columns may be in any
@@ -87,48 +129,6 @@ calculations.
 \verb{[0, 60]}. The first value defines the minimum wind speed and the second
 defines the maximum, in km/h. Calculations are carried out on the sequence
 of integer values from the minimum to the maximum, inclusive.}
-
-\item{FFMC}{A numeric value in \verb{[80, 99]}. The Fine Fuel Moisture Code (FFMC)
-as per the Canadian Forest Fire Weather Index (FWI) System.}
-
-\item{DMC}{A numeric value in \verb{[5, 250]}. The Duff Moisture Code (DMC) as per
-the Canadian Forest Fire Weather Index (FWI) System.}
-
-\item{model_mcsa}{One of \verb{\{"original", "corrected"\}}. Defines whether the
-mcsa calculation uses the original version as per Wotton & Beverly (2007)
-or the updated version from Perrakis et al. (2023), which corrects certain
-illogical behaviours at high FFMC levels. Specifically, when \code{model_mcsa = "corrected"}, if \code{FFMC > 92.93} and \code{density = "dense"}, the density class
-will be adjusted to \code{"moderate"}. Similarly, if \code{FFMC > 96.15} and \code{density = "light"}, the density class will be adjusted to \code{"moderate"}. See
-Perrakis et al. (2023) Supplementary Material for details.}
-
-\item{smooth_CFO}{Defines whether crown fire initiation is modeled as a
-smooth transition (\code{TRUE}) or an instantaneous occurrence (\code{FALSE}).}
-
-\item{CF_thresh}{A numeric value in \verb{[0, 1]}. Defines the pCFO threshold at
-which crown fire occurs.}
-
-\item{ROS_output}{A character vector to control ROS output. Choose any of the
-following:
-\itemize{
-\item \code{SROS}: Surface fire rate of spread.
-\item \code{CROS_P}: Passive crown fire rate of spread.
-\item \code{CROS_A}: Active crown fire rate of spread.
-\item \code{integrated}: Complete composite rate of spread.
-}}
-
-\item{plot}{A character vector to control plotting of output. Choose any of
-the following:
-\itemize{
-\item \code{pCFO}: Crown fire occurrence probability.
-\item \code{SROS}: Surface fire rate of spread.
-\item \code{CROS_P}: Passive crown fire rate of spread.
-\item \code{CROS_A}: Active crown fire rate of spread.
-\item \code{CAC}: Criterion for active crowning.
-\item \code{ROS_integrated}: Complete composite rate of spread plot with crowning
-thresholds.
-}}
-
-\item{...}{Additional arguments to be passed to nested functions.}
 }
 \value{
 A list of lists, with each sub-list containing outputs for a single

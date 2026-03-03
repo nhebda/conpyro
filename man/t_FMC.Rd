@@ -4,7 +4,7 @@
 \alias{t_FMC}
 \title{Estimate foliar moisture content (FMC)}
 \usage{
-t_FMC(LAT = 48, LONG = 83.3, ELV = NA, Dj = 200)
+t_FMC(LAT, LONG, ELV = NA, Dj)
 }
 \arguments{
 \item{LAT}{A numeric value in \verb{[41, 70]}. Latitude in decimal degrees.}

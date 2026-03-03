@@ -4,7 +4,7 @@
 \alias{t_mcsa}
 \title{Estimate stand-adjusted fine dead litter moisture content}
 \usage{
-t_mcsa(FFMC, DMC, season, density, stand, model_mcsa = "corrected")
+t_mcsa(FFMC, DMC, season, density, stand, ...)
 }
 \arguments{
 \item{FFMC}{A numeric value in \verb{[80, 99]}. The Fine Fuel Moisture Code (FFMC)
@@ -21,12 +21,7 @@ equivalents \verb{\{1, 1.5, 2, 3\}}. See \code{\link[=t_mcSeason]{t_mcSeason()}}
 
 \item{stand}{One of \verb{\{"pine", "spruce", "Douglas-fir", "deciduous", "mixedwood"\}} or abbreviated equivalents \verb{\{"p", "s", "df", "d", "m"\}}.}
 
-\item{model_mcsa}{One of \verb{\{"original", "corrected"\}}. Defines whether the
-mcsa calculation uses the original version as per Wotton & Beverly (2007)
-or the updated version from Perrakis et al. (2023), which corrects certain
-illogical behaviours at high FFMC levels. Specifically, when \code{model_mcsa = "corrected"}, if \code{FFMC > 92.93} and \code{density = "dense"}, the density class
-will be adjusted to \code{"moderate"}. Similarly, if \code{FFMC > 96.15} and \code{density = "light"}, the density class will be adjusted to \code{"moderate"}. See
-Perrakis et al. (2023) Supplementary Material for details.}
+\item{...}{Additional arguments to be passed to nested functions.}
 }
 \value{
 A numeric value representing fine dead litter moisture content in
@@ -38,12 +33,12 @@ stand-adjusted model (mcsa).
 }
 \examples{
 # Moist
-t_mcsa(80, 20, 1, 3, "s")
+t_mcsa(FFMC = 80, DMC = 20, season = 1, density = 3, stand = "s")
 # Moderate
-t_mcsa(84, 30, 1, 3, "p")
+t_mcsa(FFMC = 84, DMC = 30, season = 1, density = 3, stand = "p")
 # Dry
-t_mcsa(89, 40, 2, 2, "p")
+t_mcsa(FFMC = 89, DMC = 40, season = 2, density = 2, stand = "p")
 # Very dry
-t_mcsa(92, 60, 2, 1, "p")
+t_mcsa(FFMC = 92, DMC = 60, season = 2, density = 1, stand = "p")
 
 }

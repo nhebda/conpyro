@@ -5,7 +5,7 @@
 \title{Estimate surface fuel consumption (SFC) using the forest floor equation from
 De Groot et al. (2009)}
 \usage{
-t_SFC_deGroot(BUI = 85, FFL = 3.5, FWFL = 0.3)
+t_SFC_deGroot(BUI, FFL, FWFL)
 }
 \arguments{
 \item{BUI}{A numeric value in \verb{[80, 200]}. The Buildup Index (BUI) as per the

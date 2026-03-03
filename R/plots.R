@@ -6,21 +6,23 @@
 #'   scale_color_viridis_d
 #'
 prep_ggdata <- function(ID, name, WS10, data) {
-  data.frame(
+  out <- data.frame(
     ID = rep(as.character(ID), length.out = length(WS10)),
-    name = rep(deparse(substitute(name)), times = length(WS10)),
+    name = rep(name, times = length(WS10)),
     WS10 = WS10,
     val = data
   )
+
+  return(out)
 }
 
-fn_plot <- function(data, par, xlab, ylab) {
-  ## check for `ggplot2` and warn user if not installed
+plot_ggdata <- function(data, var, xlab, ylab) {
+  # Check for `ggplot2` and warn user if not installed
   if (requireNamespace("ggplot2", quietly = TRUE)) {
-    gginput <- subset(data, var == par)
+    gginput <- subset(data, name == var)
     p <- ggplot(
       gginput,
-      aes(ws, val, color = ID)
+      aes(WS10, val, color = ID)
     ) +
       geom_line(linewidth = 1.5) +
       labs(color = "Scenario") +

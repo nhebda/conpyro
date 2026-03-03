@@ -4,18 +4,11 @@
 \alias{t_FT}
 \title{Calculate fire type}
 \usage{
-t_FT(
-  mcsa = 10,
-  mcF = NULL,
-  FSG = 6,
-  SFC = 2,
-  CBD = 0.16,
-  ws = 12,
-  CF_thresh = 0.5,
-  ...
-)
+t_FT(WS10, mcsa = NULL, mcF = NULL, FSG, SFC, CBD, ...)
 }
 \arguments{
+\item{WS10}{A numeric value in \verb{[0, 60]}. Wind speed in km/h.}
+
 \item{mcsa}{A numeric value in \verb{[3, 20]}. Fine dead surface litter moisture
 content calculated using the stand-adjusted model (mcsa). May be estimated
 using \code{\link[=t_mcsa]{t_mcsa()}}. If \code{mcF} is anything other than \code{NULL}, it will override
@@ -34,11 +27,6 @@ mid-story ladder fuels.}
 May be estimated using \code{\link[=t_SFC_FBP]{t_SFC_FBP()}} or \code{\link[=t_SFC_deGroot]{t_SFC_deGroot()}}.}
 
 \item{CBD}{A numeric value in \verb{[0.01, 0.8]}. Crown bulk density in kg/m^3.}
-
-\item{ws}{A numeric value in \verb{[0, 60]}. Wind speed in km/h.}
-
-\item{CF_thresh}{A numeric value in \verb{[0, 1]}. Defines the pCFO threshold at
-which crown fire occurs.}
 
 \item{...}{Additional arguments to be passed to nested functions.}
 }

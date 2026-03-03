@@ -1,8 +1,9 @@
 #' Centralized input validation function
 #'
 #' @keywords internal
-#' @importFrom checkmate assert_number assert_numeric assert_choice
-#'   assert_integerish
+#' @importFrom checkmate assert assert_character assert_choice assert_integerish
+#'   assert_number assert_numeric check_character check_numeric
+#'
 #'
 validate_input <- function(...) {
   input <- list(...)
@@ -123,6 +124,23 @@ validate_input <- function(...) {
     },
 
     # Optional, with defaults
+    "ID" = function(name, coll) {
+      assert(
+        check_character(
+          name,
+          any.missing = FALSE,
+          unique = TRUE
+        ),
+        check_numeric(
+          name,
+          any.missing = FALSE,
+          unique = TRUE
+        ),
+        combine = "or",
+        .var.name = "ID",
+        add = coll
+      )
+    },
     "smooth_CFO" = function(name, coll) {
       assert_logical(
         name,
@@ -159,16 +177,16 @@ validate_input <- function(...) {
     },
     "model_sROS" = function(name, coll) {
       assert_subset(
-        tolower(name),
-        choices = c(1L, 2L, 3L, 4L, NA),
+        name,
+        choices = c(1L, 2L, 3L, 4L, 12L, 13L, NA),
         .var.name = "model_sROS",
         add = coll
       )
     },
     "model_cROS" = function(name, coll) {
       assert_subset(
-        tolower(name),
-        choices = c(1L, 2L, NA),
+        name,
+        choices = c(1L, 2L, 3L, NA),
         .var.name = "model_cROS",
         add = coll
       )
@@ -205,8 +223,100 @@ validate_input <- function(...) {
         name,
         lower = 0,
         upper = 80,
-        finite = TRUE,
         .var.name = "mc",
+        add = coll
+      )
+    },
+    "LAT" = function(name, coll) {
+      assert_number(
+        name,
+        lower = 41,
+        upper = 70,
+        .var.name = "LAT",
+        add = coll
+      )
+    },
+    "LONG" = function(name, coll) {
+      assert_number(
+        name,
+        lower = 52,
+        upper = 141,
+        .var.name = "LONG",
+        add = coll
+      )
+    },
+    "ELV" = function(name, coll) {
+      assert_number(
+        name,
+        lower = 0,
+        upper = 2500,
+        na.ok = TRUE,
+        .var.name = "ELV",
+        add = coll
+      )
+    },
+    "Dj" = function(name, coll) {
+      assert_number(
+        name,
+        lower = 1,
+        upper = 366,
+        .var.name = "Dj",
+        add = coll
+      )
+    },
+    "BUI" = function(name, coll) {
+      assert_number(
+        name,
+        lower = 0,
+        upper = 200,
+        .var.name = "BUI",
+        add = coll
+      )
+    },
+    "PC" = function(name, coll) {
+      assert_number(
+        name,
+        lower = 0,
+        upper = 100,
+        .var.name = "PC",
+        add = coll
+      )
+    },
+    "FFL" = function(name, coll) {
+      assert_number(
+        name,
+        lower = 1,
+        upper = 5,
+        .var.name = "FFL",
+        add = coll
+      )
+    },
+    "FWFL" = function(name, coll) {
+      assert_number(
+        name,
+        lower = 0,
+        upper = 2,
+        .var.name = "FWFL",
+        add = coll
+      )
+    },
+
+    # Ladder fuels inputs
+    "cons" = function(name, coll) {
+      assert_number(
+        name,
+        lower = 0.1,
+        upper = 10,
+        .var.name = "cons",
+        add = coll
+      )
+    },
+    "cl" = function(name, coll) {
+      assert_number(
+        name,
+        lower = 0.5,
+        upper = 15,
+        .var.name = "cl",
         add = coll
       )
     }

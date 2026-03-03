@@ -5,9 +5,11 @@
 \title{Calculate probability of crown fire occurrence (pCFO) for a single set of
 conditions}
 \usage{
-t_pCFO(mcsa = 10, mcF = NULL, FSG = 6, SFC = 2, ws = 12)
+t_pCFO(WS10, mcsa = NULL, mcF = NULL, FSG, SFC, ...)
 }
 \arguments{
+\item{WS10}{A numeric value in \verb{[0, 60]}. Wind speed in km/h.}
+
 \item{mcsa}{A numeric value in \verb{[3, 20]}. Fine dead surface litter moisture
 content calculated using the stand-adjusted model (mcsa). May be estimated
 using \code{\link[=t_mcsa]{t_mcsa()}}. If \code{mcF} is anything other than \code{NULL}, it will override
@@ -25,7 +27,7 @@ mid-story ladder fuels.}
 \item{SFC}{A numeric value in \verb{[0.1, 6]}. Surface fuel consumption in kg/m^2.
 May be estimated using \code{\link[=t_SFC_FBP]{t_SFC_FBP()}} or \code{\link[=t_SFC_deGroot]{t_SFC_deGroot()}}.}
 
-\item{ws}{A numeric value in \verb{[0, 60]}. Wind speed in km/h.}
+\item{...}{Additional arguments to be passed to nested functions.}
 }
 \value{
 A numeric value giving probability of crown fire occurrence in the
@@ -38,14 +40,25 @@ behaviour modelling system. See Perrakis et al. (2023) for details.
 }
 \examples{
 # Low probability
-t_pCFO(mcsa = 10, FSG = 6, SFC = 2, ws = 11)
+t_pCFO(ws = 11, mcsa = 10, FSG = 6, SFC = 2)
 # Moderate probability
-t_pCFO(mcsa = 9, FSG = 6, SFC = 2, ws = 12)
+t_pCFO(ws = 12, mcsa = 9, FSG = 6, SFC = 2)
 # High probability
-t_pCFO(mcsa = 8, FSG = 6, SFC = 2, ws = 13)
+t_pCFO(ws = 13, mcsa = 8, FSG = 6, SFC = 2)
 # Using t_McF()
-t_pCFO(mcF = t_mcF(89), FSG = 6, SFC = 2, ws = 13)
+t_pCFO(ws = 13, mcF = t_mcF(89), FSG = 6, SFC = 2)
 # Using t_mcsa()
-t_pCFO(mcsa = t_mcsa(89, 40, 2, 2, "p"), FSG = 6, SFC = 2, ws = 13)
+t_pCFO(
+  ws = 13,
+  mcsa = t_mcsa(
+    FFMC = 89,
+    DMC = 40,
+    season = 2,
+    density = 2,
+    stand = "p"
+  ),
+  FSG = 6,
+  SFC = 2
+)
 
 }

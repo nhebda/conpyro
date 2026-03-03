@@ -612,14 +612,15 @@ t_ROS <- function(
 #'
 #' @importFrom checkmate assert_number
 #'
-t_FMC <- function(LAT = 48, LONG = 83.3, ELV = NA, Dj = 200) {
-  assert_number(LAT, lower = 41, upper = 70)
-  assert_number(LONG, lower = 52, upper = 141)
-  assert_number(ELV, lower = 0, upper = 2500, na.ok = TRUE)
-  assert_number(Dj, lower = 1, upper = 366)
+t_FMC <- function(LAT, LONG, ELV = NA, Dj) {
+  # Validate inputs
+  validate_input(LAT = LAT, LONG = LONG, ELV = ELV, Dj = Dj)
+
+  # Calculate
   ELV <- if (is.na(ELV)) 0 else ELV
   FMC <- cffdrs:::foliar_moisture_content(LAT, LONG, ELV, Dj, 0)
   out <- round(FMC, 2)
+
   return(out)
 }
 
@@ -646,16 +647,17 @@ t_FMC <- function(LAT = 48, LONG = 83.3, ELV = NA, Dj = 200) {
 #' @importFrom checkmate assert_number
 #'
 t_SFC_FBP <- function(BUI = 85, FFMC = 91, PC = 40) {
-  assert_number(BUI, lower = 0, upper = 200)
-  assert_number(FFMC, lower = 80, upper = 99)
-  assert_number(PC, lower = 0, upper = 100)
+  # Validate inputs
+  validate_input(BUI = BUI, FFMC = FFMC, PC = PC)
+
+  # Calculate
   fueltypes <- c("C1", "C2", "C3", "C5", "C7", "D1", "M1", "S1", "S2", "S3")
   out <- lapply(
     fueltypes,
     cffdrs:::surface_fuel_consumption,
-    BUI  = BUI,
+    BUI = BUI,
     FFMC = FFMC,
-    PC   = PC
+    PC = PC
   )
   out[] <- lapply(out, round, 2)
   names(out) <- c(
@@ -670,6 +672,7 @@ t_SFC_FBP <- function(BUI = 85, FFMC = 91, PC = 40) {
     "S2",
     "S3"
   )
+
   return(out)
 }
 
@@ -696,14 +699,16 @@ t_SFC_FBP <- function(BUI = 85, FFMC = 91, PC = 40) {
 #'
 #' @importFrom checkmate assert_number
 #'
-t_SFC_deGroot <- function(BUI = 85, FFL = 3.5, FWFL = 0.3) {
-  assert_number(BUI, lower = 0, upper = 200)
-  assert_number(FFL, lower = 1, upper = 5)
-  assert_number(FWFL, lower = 0, upper = 2)
-  FFFC  <- -0.176 + 0.156 * FFL + 0.015 * BUI
-  SFC   <- FWFL + FFFC
-  out   <- list("Forest Floor Fuel Consumption" = FFFC, "SFC" = SFC)
+t_SFC_deGroot <- function(BUI, FFL, FWFL) {
+  # Validate inputs
+  validate_input(BUI = BUI, FFL = FFL, FWFL = FWFL)
+
+  # Calculate
+  FFFC <- -0.176 + 0.156 * FFL + 0.015 * BUI
+  SFC <- FWFL + FFFC
+  out <- list("Forest Floor Fuel Consumption" = FFFC, "SFC" = SFC)
   out[] <- lapply(out, round, 2)
+
   return(out)
 }
 
@@ -730,17 +735,19 @@ t_SFC_deGroot <- function(BUI = 85, FFL = 3.5, FWFL = 0.3) {
 #'
 #' @importFrom checkmate assert_number
 #'
-ladder_standing_dead <- function(cons = 0.2, cl = 4, FSG = 6) {
-  assert_number(cons, lower = 0.1, upper = 10)
-  assert_number(cl, lower = 0.5, upper = 15)
-  assert_number(FSG, lower = 0.5, upper = 20)
+ladder_standing_dead <- function(cons, cl, FSG) {
+  # Validate inputs
+  validate_input(cons = cons, cl = cl, FSG = FSG)
+
+  # Calculate
   snag_centroid <- if((cl / 2) >= FSG) FSG - 0.5 else cl / 2
-  zl            <- FSG - snag_centroid
-  scaled_SFC    <- (FSG / zl)^1.5 * cons * 3.1
-  out           <- list(
-    "LFSG [m]" = round(zl, 2),
-    "Scaled SFC contribution, small snags [kg/m^2]" = round(scaled_SFC, 2)
+  zl <- FSG - snag_centroid
+  scaled_SFC <- (FSG / zl)^1.5 * cons * 3.1
+  out <- list(
+    "LFSG (m)" = round(zl, 2),
+    "Scaled SFC contribution, small snags (kg/m^2)" = round(scaled_SFC, 2)
   )
+
   return(out)
 }
 
@@ -774,32 +781,36 @@ ladder_standing_dead <- function(cons = 0.2, cl = 4, FSG = 6) {
 #' @importFrom checkmate assert_number
 #'
 ladder_midstory_saplings <- function(
-    hs          = 5,
-    zs          = 1,
-    zp          = 6,
-    lnfl        = 0.5,
-    sapling_FMC = 120,
-    actual_SFC  = 2.7
+    hs,
+    zs,
+    zp,
+    lnfl,
+    sapling_FMC,
+    actual_SFC
 ) {
+  # Validate inputs
   assert_number(hs)
   assert_number(zs)
   assert_number(zp)
   assert_number(lnfl)
   assert_number(sapling_FMC)
   assert_number(actual_SFC)
-  cs           <- zs + (hs - zs) / 2
-  FSG          <- if((zp - cs) < 0.5) 0.5 else zp - cs
-  deltah       <- (16.52 - 0.057 * sapling_FMC) / 16
+
+  # Calculate
+  cs <- zs + (hs - zs) / 2
+  FSG <- if((zp - cs) < 0.5) 0.5 else zp - cs
+  deltah <- (16.52 - 0.057 * sapling_FMC) / 16
   sapling_SFCF <- deltah * lnfl * 1.5 * 3.1
-  SFC_cs       <- (FSG / zp)^1.5 * actual_SFC
-  total_SFCF   <- sapling_SFCF + SFC_cs
-  out          <- list(
-    "Sapling crown centroid [m]" = cs,
-    "FSG [m]" = FSG,
+  SFC_cs <- (FSG / zp)^1.5 * actual_SFC
+  total_SFCF <- sapling_SFCF + SFC_cs
+  out <- list(
+    "Sapling crown centroid (m)" = cs,
+    "FSG (m)" = FSG,
     "Sapling false-SFC" = sapling_SFCF,
     "SFC scaled to crown centroid" = SFC_cs,
     "Total false-SFC" = total_SFCF
   )
-  out[]        <- lapply(out, round, 2)
+  out[] <- lapply(out, round, 2)
+
   return(out)
 }

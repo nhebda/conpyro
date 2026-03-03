@@ -5,14 +5,7 @@
 \title{Estimate surface fuel consumption (SFC) contribution from a midstory sapling
 cohort}
 \usage{
-ladder_midstory_saplings(
-  hs = 5,
-  zs = 1,
-  zp = 6,
-  lnfl = 0.5,
-  sapling_FMC = 120,
-  actual_SFC = 2.7
-)
+ladder_midstory_saplings(hs, zs, zp, lnfl, sapling_FMC, actual_SFC)
 }
 \arguments{
 \item{hs}{Sapling height in metres.}

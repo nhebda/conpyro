@@ -36,7 +36,13 @@ conpyro2 <- function(
     name = "CBD"
   )
 
-  # Resolve optional inputs
+  # Resolve optional inputs without defaults
+  ID <- resolve_input(
+    args_list = args_list,
+    data = data,
+    name = "ID",
+    required = FALSE
+  )
   DMC <- resolve_input(
     args_list = args_list,
     data = data,
@@ -67,6 +73,8 @@ conpyro2 <- function(
     name = "smooth_CFO",
     required = FALSE
   )
+
+  # Resolve optional inputs WITH defaults
   CF_thresh <- resolve_input(
     args_list = args_list,
     data = data,
@@ -104,6 +112,7 @@ conpyro2 <- function(
     FSG = FSG,
     SFC = SFC,
     CBD = CBD,
+    ID = ID,
     DMC = DMC,
     season = season,
     density = density,
@@ -119,6 +128,13 @@ conpyro2 <- function(
   if (length(FSG) != n) FSG <- rep(FSG, length.out = n)
   if (length(SFC) != n) SFC <- rep(SFC, length.out = n)
   if (length(CBD) != n) CBD <- rep(CBD, length.out = n)
+  if (length(ID) != n) {
+    if (!is.na(ID)) {
+      ID <- paste0(ID, "_", 1:n)
+    } else {
+      ID <- 1:n
+    }
+  }
   if (length(DMC) != n) DMC <- rep(DMC, length.out = n)
   if (length(season) != n) season <- rep(season, length.out = n)
   if (length(density) != n) density <- rep(density, length.out = n)
@@ -137,6 +153,7 @@ conpyro2 <- function(
     FSG = FSG,
     SFC = SFC,
     CBD = CBD,
+    ID = ID,
     DMC = DMC,
     season = season,
     density = density,
@@ -153,8 +170,9 @@ conpyro2 <- function(
   coefs_mcsa <- sysdata$coefs_MCSA
   coefs_pCFO <- sysdata$coefs_pCFO
 
-  # Initialize output list
+  # Initialize outputs list
   out <- list()
+  ggdata <- data.frame()
 
   # Loop through scenarios and do calculations
   for (i in 1:n) {
@@ -177,6 +195,7 @@ conpyro2 <- function(
     } else {
       "mcsa"
     }
+    ID_val <- ID[[i]]
     CF_thresh_val <- if (is.na(CF_thresh[[i]])) 0.5 else CF_thresh[[i]]
     smooth_CFO_val <- if (is.na(smooth_CFO[[i]])) FALSE else smooth_CFO[[i]]
     model_mcsa_val <- if (is.na(model_mcsa[[i]])) {
@@ -277,7 +296,7 @@ conpyro2 <- function(
     } else {
       NA
     }
-    if (isTRUE(smooth_CFO)) {
+    if (isTRUE(smooth_CFO_val)) {
       sROS_out <- ROS_smooth_val[surface_fire]
       if (any(passive_crowning)) {
         cROS_P_out <- ROS_smooth_val[passive_crowning]
@@ -294,7 +313,7 @@ conpyro2 <- function(
     iROS_out <- c(sROS_out, cROS_P_out, cROS_A_out)
 
     # Add list of results to output list
-    out[[i]] <- list(
+    out[[as.character(ID_val)]] <- list(
       "mcFFMC (%)" = round(mcFFMC_val, 1),
       "mcsa (%)" = round(mcsa_val, 1),
       "WS10 (km/h)" = WS10,
@@ -304,19 +323,224 @@ conpyro2 <- function(
       "Integrated Rate of Spread (m/min)" = round(iROS_out, 1)
     )
 
-    # Optional plot preparation
+    # Prepare plotting data
     if (!is.null(plot)) {
-      if (plot == "pCFO") {
-        ggdata_pCFO <- prep_ggdata(i, "pCFO", WS10, pCFO_val)
+      if ("pCFO" %in% plot) {
+        ggdata_pCFO <- prep_ggdata(
+          ID = ID_val,
+          name = "pCFO",
+          WS10 = WS10,
+          data = pCFO_val
+        )
+
+        ggdata <- rbind(ggdata, ggdata_pCFO)
       }
-      if (plot == "ROS") {
-        ggdata_ROS <- prep_ggdata(i, "ROS", WS10, iROS_out)
+
+      if ("CAC" %in% plot) {
+        ggdata_CAC <- prep_ggdata(
+          ID = ID_val,
+          name = "CAC",
+          WS10 = WS10,
+          data = CAC_val
+        )
+
+        ggdata <- rbind(ggdata, ggdata_CAC)
+      }
+
+      if ("ROS" %in% plot) {
+        ggdata_sROS <- prep_ggdata(
+          ID = ID_val,
+          name = "sROS",
+          WS10 = WS10[surface_fire],
+          data = sROS_out
+        )
+        ggdata_cROS_P <- prep_ggdata(
+          ID = ID_val,
+          name = "cROS_P",
+          WS10 = WS10[passive_crowning],
+          data = cROS_P_out
+        )
+        ggdata_cROS_A <- prep_ggdata(
+          ID = ID_val,
+          name = "cROS_A",
+          WS10 = WS10[active_crowning],
+          data = cROS_A_out
+        )
+        # sROS to cROS_P transition
+        if (any(surface_fire) && any(passive_crowning)) {
+          ggdata_sROS_cROS_P <- data.frame(
+            ID = c(ID_val, ID_val),
+            name = rep("sROS_cROS_P", times = 2),
+            WS10 = WS10[c(
+              max(which(surface_fire)),
+              min(which(passive_crowning))
+            )],
+            val = c(max(sROS_out), min(cROS_P_out))
+          )
+          ggdata_cf_pt_scp <- data.frame(
+            ID = ID_val,
+            name = "cf_pt_scp",
+            WS10 = WS10[min(which(passive_crowning))],
+            val = cROS_P_out[[1]]
+          )
+        } else {
+          ggdata_sROS_cROS_P <- NULL
+          ggdata_cf_pt_scp <- NULL
+        }
+        # sROS to cROS_A transition
+        if (
+          any(surface_fire) &&
+          any(active_crowning) &&
+          !any(passive_crowning)
+        ) {
+          ggdata_sROS_cROS_A <- data.frame(
+            ID = c(ID_val, ID_val),
+            name = rep("sROS_cROS_A", times = 2),
+            WS10 = WS10[c(
+              max(which(surface_fire)),
+              min(which(active_crowning))
+            )],
+            val = c(max(sROS_out), min(cROS_A_out))
+          )
+          ggdata_cf_pt_sca <- data.frame(
+            ID = ID_val,
+            name = "cf_pt_sca",
+            WS10 = WS10[min(which(active_crowning))],
+            val = cROS_A_out[[1]]
+          )
+        } else {
+          ggdata_sROS_cROS_A <- NULL
+          ggdata_cf_pt_sca <- NULL
+        }
+        # cROS_P to cROS_A transition
+        if (any(passive_crowning) && any(active_crowning)) {
+          ggdata_cROS_P_cROS_A <- data.frame(
+            ID = c(ID_val, ID_val),
+            name = rep("cROS_P_cROS_A", times = 2),
+            WS10 = WS10[c(
+              max(which(passive_crowning)),
+              min(which(active_crowning))
+            )],
+            val = c(max(cROS_P_out), min(cROS_A_out))
+          )
+          ggdata_cf_pt_cpca <- data.frame(
+            ID = ID_val,
+            name = "cf_pt_cpca",
+            WS10 = WS10[min(which(active_crowning))],
+            val = cROS_A_out[[1]]
+          )
+        } else {
+          ggdata_cROS_P_cROS_A <- NULL
+          ggdata_cf_pt_cpca <- NULL
+        }
+
+        ggdata <- rbind(
+          ggdata,
+          ggdata_sROS,
+          ggdata_cROS_P,
+          ggdata_cROS_A,
+          ggdata_sROS_cROS_P,
+          ggdata_cf_pt_scp,
+          ggdata_sROS_cROS_A,
+          ggdata_cf_pt_sca,
+          ggdata_cROS_P_cROS_A,
+          ggdata_cf_pt_cpca
+        )
+
       }
     }
   }
 
-  # Prepare output
-  names(out) <- 1:n
+  # Plotting
+  if (!is.null(plot)) {
+    if ("pCFO" %in% plot) {
+      fig_pCFO <- plot_ggdata(
+        data = ggdata,
+        var = "pCFO",
+        xlab = "Wind Speed (km/h)",
+        ylab = "Crown Fire Occurrence Probability"
+      )
+
+      print(fig_pCFO)
+    }
+
+    if ("CAC" %in% plot) {
+      fig_CAC <- plot_ggdata(
+        data = ggdata,
+        var = "CAC",
+        xlab = "Wind Speed (km/h)",
+        ylab = "Criterion for Active Crowning"
+      )
+
+      print(fig_CAC)
+    }
+
+    if ("ROS" %in% plot) {
+      fig_ROS <- ggplot() +
+        # sROS
+        geom_line(
+          data = subset(ggdata, name == "sROS"),
+          mapping = aes(WS10, val, color = ID),
+          linewidth = 1.5
+        ) +
+        # cROS_P
+        geom_line(
+          data = subset(ggdata, name == "cROS_P"),
+          mapping = aes(WS10, val, color = ID),
+          linewidth = 1.5
+        ) +
+        # cROS_A
+        geom_line(
+          data = subset(ggdata, name == "cROS_A"),
+          mapping = aes(WS10, val, color = ID),
+          linewidth = 1.5
+        ) +
+        # Transition lines
+        geom_line(
+          data = subset(ggdata, name == "sROS_cROS_P"),
+          mapping = aes(WS10, val, color = ID),
+          linewidth = 1.5,
+          linetype = "dotted"
+        ) +
+        geom_line(
+          data = subset(ggdata, name == "sROS_cROS_A"),
+          mapping = aes(WS10, val, color = ID),
+          linewidth = 1.5,
+          linetype = "dotted"
+        ) +
+        geom_line(
+          data = subset(ggdata, name == "cROS_P_cROS_A"),
+          mapping = aes(WS10, val, color = ID),
+          linewidth = 1.5,
+          linetype = "dotted"
+        ) +
+        # Transition points
+        geom_point(
+          data = subset(ggdata, name == "cf_pt_scp"),
+          mapping = aes(WS10, val, color = ID),
+          shape = 16,
+          size = 4
+        ) +
+        geom_point(
+          data = subset(ggdata, name == "cf_pt_sca"),
+          mapping = aes(WS10, val, color = ID),
+          shape = 15,
+          size = 4
+        ) +
+        geom_point(
+          data = subset(ggdata, name == "cf_pt_cpca"),
+          mapping = aes(WS10, val, color = ID),
+          shape = 15,
+          size = 4
+        ) +
+        labs(color = "Scenario") +
+        xlab("Wind Speed (km/h)") +
+        ylab("Equilibrium Rate of Spread (m/min)") +
+        scale_color_viridis_d()
+
+      print(fig_ROS)
+    }
+  }
 
   return(out)
 }

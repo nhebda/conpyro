@@ -4,7 +4,7 @@
 \alias{ladder_standing_dead}
 \title{Estimate standing dead ladder fuels for midstory small snags <5 cm DBH}
 \usage{
-ladder_standing_dead(cons = 0.2, cl = 4, FSG = 6)
+ladder_standing_dead(cons, cl, FSG)
 }
 \arguments{
 \item{cons}{A numeric value in \verb{[0.1, 10]}. Consumption of fine dead elevated
