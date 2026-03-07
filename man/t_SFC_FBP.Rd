@@ -5,10 +5,10 @@
 \title{Estimate surface fuel consumption (SFC) using Canadian Forest Fire Behavior
 Prediction System (FBPS) equations}
 \usage{
-t_SFC_FBP(BUI = 85, FFMC = 91, PC = 40)
+t_SFC_FBP(BUI, FFMC, PC)
 }
 \arguments{
-\item{BUI}{Required. A numeric value in \verb{[80, 200]}. The Buildup Index (BUI)
+\item{BUI}{Required. A numeric value in \verb{[5, 200]}. The Buildup Index (BUI)
 as per the Canadian Forest Fire Weather Index (FWI) System.}
 
 \item{FFMC}{Required. A single numeric value in \verb{[80, 99]}. The Fine Fuel
@@ -22,11 +22,14 @@ A list of length \code{10} consisting of named numeric values
 corresponding to the major FBPS fuel types.
 }
 \description{
-\code{t_SFC_FBP()} estimates SFC for all major fuel types as per the FBPS
-equations. A simple wrapper for \code{cffdrs:::surface_fuel_consumption}. An
-alternative SFC calculation method is offered by \code{\link[=t_SFC_deGroot]{t_SFC_deGroot()}}.
+\code{t_SFC_FBP()} estimates SFC for major FBPS fuel types by calling
+\code{cffdrs:::surface_fuel_consumption} (a non-exported helper in the \code{cffdrs}
+package). Therefore, \code{cffdrs} must be installed for this function to work.
+An alternative SFC calculation method is offered by \code{\link[=t_SFC_deGroot]{t_SFC_deGroot()}}.
 }
 \examples{
-t_SFC_FBP(BUI = 81, FFMC = 92, PC = 55)
+if (requireNamespace("cffdrs", quietly = TRUE)) {
+  t_SFC_FBP(BUI = 81, FFMC = 92, PC = 55)
+}
 
 }

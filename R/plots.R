@@ -4,9 +4,6 @@
 #'
 #' @keywords internal
 #'
-#' @importFrom ggplot2 ggplot aes geom_line geom_point labs xlab ylab
-#'   scale_color_viridis_d
-#'
 prep_ggdata <- function(ID, name, WS10, data) {
   out <- data.frame(
     ID = rep(as.character(ID), length.out = length(WS10)),
@@ -23,24 +20,25 @@ prep_ggdata <- function(ID, name, WS10, data) {
 #'
 #' @keywords internal
 #'
-#' @importFrom ggplot2 ggplot aes geom_line geom_point labs xlab ylab
-#'   scale_color_viridis_d
-#'
 plot_ggdata <- function(data, var, xlab, ylab) {
   # Check for `ggplot2` and warn user if not installed
   if (requireNamespace("ggplot2", quietly = TRUE)) {
     gginput <- subset(data, name == var)
-    p <- ggplot(
+    p <- ggplot2::ggplot(
       gginput,
-      aes(WS10, val, color = ID)
+      ggplot2::aes(WS10, val, color = ID)
     ) +
-      geom_line(linewidth = 1.5) +
-      labs(color = "Scenario") +
-      xlab(xlab) +
-      ylab(ylab) +
-      scale_color_viridis_d()
+      ggplot2::geom_line(linewidth = 1.5) +
+      ggplot2::labs(color = "Scenario") +
+      ggplot2::xlab(xlab) +
+      ggplot2::ylab(ylab) +
+      ggplot2::scale_color_viridis_d()
+
+    return(p)
   } else {
-    stop("Plotting is active, but 'ggplot2' cannot be found.\nPlease install
-         'ggplot2'")
+    stop("Plotting is active, but 'ggplot2' cannot be found.\n
+         Please install 'ggplot2'",
+         call. = FALSE
+    )
   }
 }

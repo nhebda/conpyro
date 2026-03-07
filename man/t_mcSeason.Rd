@@ -7,12 +7,13 @@
 t_mcSeason(month, day)
 }
 \arguments{
-\item{month}{An integer in \verb{\{1, 2, 3, ..., 12\}}.}
+\item{month}{Required. An integer in \verb{\{1, 2, 3, ..., 12\}}.}
 
-\item{day}{An integer in \verb{\{1, 2, 3, ..., 31\}}.}
+\item{day}{Required. An integer in \verb{\{1, 2, 3, ..., 31\}}.}
 }
 \value{
-A number in \verb{\{1, 1.5, 2, 3\}}, corresponding to \verb{\{"spring", "sp-su", "summer", "fall"\}}.
+A number in \verb{\{1, 1.5, 2, 3\}}, corresponding to \verb{\{"spring", "sp-su", "summer", "fall"\}}. \code{\link[=t_mcsa]{t_mcsa()}} accepts either numeric codes or the
+corresponding labels.
 }
 \description{
 \code{t_mcSeason()} takes a month and day as input and calculates the \code{season}
@@ -27,13 +28,21 @@ valid date.
 }
 }
 \examples{
-# Spring
-t_mcSeason(5, 11)
-# Spring-summer transition
-t_mcSeason(6, 7)
-# Summer
-t_mcSeason(8, 16)
-# Fall
-t_mcSeason(9, 24)
+# Basic usage
+t_mcSeason(5, 11)   # Spring -> 1
+t_mcSeason(6, 7)    # Spring-summer transition -> 1.5
+t_mcSeason(8, 16)   # Summer -> 2
+t_mcSeason(9, 24)   # Fall -> 3
+
+# Boundary dates
+t_mcSeason(5, 31)   # last day of spring -> 1
+t_mcSeason(6, 1)    # first day of sp-su -> 1.5
+t_mcSeason(6, 15)   # last day of sp-su -> 1.5
+t_mcSeason(6, 16)   # first day of summer -> 2
+t_mcSeason(8, 31)   # last day of summer -> 2
+t_mcSeason(9, 1)    # first day of fall -> 3
+
+# Leap-day behavior
+t_mcSeason(2, 29)   # valid (leap year used internally) -> 1
 
 }
