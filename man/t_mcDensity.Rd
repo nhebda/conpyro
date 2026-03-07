@@ -7,21 +7,28 @@
 t_mcDensity(canopy_closure)
 }
 \arguments{
-\item{canopy_closure}{An integer in \verb{[20, 100]}. Canopy closure in percent.}
+\item{canopy_closure}{Required. An number in \verb{[20, 100]}. Canopy closure in
+percent.}
 }
 \value{
-A number in \verb{\{1, 2, 3\}}, corresponding to \verb{\{"light", "moderate", "dense"\}}
+An integer in \verb{\{1, 2, 3\}}, corresponding to \verb{\{"light", "moderate", "dense"\}}. \code{\link[=t_mcsa]{t_mcsa()}} accepts either numeric codes or the corresponding
+labels.
 }
 \description{
 \code{t_mcDensity()} takes a canopy closure value as input and outputs a
-categorical \code{density} value to be used in \code{\link[=t_mcsa]{t_mcsa()}}.
+categorical \code{density} value to be used in \code{\link[=t_mcsa]{t_mcsa()}}. Light ≤ 45; Moderate
+46–60; Dense ≥ 61.
 }
 \examples{
-# Light
-t_mcDensity(30)
-# Moderate
-t_mcDensity(50)
-# Dense
-t_mcDensity(70)
+# Basic usage
+t_mcDensity(30)  # Light -> 1
+t_mcDensity(50)  # Moderate -> 2
+t_mcDensity(70)  # Dense -> 3
+
+# Boundary conditions
+t_mcDensity(45)  # Light upper bound -> 1
+t_mcDensity(46)  # Moderate lower bound -> 2
+t_mcDensity(60)  # Moderate upper bound -> 2
+t_mcDensity(61)  # Dense lower bound -> 3
 
 }

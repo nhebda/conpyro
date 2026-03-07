@@ -22,12 +22,13 @@
 #' When using arguments, inputs must either be of length `1` or of the common
 #' length among all inputs. Length `1` inputs will be automatically recycled to
 #' the common length, thus applying to all scenarios. Function parameters are
-#' case-sensitive but arguments themselves are case-insensitive.
+#' case-sensitive but input values themselves are case-insensitive.
 #'
 #' @param data Optional. A data frame of at least `1` row and `1` column.
 #'   Columns must be named according to the parameter they supply.
 #' @param WS10 Required. A numeric vector in `[0, 60]`. Standard 10-m open wind
-#'   speed in km/h.
+#'   speed in km/h. `WS10` is a shared wind-speed vector applied to all
+#'   scenarios. It cannot currently be supplied via `data`.
 #' @param FFMC Required. A numeric vector in `[80, 99]`. The Fine Fuel Moisture
 #'   Code as per the Canadian Fire Weather Index System.
 #' @param FSG Required. A numeric vector in `[0.5, 20]`. Fuel strata gap in
@@ -52,10 +53,10 @@
 #'   (`mcsa`). If `season` is not supplied, fine fuel moisture calculations will
 #'   fall back on the FFMC-based model.
 #' @param density Optional. A vector comprising `{"light", "moderate", "dense"}`
-#'   or numeric equivalents `{1, 2, 3}`. See [t_mcDensity]. Used in calculating
-#'   stand-adjusted fine dead surface litter moisture content (`mcsa`). If
-#'   `density` is not supplied, fine fuel moisture calculations will fall back
-#'   on the FFMC-based model.
+#'   or numeric equivalents `{1, 2, 3}`. See [t_mcDensity()]. Used in
+#'   calculating stand-adjusted fine dead surface litter moisture content
+#'   (`mcsa`). If `density` is not supplied, fine fuel moisture calculations
+#'   will fall back on the FFMC-based model.
 #' @param stand Optional. A vector comprising `{"pine", "spruce", "Douglas-fir",
 #'   "deciduous", "mixedwood"}` or abbreviated equivalents `{"p", "s", "df",
 #'   "d", "m"}`. Used in calculating stand-adjusted fine dead surface litter
@@ -63,18 +64,44 @@
 #'   calculations will fall back on the FFMC-based model.
 #' @param smooth_CFO Optional. A logical vector that defines whether crown fire
 #'   occurrence is modeled as a smooth transition (`TRUE`) or an instantaneous
-#'   event (`FALSE`). Default is `FALSE`.
-#' @param ID Optional. A vector of unique scenario identifiers.
+#'   event (`FALSE`). Default is `FALSE`. If passive crowning occurs at any wind
+#'   speed, smoothing is applied between sROS and cROS_P across the transition
+#'   region; any subsequent transition to active crowning remains abrupt.
+#' @param ID Optional. A vector of unique scenario identifiers. If length `1`,
+#'   numbers will be sequentially appended to each scenario to ensure uniqueness
+#'   (e.g., ID_1, ID_2, ..., ID_n).
 #' @param plot Optional. A character vector to control plotting of output.
 #'   Choose any of the following:
 #'   * `"pCFO"`: Crown fire occurrence probability.
 #'   * `"CAC"`: Criterion for active crowning.
 #'   * `"ROS"`: Composite rate of spread plot with crowning thresholds.
-#' @param ... Optional. Additional advanced arguments to be passed to nested
-#'   functions.
+#' @param ... Optional. Allows additional arguments to be passed to nested
+#'   functions by advanced users. In [conpyro()], the following advanced
+#'   parameters are supported:
+#'   * `model_mcsa`: One of either `original` or `corrected`. Default is
+#'   `corrected`.
+#'   * `model_pCFO`: An integer in `{7, 8, 10, 11}`, corresponding to the
+#'   numbered crown fire occurrence models presented in Perrakis et al. (2023),
+#'   Table 2. Default for `mcF` path is `10`; default for `mcsa` path is `11`.
+#'   * `model_sROS`: An integer in `{1, 2, 3, 4, 12, 13}`. Default for `mcF`
+#'   path is `12`; default for `mcsa` path is `13`.
+#'   * `model_cROS`: An integer in `{1, 2, 3}`. Default is `1`.
+#'   * `CF_thresh`: A single numeric value in `[0, 1]`. Crown fire occurrence
+#'   threshold. Default is 0.5.
 #'
 #' @returns A list of lists, with each sub-list containing outputs for a single
-#'   ConPyro scenario. Optionally plots output.
+#'   ConPyro scenario. The outer list is named by scenario `ID`. Each scenario
+#'   list contains:
+#'   * `mcFFMC (%)`
+#'   * `mcsa (%)`
+#'   * `WS10 (km/h)`
+#'   * `Crown Fire Occurrence Probability`
+#'   * `Passive Crown Fire WS10 Threshold (km/h)`
+#'   * `Active Crown Fire WS10 Threshold (km/h)`
+#'   * `Composite Rate of Spread (m/min)`
+#'
+#'   Optionally plots output.
+#'
 #' @export
 #'
 #' @examples
@@ -85,6 +112,7 @@
 #'   FFMC = 91,
 #'   DMC = 85
 #' )
+#'
 #' # Smooth crown fire occurrence for all scenarios
 #' conpyro(
 #'   data = default_input,
@@ -93,25 +121,27 @@
 #'   DMC = 85,
 #'   smooth_CFO = TRUE
 #' )
+#'
 #' # Per-scenario FFMC
 #' conpyro(
 #'   data = default_input,
 #'   WS10 = 0:40,
 #'   FFMC = c(90, 91, 92),
-#'   DMC = 85,
+#'   DMC = 85
 #' )
-#' # Per-scenario smooth crown fire occurrence, with plot
+#'
+#' # Per-scenario smooth crown fire occurrence, with plots
 #' conpyro(
 #'   data = default_input,
 #'   WS10 = 0:40,
 #'   FFMC = c(90, 91, 92),
 #'   DMC = 85,
 #'   smooth_CFO = c(TRUE, FALSE, TRUE),
-#'   plot = "ROS"
+#'   plot = c("pCFO", "ROS")
 #' )
 #'
 conpyro <- function(
-    data,
+    data = NULL,
     WS10,
     FFMC,
     FSG,
@@ -128,6 +158,12 @@ conpyro <- function(
 ) {
   # Get arguments
   args_list <- introspect_args()
+
+  # Check `data` and set names to lowercase
+  if (!is.null(data)) {
+    assert_data_frame(data)
+    names(data) <- tolower(names(data))
+  }
 
   # Resolve required inputs
   FFMC <- resolve_input(
@@ -274,12 +310,31 @@ conpyro <- function(
     stand = stand,
     smooth_CFO = smooth_CFO,
     ID = ID,
+    plot = plot,
     CF_thresh = CF_thresh,
     model_mcsa = model_mcsa,
     model_pCFO = model_pCFO,
     model_sROS = model_sROS,
     model_cROS = model_cROS
   )
+
+  # Normalize inputs
+  WS10 <- normalize_input(WS10, "WS10")
+  FFMC <- normalize_input(FFMC, "FFMC")
+  FSG <- normalize_input(FSG, "FSG")
+  SFC <- normalize_input(SFC, "SFC")
+  CBD <- normalize_input(CBD, "CBD")
+  DMC <- normalize_input(DMC, "DMC")
+  season <- normalize_input(season, "season")
+  density <- normalize_input(density, "density")
+  stand <- normalize_input(stand, "stand")
+  smooth_CFO <- normalize_input(smooth_CFO, "smooth_CFO")
+  plot <- unique(normalize_input(plot, "plot"))
+  CF_thresh <- normalize_input(CF_thresh, "CF_thresh")
+  model_mcsa <- normalize_input(model_mcsa, "model_mcsa")
+  model_pCFO <- normalize_input(model_pCFO, "model_pCFO")
+  model_sROS <- normalize_input(model_sROS, "model_sROS")
+  model_cROS <- normalize_input(model_cROS, "model_cROS")
 
   # Load coefficients
   coefs_mcsa <- sysdata$coefs_MCSA
@@ -367,9 +422,8 @@ conpyro <- function(
       WS10 = WS10,
       mc = mc_val,
       SFC = SFC_val,
-      model_sROS_val
+      model_sROS = model_sROS_val
     )
-    crown_fire <- pCFO_val >= CF_thresh_val
     cROS_A_val <- cROS_A(
       WS10 = WS10,
       mc = mc_val,
@@ -440,7 +494,7 @@ conpyro <- function(
 
     # Prepare plotting data
     if (!is.null(plot)) {
-      if ("pCFO" %in% plot) {
+      if (tolower("pCFO") %in% plot) {
         ggdata_pCFO <- prep_ggdata(
           ID = ID_val,
           name = "pCFO",
@@ -451,7 +505,7 @@ conpyro <- function(
         ggdata <- rbind(ggdata, ggdata_pCFO)
       }
 
-      if ("CAC" %in% plot) {
+      if (tolower("CAC") %in% plot) {
         ggdata_CAC <- prep_ggdata(
           ID = ID_val,
           name = "CAC",
@@ -462,7 +516,7 @@ conpyro <- function(
         ggdata <- rbind(ggdata, ggdata_CAC)
       }
 
-      if ("ROS" %in% plot) {
+      if (tolower("ROS") %in% plot) {
         ggdata_sROS <- prep_ggdata(
           ID = ID_val,
           name = "sROS",
@@ -568,7 +622,7 @@ conpyro <- function(
 
   # Plotting
   if (!is.null(plot)) {
-    if ("pCFO" %in% plot) {
+    if (tolower("pCFO") %in% plot) {
       fig_pCFO <- plot_ggdata(
         data = ggdata,
         var = "pCFO",
@@ -579,7 +633,7 @@ conpyro <- function(
       print(fig_pCFO)
     }
 
-    if ("CAC" %in% plot) {
+    if (tolower("CAC") %in% plot) {
       fig_CAC <- plot_ggdata(
         data = ggdata,
         var = "CAC",
@@ -590,70 +644,77 @@ conpyro <- function(
       print(fig_CAC)
     }
 
-    if ("ROS" %in% plot) {
-      fig_ROS <- ggplot() +
-        # sROS
-        geom_line(
-          data = subset(ggdata, name == "sROS"),
-          mapping = aes(WS10, val, color = ID),
-          linewidth = 1.5
-        ) +
-        # cROS_P
-        geom_line(
-          data = subset(ggdata, name == "cROS_P"),
-          mapping = aes(WS10, val, color = ID),
-          linewidth = 1.5
-        ) +
-        # cROS_A
-        geom_line(
-          data = subset(ggdata, name == "cROS_A"),
-          mapping = aes(WS10, val, color = ID),
-          linewidth = 1.5
-        ) +
-        # Transition lines
-        geom_line(
-          data = subset(ggdata, name == "sROS_cROS_P"),
-          mapping = aes(WS10, val, color = ID),
-          linewidth = 1.5,
-          linetype = "dotted"
-        ) +
-        geom_line(
-          data = subset(ggdata, name == "sROS_cROS_A"),
-          mapping = aes(WS10, val, color = ID),
-          linewidth = 1.5,
-          linetype = "dotted"
-        ) +
-        geom_line(
-          data = subset(ggdata, name == "cROS_P_cROS_A"),
-          mapping = aes(WS10, val, color = ID),
-          linewidth = 1.5,
-          linetype = "dotted"
-        ) +
-        # Transition points
-        geom_point(
-          data = subset(ggdata, name == "cf_pt_scp"),
-          mapping = aes(WS10, val, color = ID),
-          shape = 16,
-          size = 4
-        ) +
-        geom_point(
-          data = subset(ggdata, name == "cf_pt_sca"),
-          mapping = aes(WS10, val, color = ID),
-          shape = 15,
-          size = 4
-        ) +
-        geom_point(
-          data = subset(ggdata, name == "cf_pt_cpca"),
-          mapping = aes(WS10, val, color = ID),
-          shape = 15,
-          size = 4
-        ) +
-        labs(color = "Scenario") +
-        xlab("Wind Speed (km/h)") +
-        ylab("Equilibrium Rate of Spread (m/min)") +
-        scale_color_viridis_d()
+    if (tolower("ROS") %in% plot) {
+      if (requireNamespace("ggplot2", quietly = TRUE)) {
+        fig_ROS <- ggplot2::ggplot() +
+          # sROS
+          ggplot2::geom_line(
+            data = subset(ggdata, name == "sROS"),
+            mapping = ggplot2::aes(WS10, val, color = ID),
+            linewidth = 1.5
+          ) +
+          # cROS_P
+          ggplot2::geom_line(
+            data = subset(ggdata, name == "cROS_P"),
+            mapping = ggplot2::aes(WS10, val, color = ID),
+            linewidth = 1.5
+          ) +
+          # cROS_A
+          ggplot2::geom_line(
+            data = subset(ggdata, name == "cROS_A"),
+            mapping = ggplot2::aes(WS10, val, color = ID),
+            linewidth = 1.5
+          ) +
+          # Transition lines
+          ggplot2::geom_line(
+            data = subset(ggdata, name == "sROS_cROS_P"),
+            mapping = ggplot2::aes(WS10, val, color = ID),
+            linewidth = 1.5,
+            linetype = "dotted"
+          ) +
+          ggplot2::geom_line(
+            data = subset(ggdata, name == "sROS_cROS_A"),
+            mapping = ggplot2::aes(WS10, val, color = ID),
+            linewidth = 1.5,
+            linetype = "dotted"
+          ) +
+          ggplot2::geom_line(
+            data = subset(ggdata, name == "cROS_P_cROS_A"),
+            mapping = ggplot2::aes(WS10, val, color = ID),
+            linewidth = 1.5,
+            linetype = "dotted"
+          ) +
+          # Transition points
+          ggplot2::geom_point(
+            data = subset(ggdata, name == "cf_pt_scp"),
+            mapping = ggplot2::aes(WS10, val, color = ID),
+            shape = 16,
+            size = 4
+          ) +
+          ggplot2::geom_point(
+            data = subset(ggdata, name == "cf_pt_sca"),
+            mapping = ggplot2::aes(WS10, val, color = ID),
+            shape = 15,
+            size = 4
+          ) +
+          ggplot2::geom_point(
+            data = subset(ggdata, name == "cf_pt_cpca"),
+            mapping = ggplot2::aes(WS10, val, color = ID),
+            shape = 15,
+            size = 4
+          ) +
+          ggplot2::labs(color = "Scenario") +
+          ggplot2::xlab("Wind Speed (km/h)") +
+          ggplot2::ylab("Equilibrium Rate of Spread (m/min)") +
+          ggplot2::scale_color_viridis_d()
 
-      print(fig_ROS)
+        print(fig_ROS)
+      } else {
+        stop("Plotting is active, but 'ggplot2' cannot be found.\n
+             Please install 'ggplot2'",
+             call. = FALSE
+        )
+      }
     }
   }
 

@@ -17,12 +17,17 @@ Code as per the Canadian Fire Weather Index System.}
 numeric equivalents \verb{\{1, 1.5, 2, 3\}}. See \code{\link[=t_mcSeason]{t_mcSeason()}}.}
 
 \item{density}{Required. One of \verb{\{"light", "moderate", "dense"\}} or numeric
-equivalents \verb{\{1, 2, 3\}}. See \link{t_mcDensity}.}
+equivalents \verb{\{1, 2, 3\}}. See \code{\link[=t_mcDensity]{t_mcDensity()}}.}
 
 \item{stand}{Required. One of \verb{\{"pine", "spruce", "Douglas-fir", "deciduous", "mixedwood"\}} or abbreviated equivalents \verb{\{"p", "s", "df", "d", "m"\}}.}
 
-\item{...}{Optional. Additional advanced arguments to be passed to nested
-functions.}
+\item{...}{Optional. Allows additional arguments to be passed to nested
+functions by advanced users. In \code{\link[=t_mcsa]{t_mcsa()}}, the following advanced
+parameters are supported:
+\itemize{
+\item \code{model_mcsa}: One of either \code{original} or \code{corrected}. Default is
+\code{corrected}.
+}}
 }
 \value{
 A numeric value representing fine dead litter moisture content in
@@ -33,13 +38,9 @@ percent.
 stand-adjusted model (mcsa).
 }
 \examples{
-# Moist
-t_mcsa(FFMC = 80, DMC = 20, season = 1, density = 3, stand = "s")
-# Moderate
-t_mcsa(FFMC = 84, DMC = 30, season = 1, density = 3, stand = "p")
-# Dry
-t_mcsa(FFMC = 89, DMC = 40, season = 2, density = 2, stand = "p")
-# Very dry
-t_mcsa(FFMC = 92, DMC = 60, season = 2, density = 1, stand = "p")
+t_mcsa(FFMC = 80, DMC = 20, season = 1, density = 3, stand = "s") # Moist
+t_mcsa(FFMC = 84, DMC = 30, season = 1, density = 3, stand = "p") # Moderate
+t_mcsa(FFMC = 89, DMC = 40, season = 2, density = 2, stand = "p") # Dry
+t_mcsa(FFMC = 92, DMC = 60, season = 2, density = 1, stand = "p") # Very dry
 
 }

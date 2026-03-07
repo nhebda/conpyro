@@ -6,7 +6,7 @@
 and rate of spread (ROS) for one or more scenarios}
 \usage{
 conpyro(
-  data,
+  data = NULL,
   WS10,
   FFMC,
   FSG,
@@ -27,7 +27,8 @@ conpyro(
 Columns must be named according to the parameter they supply.}
 
 \item{WS10}{Required. A numeric vector in \verb{[0, 60]}. Standard 10-m open wind
-speed in km/h.}
+speed in km/h. \code{WS10} is a shared wind-speed vector applied to all
+scenarios. It cannot currently be supplied via \code{data}.}
 
 \item{FFMC}{Required. A numeric vector in \verb{[80, 99]}. The Fine Fuel Moisture
 Code as per the Canadian Fire Weather Index System.}
@@ -58,10 +59,10 @@ in calculating stand-adjusted fine dead surface litter moisture content
 fall back on the FFMC-based model.}
 
 \item{density}{Optional. A vector comprising \verb{\{"light", "moderate", "dense"\}}
-or numeric equivalents \verb{\{1, 2, 3\}}. See \link{t_mcDensity}. Used in calculating
-stand-adjusted fine dead surface litter moisture content (\code{mcsa}). If
-\code{density} is not supplied, fine fuel moisture calculations will fall back
-on the FFMC-based model.}
+or numeric equivalents \verb{\{1, 2, 3\}}. See \code{\link[=t_mcDensity]{t_mcDensity()}}. Used in
+calculating stand-adjusted fine dead surface litter moisture content
+(\code{mcsa}). If \code{density} is not supplied, fine fuel moisture calculations
+will fall back on the FFMC-based model.}
 
 \item{stand}{Optional. A vector comprising \verb{\{"pine", "spruce", "Douglas-fir", "deciduous", "mixedwood"\}} or abbreviated equivalents \verb{\{"p", "s", "df", "d", "m"\}}. Used in calculating stand-adjusted fine dead surface litter
 moisture content (\code{mcsa}). If \code{stand} is not supplied, fine fuel moisture
@@ -69,9 +70,13 @@ calculations will fall back on the FFMC-based model.}
 
 \item{smooth_CFO}{Optional. A logical vector that defines whether crown fire
 occurrence is modeled as a smooth transition (\code{TRUE}) or an instantaneous
-event (\code{FALSE}). Default is \code{FALSE}.}
+event (\code{FALSE}). Default is \code{FALSE}. If passive crowning occurs at any wind
+speed, smoothing is applied between sROS and cROS_P across the transition
+region; any subsequent transition to active crowning remains abrupt.}
 
-\item{ID}{Optional. A vector of unique scenario identifiers.}
+\item{ID}{Optional. A vector of unique scenario identifiers. If length \code{1},
+numbers will be sequentially appended to each scenario to ensure uniqueness
+(e.g., ID_1, ID_2, ..., ID_n).}
 
 \item{plot}{Optional. A character vector to control plotting of output.
 Choose any of the following:
@@ -81,12 +86,37 @@ Choose any of the following:
 \item \code{"ROS"}: Composite rate of spread plot with crowning thresholds.
 }}
 
-\item{...}{Optional. Additional advanced arguments to be passed to nested
-functions.}
+\item{...}{Optional. Allows additional arguments to be passed to nested
+functions by advanced users. In \code{\link[=conpyro]{conpyro()}}, the following advanced
+parameters are supported:
+\itemize{
+\item \code{model_mcsa}: One of either \code{original} or \code{corrected}. Default is
+\code{corrected}.
+\item \code{model_pCFO}: An integer in \verb{\{7, 8, 10, 11\}}, corresponding to the
+numbered crown fire occurrence models presented in Perrakis et al. (2023),
+Table 2. Default for \code{mcF} path is \code{10}; default for \code{mcsa} path is \code{11}.
+\item \code{model_sROS}: An integer in \verb{\{1, 2, 3, 4, 12, 13\}}. Default for \code{mcF}
+path is \code{12}; default for \code{mcsa} path is \code{13}.
+\item \code{model_cROS}: An integer in \verb{\{1, 2, 3\}}. Default is \code{1}.
+\item \code{CF_thresh}: A single numeric value in \verb{[0, 1]}. Crown fire occurrence
+threshold. Default is 0.5.
+}}
 }
 \value{
 A list of lists, with each sub-list containing outputs for a single
-ConPyro scenario. Optionally plots output.
+ConPyro scenario. The outer list is named by scenario \code{ID}. Each scenario
+list contains:
+\itemize{
+\item \verb{mcFFMC (\%)}
+\item \verb{mcsa (\%)}
+\item \code{WS10 (km/h)}
+\item \verb{Crown Fire Occurrence Probability}
+\item \verb{Passive Crown Fire WS10 Threshold (km/h)}
+\item \verb{Active Crown Fire WS10 Threshold (km/h)}
+\item \verb{Composite Rate of Spread (m/min)}
+}
+
+Optionally plots output.
 }
 \description{
 \code{conpyro()} calculates pCFO, crowning thresholds, and ROS for any number of
@@ -111,7 +141,7 @@ supply. All inputs are case-insensitive and columns may be in any order.
 When using arguments, inputs must either be of length \code{1} or of the common
 length among all inputs. Length \code{1} inputs will be automatically recycled to
 the common length, thus applying to all scenarios. Function parameters are
-case-sensitive but arguments themselves are case-insensitive.
+case-sensitive but input values themselves are case-insensitive.
 }
 \examples{
 # Basic usage
@@ -121,6 +151,7 @@ conpyro(
   FFMC = 91,
   DMC = 85
 )
+
 # Smooth crown fire occurrence for all scenarios
 conpyro(
   data = default_input,
@@ -129,21 +160,23 @@ conpyro(
   DMC = 85,
   smooth_CFO = TRUE
 )
+
 # Per-scenario FFMC
 conpyro(
   data = default_input,
   WS10 = 0:40,
   FFMC = c(90, 91, 92),
-  DMC = 85,
+  DMC = 85
 )
-# Per-scenario smooth crown fire occurrence, with plot
+
+# Per-scenario smooth crown fire occurrence, with plots
 conpyro(
   data = default_input,
   WS10 = 0:40,
   FFMC = c(90, 91, 92),
   DMC = 85,
   smooth_CFO = c(TRUE, FALSE, TRUE),
-  plot = "ROS"
+  plot = c("pCFO", "ROS")
 )
 
 }

@@ -8,29 +8,37 @@ conditions}
 t_pCFO(WS10, mcF = NULL, mcsa = NULL, FSG, SFC, ...)
 }
 \arguments{
-\item{WS10}{Required. A numeric value in \verb{[0, 60]}. Standard 10-m open wind
-speed in km/h.}
+\item{WS10}{Required. A single numeric value in \verb{[0, 60]}. Standard 10-m open
+wind speed in km/h.}
 
-\item{mcF}{Optional. A numeric value in \verb{[3, 20]}. Fine dead surface litter
-moisture content in percent, calculated using the Fine Fuel Moisture Code
-(FFMC). May be estimated using \code{\link[=t_mcF]{t_mcF()}}. If \code{NULL}, \code{mcsa} will be used
-instead.}
+\item{mcF}{Optional. A single numeric value in \verb{[1, 30]}. Fine dead surface
+litter moisture content in percent, calculated using the Fine Fuel Moisture
+Code (FFMC). May be estimated using \code{\link[=t_mcF]{t_mcF()}}. If \code{NULL}, \code{mcsa} will be
+used instead.}
 
-\item{mcsa}{Optional. A numeric value in \verb{[3, 20]}. Fine dead surface litter
-moisture content in percent, calculated using the stand-adjusted model. May
-be estimated using \code{\link[=t_mcsa]{t_mcsa()}}. If \code{mcF} is anything other than \code{NULL}, it
-will override \code{mcsa}.}
+\item{mcsa}{Optional. A single numeric value in \verb{[1, 30]}. Fine dead surface
+litter moisture content in percent, calculated using the stand-adjusted
+model. May be estimated using \code{\link[=t_mcsa]{t_mcsa()}}. If \code{mcF} is anything other than
+\code{NULL}, it will override \code{mcsa}.}
 
-\item{FSG}{Required. A numeric value in \verb{[0.5, 20]}. Fuel strata gap in
-metres, representing the vertical distance between the top of the surface
-fuels and the lower limit of the canopy fuels. Analogous to crown base
-height in the absence of mid-story ladder fuels.}
+\item{FSG}{Required. A single numeric value in \verb{[0.5, 20]}. Fuel strata gap
+in metres, representing the vertical distance between the top of the
+surface fuels and the lower limit of the canopy fuels. Analogous to crown
+base height in the absence of mid-story ladder fuels.}
 
-\item{SFC}{Required. A numeric value in \verb{[0.1, 6]}. Surface fuel consumption
-in kg/m^2. May be estimated using \code{\link[=t_SFC_FBP]{t_SFC_FBP()}} or \code{\link[=t_SFC_deGroot]{t_SFC_deGroot()}}.}
+\item{SFC}{Required. A single numeric value in \verb{[0.1, 6]}. Surface fuel
+consumption in kg/m^2. May be estimated using \code{\link[=t_SFC_FBP]{t_SFC_FBP()}} or
+\code{\link[=t_SFC_deGroot]{t_SFC_deGroot()}}.}
 
-\item{...}{Optional. Additional advanced arguments to be passed to nested
-functions.}
+\item{...}{Optional. Allows additional arguments to be passed to nested
+functions by advanced users. In \code{\link[=t_pCFO]{t_pCFO()}}, the following advanced
+parameters are supported:
+\itemize{
+\item \code{model_pCFO}: An integer in \verb{\{7, 8, 10, 11\}}, corresponding to the
+numbered crown fire occurrence models presented in Perrakis et al. (2023),
+Table 2. Default when using \code{mcF} is \code{10}; default when using \code{mcsa} is
+\code{11}.
+}}
 }
 \value{
 A numeric value giving probability of crown fire occurrence in the
@@ -42,14 +50,14 @@ fuel and fire weather conditions using the Conifer Pyrometrics (ConPyro) fire
 behaviour modelling system. See Perrakis et al. (2023) for details.
 }
 \examples{
-# Low probability
-t_pCFO(WS10 = 11, mcsa = 10, FSG = 6, SFC = 2)
-# Moderate probability
-t_pCFO(WS10 = 12, mcsa = 9, FSG = 6, SFC = 2)
-# High probability
-t_pCFO(WS10 = 13, mcsa = 8, FSG = 6, SFC = 2)
+# Basic usage
+t_pCFO(WS10 = 11, mcsa = 10, FSG = 6, SFC = 2)  # Low probability
+t_pCFO(WS10 = 12, mcsa = 9, FSG = 6, SFC = 2)   # Moderate probability
+t_pCFO(WS10 = 13, mcsa = 8, FSG = 6, SFC = 2)   # High probability
+
 # Using t_mcF()
 t_pCFO(WS10 = 13, mcF = t_mcF(89), FSG = 6, SFC = 2)
+
 # Using t_mcsa()
 t_pCFO(
   WS10 = 13,

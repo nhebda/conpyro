@@ -31,7 +31,7 @@ Available functions (click for details):
 
 Authors:
 \itemize{
-  \item Daniel Perrakis \email{daniel.perrakis@nrcan-rncan.gc.ca}
+  \item Daniel Perrakis \email{daniel.perrakis@nrcan-rncan.gc.ca} (Primary author of the ConPyro fire behaviour modelling system) [contributor]
   \item Ceres Barros \email{ceres.barros@nrcan-rncan.gc.ca}
 }
 

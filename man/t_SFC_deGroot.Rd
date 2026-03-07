@@ -8,7 +8,7 @@ De Groot et al. (2009)}
 t_SFC_deGroot(BUI, FFL, FWFL)
 }
 \arguments{
-\item{BUI}{Required. A numeric value in \verb{[80, 200]}. The Buildup Index (BUI)
+\item{BUI}{Required. A numeric value in \verb{[5, 200]}. The Buildup Index (BUI)
 as per the Canadian Forest Fire Weather Index (FWI) System.}
 
 \item{FFL}{Required. A numeric value in \verb{[1, 5]}. Forest floor load (litter +
@@ -19,6 +19,7 @@ cm diam.) in kg/m^2.}
 }
 \value{
 A list of length \code{2} consisting of one numeric value named \verb{Forest Floor Fuel Consumption} and one numeric value named \code{SFC}, both in kg/m^2.
+SFC = Fine Woody Fuel Load + Forest Floor Fuel Consumption.
 }
 \description{
 \code{t_SFC_deGroot()} estimates SFC based on fuel load and Buildup Index (BUI)

@@ -7,42 +7,59 @@
 t_ROS(WS10, mcF = NULL, mcsa = NULL, FSG, SFC, CBD, smooth_CFO = FALSE, ...)
 }
 \arguments{
-\item{WS10}{Required. A numeric value in \verb{[0, 60]}. Standard 10-m open wind
-speed in km/h.}
+\item{WS10}{Required. A single numeric value in \verb{[0, 60]}. Standard 10-m open
+wind speed in km/h.}
 
-\item{mcF}{Optional. A numeric value in \verb{[3, 20]}. Fine dead surface litter
-moisture content in percent, calculated using the Fine Fuel Moisture Code
-(FFMC). May be estimated using \code{\link[=t_mcF]{t_mcF()}}. If \code{NULL}, \code{mcsa} will be used
-instead.}
+\item{mcF}{Optional. A single numeric value in \verb{[1, 30]}. Fine dead surface
+litter moisture content in percent, calculated using the Fine Fuel Moisture
+Code (FFMC). May be estimated using \code{\link[=t_mcF]{t_mcF()}}. If \code{NULL}, \code{mcsa} will be
+used instead.}
 
-\item{mcsa}{Optional. A numeric value in \verb{[3, 20]}. Fine dead surface litter
-moisture content in percent, calculated using the stand-adjusted model. May
-be estimated using \code{\link[=t_mcsa]{t_mcsa()}}. If \code{mcF} is anything other than \code{NULL}, it
-will override \code{mcsa}.}
+\item{mcsa}{Optional. A single numeric value in \verb{[1, 30]}. Fine dead surface
+litter moisture content in percent, calculated using the stand-adjusted
+model. May be estimated using \code{\link[=t_mcsa]{t_mcsa()}}. If \code{mcF} is anything other than
+\code{NULL}, it will override \code{mcsa}.}
 
-\item{FSG}{Required. A numeric value in \verb{[0.5, 20]}. Fuel strata gap in
-metres, representing the vertical distance between the top of the surface
-fuels and the lower limit of the canopy fuels. Analogous to crown base
-height in the absence of mid-story ladder fuels.}
+\item{FSG}{Required. A single numeric value in \verb{[0.5, 20]}. Fuel strata gap
+in metres, representing the vertical distance between the top of the
+surface fuels and the lower limit of the canopy fuels. Analogous to crown
+base height in the absence of mid-story ladder fuels.}
 
-\item{SFC}{Required. A numeric value in \verb{[0.1, 6]}. Surface fuel consumption
-in kg/m^2. May be estimated using \code{\link[=t_SFC_FBP]{t_SFC_FBP()}} or \code{\link[=t_SFC_deGroot]{t_SFC_deGroot()}}.}
+\item{SFC}{Required. A single numeric value in \verb{[0.1, 6]}. Surface fuel
+consumption in kg/m^2. May be estimated using \code{\link[=t_SFC_FBP]{t_SFC_FBP()}} or
+\code{\link[=t_SFC_deGroot]{t_SFC_deGroot()}}.}
 
-\item{CBD}{Required. A numeric value in \verb{[0.01, 0.8]}. Crown bulk density in
-kg/m^3.}
+\item{CBD}{Required. A single numeric value in \verb{[0.01, 0.8]}. Crown bulk
+density in kg/m^3.}
 
-\item{smooth_CFO}{Optional. A logical vector that defines whether crown fire
+\item{smooth_CFO}{A single logical value that defines whether crown fire
 occurrence is modeled as a smooth transition (\code{TRUE}) or an instantaneous
-event (\code{FALSE}). Default is \code{FALSE}.}
+event (\code{FALSE}). Default is \code{FALSE}. If passive crowning occurs at any wind
+speed, smoothing is applied between sROS and cROS_P across the transition
+region; any subsequent transition to active crowning remains abrupt.}
 
-\item{...}{Optional. Additional advanced arguments to be passed to nested
-functions.}
+\item{...}{Optional. Allows additional arguments to be passed to nested
+functions by advanced users. In \code{\link[=t_ROS]{t_ROS()}}, the following advanced
+parameters are supported:
+\itemize{
+\item \code{model_pCFO}: An integer in \verb{\{7, 8, 10, 11\}}, corresponding to the
+numbered crown fire occurrence models presented in Perrakis et al. (2023),
+Table 2. Default when using \code{mcF} is \code{10}; default when using \code{mcsa} is
+\code{11}.
+\item \code{model_sROS}: An integer in \verb{\{1, 2, 3, 4, 12, 13\}}. Default when using
+\code{mcF} is \code{12}; default when using \code{mcsa} is \code{13}.
+\item \code{model_cROS}: An integer in \verb{\{1, 2, 3\}}. Default is \code{1}.
+\item \code{CF_thresh}: A single numeric value in \verb{[0, 1]}. Crown fire occurrence
+threshold. Default is 0.5.
+}}
 }
 \value{
-A list of length 2 consisting of:
+A named list with elements \verb{Type of fire} and \verb{Rate of spread (m/min)}:
 \itemize{
-\item A single numeric value named \verb{Predicted rate of spread (m/min)}
-\item A single character vector named \verb{Type of fire}
+\item \verb{Type of fire}: A single character vector giving the fire type. One of
+\verb{\{"S", "PC", "AC"\}}, corresponding to surface fire, passive crown fire, or
+active crown fire, respectively.
+\item A single numeric value giving fire rate of spread in m/min.
 }
 }
 \description{
@@ -53,13 +70,12 @@ single-scenario calculation than the main \code{\link[=conpyro]{conpyro()}} func
 multiple scenarios or plot output, use \code{\link[=conpyro]{conpyro()}} instead.
 }
 \examples{
-# Surface fire
-t_ROS(WS10 = 11, mcsa = 9, FSG = 6, SFC = 2, CBD = 0.1)
-# Passive crown fire
-t_ROS(WS10 = 11, mcsa = 8, FSG = 6, SFC = 2, CBD = 0.1)
-# Active crown fire
-t_ROS(WS10 = 11, mcsa = 8, FSG = 6, SFC = 2, CBD = 0.2)
-# Active crown fire with smooth initiation
+# Basic usage
+t_ROS(WS10 = 11, mcsa = 9, FSG = 6, SFC = 2, CBD = 0.1)  # Surface fire
+t_ROS(WS10 = 11, mcsa = 8, FSG = 6, SFC = 2, CBD = 0.1)  # Passive crown fire
+t_ROS(WS10 = 11, mcsa = 8, FSG = 6, SFC = 2, CBD = 0.2)  # Active crown fire
+
+# Active crown fire with smooth occurrence
 t_ROS(
   WS10 = 11,
   mcsa = 8,
@@ -68,8 +84,10 @@ t_ROS(
   CBD = 0.2,
   smooth_CFO = TRUE
 )
+
 # Using t_mcF()
 t_ROS(WS10 = 13, mcF = t_mcF(91), FSG = 6, SFC = 2, CBD = 0.2)
+
 # Using t_mcsa()
 t_ROS(
   WS10 = 13,

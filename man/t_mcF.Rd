@@ -19,13 +19,9 @@ percent.
 Fine Fuel Moisture Code (FFMC) of the Canadian Fire Weather Index System.
 }
 \examples{
-# Moist
-t_mcF(80)
-# Moderate
-t_mcF(84)
-# Dry
-t_mcF(89)
-# Very dry
-t_mcF(92)
+t_mcF(80)  # Moist
+t_mcF(84)  # Moderate
+t_mcF(89)  # Dry
+t_mcF(92)  # Very dry
 
 }

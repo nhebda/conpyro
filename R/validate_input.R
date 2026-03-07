@@ -153,9 +153,17 @@ validate_input <- function(...) {
       assert_numeric(
         name,
         lower = 0,
-        upper = 100,
+        upper = 1,
         null.ok = TRUE,
         .var.name = "CF_thresh",
+        add = coll
+      )
+    },
+    "plot" = function(name, coll) {
+      assert_subset(
+        tolower(name),
+        choices = c("pcfo", "cac", "ros"),
+        .var.name = "plot",
         add = coll
       )
     },
@@ -169,7 +177,7 @@ validate_input <- function(...) {
     },
     "model_pCFO" = function(name, coll) {
       assert_subset(
-        tolower(name),
+        name,
         choices = c(7L, 8L, 10L, 11L, NA),
         .var.name = "model_pCFO",
         add = coll
@@ -195,7 +203,7 @@ validate_input <- function(...) {
     # Tools-specific inputs
     "month" = function(name, coll) {
       assert_integerish(
-        name,
+        as.numeric(name),
         len = 1L,
         .var.name = "month",
         add = coll
@@ -203,7 +211,7 @@ validate_input <- function(...) {
     },
     "day" = function(name, coll) {
       assert_integerish(
-        name,
+        as.numeric(name),
         len = 1L,
         .var.name = "day",
         add = coll
@@ -221,8 +229,8 @@ validate_input <- function(...) {
     "mc" = function(name, coll) {
       assert_number(
         name,
-        lower = 0,
-        upper = 80,
+        lower = 1,
+        upper = 30,
         .var.name = "mc",
         add = coll
       )
@@ -256,7 +264,7 @@ validate_input <- function(...) {
       )
     },
     "Dj" = function(name, coll) {
-      assert_number(
+      assert_integerish(
         name,
         lower = 1,
         upper = 366,
@@ -267,7 +275,7 @@ validate_input <- function(...) {
     "BUI" = function(name, coll) {
       assert_number(
         name,
-        lower = 0,
+        lower = 5,
         upper = 200,
         .var.name = "BUI",
         add = coll
@@ -317,6 +325,60 @@ validate_input <- function(...) {
         lower = 0.5,
         upper = 15,
         .var.name = "cl",
+        add = coll
+      )
+    },
+    "hs" = function(name, coll) {
+      assert_number(
+        name,
+        lower = 0.5,
+        upper = 10,
+        .var.name = "hs",
+        add = coll
+      )
+    },
+    "zs" = function(name, coll) {
+      assert_number(
+        name,
+        lower = 0.5,
+        upper = 9,
+        .var.name = "zs",
+        add = coll
+      )
+    },
+    "zp" = function(name, coll) {
+      assert_number(
+        name,
+        lower = 0.5,
+        upper = 20,
+        .var.name = "zp",
+        add = coll
+      )
+    },
+    "lnfl" = function(name, coll) {
+      assert_number(
+        name,
+        lower = 0.1,
+        upper = 2,
+        .var.name = "lnfl",
+        add = coll
+      )
+    },
+    "sapling_FMC" = function(name, coll) {
+      assert_number(
+        name,
+        lower = 80,
+        upper = 120,
+        .var.name = "sapling_FMC",
+        add = coll
+      )
+    },
+    "actual_SFC" = function(name, coll) {
+      assert_number(
+        name,
+        lower = 0.1,
+        upper = 6,
+        .var.name = "actual_SFC",
         add = coll
       )
     }
