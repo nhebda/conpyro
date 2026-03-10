@@ -252,7 +252,7 @@ test_that("conpyro output is consistent with tool functions", {
   expect_equal(out[["tool"]][["mcsa (%)"]], round(mcsa_val, 1))
   expect_equal(
     out[["tool"]][["Composite Rate of Spread (m/min)"]],
-    unname(ft_ros[["Rate of spread (m/min)"]])
+    unname(ft_ros[["Composite Rate of Spread (m/min)"]])
   )
 })
 

@@ -820,15 +820,15 @@ test_that("t_ROS returns a named list with expected types", {
 
   expect_type(out, "list")
   expect_length(out, 2L)
-  expect_named(out, c("Type of fire", "Rate of spread (m/min)"))
+  expect_named(out, c("Type of Fire", "Composite Rate of Spread (m/min)"))
 
-  expect_type(out[["Type of fire"]], "character")
-  expect_length(out[["Type of fire"]], 1L)
-  expect_true(out[["Type of fire"]] %in% c("S", "PC", "AC"))
+  expect_type(out[["Type of Fire"]], "character")
+  expect_length(out[["Type of Fire"]], 1L)
+  expect_true(out[["Type of Fire"]] %in% c("S", "PC", "AC"))
 
-  expect_type(out[["Rate of spread (m/min)"]], "double")
-  expect_length(out[["Rate of spread (m/min)"]], 1L)
-  expect_true(is.finite(out[["Rate of spread (m/min)"]]))
+  expect_type(out[["Composite Rate of Spread (m/min)"]], "double")
+  expect_length(out[["Composite Rate of Spread (m/min)"]], 1L)
+  expect_true(is.finite(out[["Composite Rate of Spread (m/min)"]]))
 })
 
 test_that("t_ROS matches fire type from t_FT for same inputs", {
@@ -836,7 +836,7 @@ test_that("t_ROS matches fire type from t_FT for same inputs", {
 
   out <- t_ROS(WS10 = 11, mcsa = 9, FSG = 6, SFC = 2, CBD = 0.1)
 
-  expect_identical(out[["Type of fire"]], ft)
+  expect_identical(out[["Type of Fire"]], ft)
 })
 
 test_that("t_ROS matches documented example fire types", {
@@ -844,9 +844,9 @@ test_that("t_ROS matches documented example fire types", {
   out_pc <- t_ROS(WS10 = 11, mcsa = 8, FSG = 6, SFC = 2, CBD = 0.1)
   out_ac <- t_ROS(WS10 = 11, mcsa = 8, FSG = 6, SFC = 2, CBD = 0.2)
 
-  expect_identical(out_s[["Type of fire"]], "S")
-  expect_identical(out_pc[["Type of fire"]], "PC")
-  expect_identical(out_ac[["Type of fire"]], "AC")
+  expect_identical(out_s[["Type of Fire"]], "S")
+  expect_identical(out_pc[["Type of Fire"]], "PC")
+  expect_identical(out_ac[["Type of Fire"]], "AC")
 })
 
 test_that("t_ROS uses expected ROS component when smooth_CFO is FALSE", {
@@ -854,15 +854,15 @@ test_that("t_ROS uses expected ROS component when smooth_CFO is FALSE", {
   out_s <- t_ROS(WS10 = 11, mcsa = 9, FSG = 6, SFC = 2, CBD = 0.1)
   sros <- sROS(WS10 = 11, mc = 9, SFC = 2, model_sROS = 13L)
 
-  expect_identical(out_s[["Type of fire"]], "S")
-  expect_equal(out_s[["Rate of spread (m/min)"]], round(sros, 1))
+  expect_identical(out_s[["Type of Fire"]], "S")
+  expect_equal(out_s[["Composite Rate of Spread (m/min)"]], round(sros, 1))
 
   # Active crown: ROS == cROS_A
   out_ac <- t_ROS(WS10 = 11, mcsa = 8, FSG = 6, SFC = 2, CBD = 0.2)
   crosa <- cROS_A(WS10 = 11, mc = 8, CBD = 0.2, model_cROS = 1L)
 
-  expect_identical(out_ac[["Type of fire"]], "AC")
-  expect_equal(out_ac[["Rate of spread (m/min)"]], round(crosa, 1))
+  expect_identical(out_ac[["Type of Fire"]], "AC")
+  expect_equal(out_ac[["Composite Rate of Spread (m/min)"]], round(crosa, 1))
 
   # Passive crown: ROS == cROS_P
   out_pc <- t_ROS(WS10 = 11, mcsa = 8, FSG = 6, SFC = 2, CBD = 0.1)
@@ -870,8 +870,8 @@ test_that("t_ROS uses expected ROS component when smooth_CFO is FALSE", {
   cac <- CAC(cROS_A = crosa2, CBD = 0.1)
   crosp <- cROS_P(cROS_A = crosa2, CAC = cac)
 
-  expect_identical(out_pc[["Type of fire"]], "PC")
-  expect_equal(out_pc[["Rate of spread (m/min)"]], round(crosp, 1))
+  expect_identical(out_pc[["Type of Fire"]], "PC")
+  expect_equal(out_pc[["Composite Rate of Spread (m/min)"]], round(crosp, 1))
 })
 
 test_that("mcF overrides mcsa and changes default model_sROS", {
@@ -966,10 +966,10 @@ test_that("t_ROS uses ROS_smooth when smooth_CFO is TRUE", {
 
   passive <- pcfo >= 0.5 && cac < 1
 
-  expect_identical(out[["Type of fire"]], "PC")
+  expect_identical(out[["Type of Fire"]], "PC")
 
   expect_equal(
-    out[["Rate of spread (m/min)"]],
+    out[["Composite Rate of Spread (m/min)"]],
     round(ROS_smooth(pcfo, passive, sros, crosp, crosa), 1)
   )
 })
@@ -993,13 +993,13 @@ test_that("smooth_CFO changes ROS relative to instantaneous selection", {
     smooth_CFO = TRUE
   )
 
-  expect_identical(out_inst[["Type of fire"]], out_smooth[["Type of fire"]])
+  expect_identical(out_inst[["Type of Fire"]], out_smooth[["Type of Fire"]])
 
   expect_false(
     isTRUE(
       all.equal(
-        out_inst[["Rate of spread (m/min)"]],
-        out_smooth[["Rate of spread (m/min)"]]
+        out_inst[["Composite Rate of Spread (m/min)"]],
+        out_smooth[["Composite Rate of Spread (m/min)"]]
       )
     )
   )

@@ -88,6 +88,11 @@
 #'   * `model_cROS`: An integer in `{1, 2, 3}`. Default is `1`.
 #'   * `CF_thresh`: A single numeric value in `[0, 1]`. Crown fire occurrence
 #'   threshold. Default is 0.5.
+#'   * `ROS_output`: A vector comprising
+#'   `{"sROS", "cROS_P", "cROS_A", "composite"}`. Determines whether ROS output
+#'   is only sROS, only cROS_P, only cROS_A, or a piecewise composite of all
+#'   three (default). Note that when `ROS_output` is anything other than
+#'   `"composite"`, `smooth_CFO = TRUE` will be ignored.
 #'
 #' @returns A list of lists, with each sub-list containing outputs for a single
 #'   ConPyro scenario. The outer list is named by scenario `ID`. Each scenario
@@ -98,7 +103,11 @@
 #'   * `Crown Fire Occurrence Probability`
 #'   * `Passive Crown Fire WS10 Threshold (km/h)`
 #'   * `Active Crown Fire WS10 Threshold (km/h)`
-#'   * `Composite Rate of Spread (m/min)`
+#'   * Depending of the value of `ROS_output`:
+#'     * `Composite Rate of Spread (m/min)`
+#'     * `Surface Rate of Spread (m/min)`
+#'     * `Passive Crowning Rate of Spread (m/min)`
+#'     * `Active Crowning Rate of Spread (m/min)`
 #'
 #'   Optionally plots output.
 #'
@@ -156,7 +165,7 @@ conpyro <- function(
     plot = NULL,
     ...
 ) {
-  # Get arguments
+  # Get and check arguments
   args_list <- introspect_args()
 
   # Check `data` and set names to lowercase
@@ -226,6 +235,12 @@ conpyro <- function(
     name = "ID",
     required = FALSE
   )
+  ROS_output <- resolve_input(
+    args_list = args_list,
+    data = data,
+    name = "ROS_output",
+    required = FALSE
+  )
   CF_thresh <- resolve_input(
     args_list = args_list,
     data = data,
@@ -269,6 +284,7 @@ conpyro <- function(
     stand = stand,
     smooth_CFO = smooth_CFO,
     ID = ID,
+    ROS_output = ROS_output,
     CF_thresh = CF_thresh,
     model_mcsa = model_mcsa,
     model_pCFO = model_pCFO,
@@ -291,6 +307,7 @@ conpyro <- function(
       ID <- 1:n
     }
   }
+  if (length(ROS_output) != n) ROS_output <- rep(ROS_output, length.out = n)
   if (length(CF_thresh) != n) CF_thresh <- rep(CF_thresh, length.out = n)
   if (length(model_mcsa) != n) model_mcsa <- rep(model_mcsa, length.out = n)
   if (length(model_pCFO) != n) model_pCFO <- rep(model_pCFO, length.out = n)
@@ -311,6 +328,7 @@ conpyro <- function(
     smooth_CFO = smooth_CFO,
     ID = ID,
     plot = plot,
+    ROS_output = ROS_output,
     CF_thresh = CF_thresh,
     model_mcsa = model_mcsa,
     model_pCFO = model_pCFO,
@@ -330,6 +348,7 @@ conpyro <- function(
   stand <- normalize_input(stand, "stand")
   smooth_CFO <- normalize_input(smooth_CFO, "smooth_CFO")
   plot <- unique(normalize_input(plot, "plot"))
+  ROS_output <- normalize_input(ROS_output, "ROS_output")
   CF_thresh <- normalize_input(CF_thresh, "CF_thresh")
   model_mcsa <- normalize_input(model_mcsa, "model_mcsa")
   model_pCFO <- normalize_input(model_pCFO, "model_pCFO")
@@ -367,6 +386,11 @@ conpyro <- function(
     }
     smooth_CFO_val <- if (is.na(smooth_CFO[[i]])) FALSE else smooth_CFO[[i]]
     ID_val <- ID[[i]]
+    ROS_output_val <- if (is.na(ROS_output[[i]])) {
+      "composite"
+    } else {
+      ROS_output[[i]]
+    }
     CF_thresh_val <- if (is.na(CF_thresh[[i]])) 0.5 else CF_thresh[[i]]
     model_mcsa_val <- if (is.na(model_mcsa[[i]])) {
       "corrected"
@@ -488,9 +512,22 @@ conpyro <- function(
       "WS10 (km/h)" = WS10,
       "Crown Fire Occurrence Probability" = round(pCFO_val, 2),
       "Passive Crown Fire WS10 Threshold (km/h)" = cROS_P_thresh,
-      "Active Crown Fire WS10 Threshold (km/h)" = cROS_A_thresh,
-      "Composite Rate of Spread (m/min)" = round(iROS_out, 1)
+      "Active Crown Fire WS10 Threshold (km/h)" = cROS_A_thresh
     )
+    # Conditional ROS output
+    if (ROS_output_val == "composite") {
+      out[[as.character(ID_val)]][["Composite Rate of Spread (m/min)"]] <-
+        round(iROS_out, 1)
+    } else if (ROS_output_val == tolower("sROS")) {
+      out[[as.character(ID_val)]][["Surface Rate of Spread (m/min)"]] <-
+        round(sROS_val, 1)
+    } else if (ROS_output_val == tolower("cROS_P")) {
+      out[[as.character(ID_val)]][["Passive Crowning Rate of Spread (m/min)"]]<-
+        round(cROS_P_val, 1)
+    } else if (ROS_output_val == tolower("cROS_A")) {
+      out[[as.character(ID_val)]][["Active Crowning Rate of Spread (m/min)"]] <-
+        round(cROS_A_val, 1)
+    }
 
     # Prepare plotting data
     if (!is.null(plot)) {

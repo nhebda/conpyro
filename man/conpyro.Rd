@@ -100,6 +100,11 @@ path is \code{12}; default for \code{mcsa} path is \code{13}.
 \item \code{model_cROS}: An integer in \verb{\{1, 2, 3\}}. Default is \code{1}.
 \item \code{CF_thresh}: A single numeric value in \verb{[0, 1]}. Crown fire occurrence
 threshold. Default is 0.5.
+\item \code{ROS_output}: A vector comprising
+\verb{\{"sROS", "cROS_P", "cROS_A", "composite"\}}. Determines whether ROS output
+is only sROS, only cROS_P, only cROS_A, or a piecewise composite of all
+three (default). Note that when \code{ROS_output} is anything other than
+\code{"composite"}, \code{smooth_CFO = TRUE} will be ignored.
 }}
 }
 \value{
@@ -113,7 +118,13 @@ list contains:
 \item \verb{Crown Fire Occurrence Probability}
 \item \verb{Passive Crown Fire WS10 Threshold (km/h)}
 \item \verb{Active Crown Fire WS10 Threshold (km/h)}
+\item Depending of the value of \code{ROS_output}:
+\itemize{
 \item \verb{Composite Rate of Spread (m/min)}
+\item \verb{Surface Rate of Spread (m/min)}
+\item \verb{Passive Crowning Rate of Spread (m/min)}
+\item \verb{Active Crowning Rate of Spread (m/min)}
+}
 }
 
 Optionally plots output.

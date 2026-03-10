@@ -149,6 +149,22 @@ validate_input <- function(...) {
         add = coll
       )
     },
+    "plot" = function(name, coll) {
+      assert_subset(
+        tolower(name),
+        choices = c("pcfo", "cac", "ros"),
+        .var.name = "plot",
+        add = coll
+      )
+    },
+    "ROS_output" = function(name, coll) {
+      assert_subset(
+        tolower(name),
+        choices = c("composite", "sros", "cros_p", "cros_a", NA),
+        .var.name = "ROS_output",
+        add = coll
+      )
+    },
     "CF_thresh" = function(name, coll) {
       assert_numeric(
         name,
@@ -156,14 +172,6 @@ validate_input <- function(...) {
         upper = 1,
         null.ok = TRUE,
         .var.name = "CF_thresh",
-        add = coll
-      )
-    },
-    "plot" = function(name, coll) {
-      assert_subset(
-        tolower(name),
-        choices = c("pcfo", "cac", "ros"),
-        .var.name = "plot",
         add = coll
       )
     },

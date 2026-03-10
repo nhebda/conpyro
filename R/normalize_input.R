@@ -15,6 +15,7 @@ normalize_input <- function(x, name) {
     "stand" = function(x) tolower(as.character(x)),
     "smooth_CFO" = function(x) as.logical(x),
     "plot" = function(x) tolower(as.character(x)),
+    "ROS_output" = function(x) tolower(as.character(x)),
     "CF_thresh" = function(x) as.numeric(x),
     "model_mcsa" = function(x) tolower(as.character(x)),
     "model_pCFO" = function(x) as.integer(x),

@@ -553,13 +553,21 @@ t_FT <- function(
 #'   * `model_cROS`: An integer in `{1, 2, 3}`. Default is `1`.
 #'   * `CF_thresh`: A single numeric value in `[0, 1]`. Crown fire occurrence
 #'   threshold. Default is 0.5.
+#'   * `ROS_output`: A vector comprising
+#'   `{"sROS", "cROS_P", "cROS_A", "composite"}`. Determines whether ROS output
+#'   is only sROS, only cROS_P, only cROS_A, or a piecewise composite of all
+#'   three (default). Note that when `ROS_output` is anything other than
+#'   `"composite"`, `smooth_CFO = TRUE` will be ignored.
 #'
-#' @returns A named list with elements `Type of fire` and `Rate of spread
-#'   (m/min)`:
-#'   * `Type of fire`: A single character vector giving the fire type. One of
+#' @returns A named list of length `2` with the following elements:
+#'   * `Type of Fire`: A single character vector giving the fire type. One of
 #'   `{"S", "PC", "AC"}`, corresponding to surface fire, passive crown fire, or
 #'   active crown fire, respectively.
-#'   * A single numeric value giving fire rate of spread in m/min.
+#'   * Depending of the value of `ROS_output`:
+#'     * `Composite Rate of Spread (m/min)`
+#'     * `Surface Rate of Spread (m/min)`
+#'     * `Passive Crowning Rate of Spread (m/min)`
+#'     * `Active Crowning Rate of Spread (m/min)`
 #'
 #' @export
 #'
@@ -644,7 +652,13 @@ t_ROS <- function(
 
   # Resolve, validate, & normalize optional inputs
   extra_args <- list(...)
-  allowed <- c("model_pCFO", "model_sROS", "model_cROS", "CF_thresh")
+  allowed <- c(
+    "model_pCFO",
+    "model_sROS",
+    "model_cROS",
+    "CF_thresh",
+    "ROS_output"
+  )
   unknown <- setdiff(names(extra_args), allowed)
   if (length(unknown) > 0) {
     stop(
@@ -685,6 +699,14 @@ t_ROS <- function(
   } else {
     CF_thresh <- 0.5
   }
+  if ("ROS_output" %in% names(extra_args)) {
+    ROS_output <- extra_args[["ROS_output"]]
+    validate_input(ROS_output = ROS_output)
+    check_length(n = 1L, ROS_output = ROS_output)
+    ROS_output <- normalize_input(ROS_output, "ROS_output")
+  } else {
+    ROS_output <- "composite"
+  }
 
   # Calculate
   coefs_pCFO <- sysdata$coefs_pCFO
@@ -721,20 +743,29 @@ t_ROS <- function(
     )
   }
   if (pCFO_val < CF_thresh) {
-    ROS <- if (isTRUE(smooth_CFO)) ROS_smooth_val else sROS_val
+    iROS <- if (isTRUE(smooth_CFO)) ROS_smooth_val else sROS_val
     FT <- "S"
   } else if (pCFO_val >= CF_thresh && CAC_val < 1) {
-    ROS <- if (isTRUE(smooth_CFO)) ROS_smooth_val else cROS_P_val
+    iROS <- if (isTRUE(smooth_CFO)) ROS_smooth_val else cROS_P_val
     FT  <- "PC"
   } else {
-    ROS <- if (isTRUE(smooth_CFO)) ROS_smooth_val else cROS_A_val
+    iROS <- if (isTRUE(smooth_CFO)) ROS_smooth_val else cROS_A_val
     FT  <- "AC"
   }
 
-  out <- list(
-    "Type of fire" = FT,
-    "Rate of spread (m/min)" = round(ROS, 1)
-  )
+  out <- list("Type of Fire" = FT)
+
+  # Conditional ROS output
+  if (ROS_output == "composite") {
+    out[["Composite Rate of Spread (m/min)"]] <- round(iROS, 1)
+  } else if (ROS_output == tolower("sROS")) {
+    out[["Surface Rate of Spread (m/min)"]] <- round(sROS_val, 1)
+  } else if (ROS_output == tolower("cROS_P")) {
+    out[["Passive Crowning Rate of Spread (m/min)"]] <- round(cROS_P_val, 1)
+  } else if (ROS_output == tolower("cROS_A")) {
+    out[["Active Crowning Rate of Spread (m/min)"]] <- round(cROS_A_val, 1)
+  }
+
   return(out)
 }
 
