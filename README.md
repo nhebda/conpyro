@@ -1,8 +1,6 @@
 
 # conpyro
 
-## Conifer Pyrometrics (ConPyro) fire behaviour modelling tools for R
-
 <!-- badges: start -->
 
 ![lifecycle](https://img.shields.io/badge/lifecycle-beta-orange)
@@ -10,11 +8,18 @@
 
 <!-- badges: end -->
 
+**Conifer Pyrometrics (ConPyro) fire behaviour modelling tools for R**
+
 ## Overview
 
 `conpyro` is an R package implementing the **Conifer Pyrometrics
-(ConPyro)** fire behaviour modelling system described in Perrakis et
-al. (2023).
+(ConPyro)** fire behaviour modelling system described in:
+
+> Perrakis, D. D. B., Cruz, M. G., Alexander, M. E., Hanes, C. C.,
+> Thompson, D. K., Taylor, S. W., & Stocks, B. J. (2023). Improved
+> logistic models of crown fire probability in Canadian conifer forests.
+> International Journal of Wildland Fire, 32(10), 1455–1473.
+> <https://doi.org/10.1071/WF23074>
 
 The package provides tools for estimating:
 
@@ -33,9 +38,7 @@ The package is designed for both:
 This GitHub release is a **beta version intended for testing and
 feedback prior to CRAN submission.**
 
-------------------------------------------------------------------------
-
-## Installation
+## Installation & Dependencies
 
 Install the **beta version** from GitHub:
 
@@ -51,9 +54,11 @@ to use those tools, install it separately:
 install.packages("cffdrs")
 ```
 
-Optional plotting requires **ggplot2**.
+Optional plotting of results requires `ggplot2`:
 
-------------------------------------------------------------------------
+``` r
+install.packages("ggplot2")
+```
 
 ## Basic Example
 
@@ -73,20 +78,20 @@ conpyro(
 This calculates fire behaviour metrics for each scenario defined in
 `data` across wind speeds from **0–40 km/h**.
 
-------------------------------------------------------------------------
-
 ## Input Methods
 
 Inputs can be supplied in two ways:
 
 ### 1. Data frame input (recommended for many scenarios)
 
-Each row represents a scenario.
+Each row in `data` represents a scenario – a single fuel and fire
+weather configuration. Thousands of scenarios can be quickly processed
+this way.
 
 ``` r
 conpyro(
   data = my_scenarios,
-  WS10 = 0:40
+  WS10 = 0:30
 )
 ```
 
@@ -102,7 +107,7 @@ conpyro(
   FSG = 6,
   SFC = 2,
   CBD = 0.1,
-  DMC = 80,
+  DMC = c(23, 50, 80),
   season = c("spring", "summer", "summer"),
   density = "moderate",
   stand = "pine"
@@ -110,8 +115,6 @@ conpyro(
 ```
 
 Length `1` arguments will be recycled across all scenarios.
-
-------------------------------------------------------------------------
 
 ## Plotting Results
 
@@ -134,8 +137,6 @@ Available plot types:
 - `"ROS"` – Composite rate-of-spread plot with crowning thresholds
 
 Plotting requires **ggplot2**.
-
-------------------------------------------------------------------------
 
 ## Helper Tools
 
@@ -170,8 +171,6 @@ inputs and intermediate quantities for single scenarios.
 These tools allow users to explore individual components of the ConPyro
 modeling system.
 
-------------------------------------------------------------------------
-
 ## Beta Status
 
 This package is currently in **beta testing**.
@@ -179,19 +178,15 @@ This package is currently in **beta testing**.
 During this phase we aim to:
 
 - Collect feedback from fire behaviour researchers and practitioners
-- Identify edge cases
+- Identify edge cases and bugs
 - Refine documentation and usability
 - Evaluate performance for large-scale modelling workflows
 
 The package interface may evolve prior to a future CRAN release.
 
-------------------------------------------------------------------------
-
 ## License
 
 GPL (\>= 3)
-
-------------------------------------------------------------------------
 
 ## Contact
 
