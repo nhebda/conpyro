@@ -26,7 +26,7 @@ functions by advanced users. In \code{\link[=t_mcsa]{t_mcsa()}}, the following a
 parameters are supported:
 \itemize{
 \item \code{model_mcsa}: One of either \code{original} or \code{corrected}. Default is
-\code{corrected}.
+\code{corrected}. See Perrakis et al. (2023) supplementary material for details.
 }}
 }
 \value{

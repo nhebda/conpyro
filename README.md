@@ -25,7 +25,7 @@ The package provides tools for estimating:
 
 - Fine fuel moisture content using a stand-adjusted model
 - Crown fire occurrence probability
-- Passive and active crown fire thresholds
+- Passive and active crown fire wind speed thresholds
 - Surface and crown fire rate of spread
 
 The package is designed for both:
@@ -37,6 +37,11 @@ The package is designed for both:
 
 This GitHub release is a **beta version intended for testing and
 feedback prior to CRAN submission.**
+
+**Note:** Both this software and the underlying ConPyro models are still
+under active development. Model outputs are estimates intended for
+informational and exploratory purposes only and should not be
+interpreted as definitive predictions of fire behaviour.
 
 ## Installation & Dependencies
 
@@ -198,5 +203,8 @@ Please open an issue on GitHub:
 
 Or contact:
 
-    Nicholas J. R. Hebda
-    Nicholas.Hebda at nrcan-rncan.gc.ca
+    Dr. Nicholas J. R. Hebda
+    Fire Informatics Officer
+    Canadian Forest Service
+    Natural Resources Canada
+    nicholas.hebda (at) nrcan-rncan.gc.ca

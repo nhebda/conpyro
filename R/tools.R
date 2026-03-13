@@ -155,7 +155,7 @@ t_mcF <- function(FFMC) {
 #'   functions by advanced users. In [t_mcsa()], the following advanced
 #'   parameters are supported:
 #'   * `model_mcsa`: One of either `original` or `corrected`. Default is
-#'   `corrected`.
+#'   `corrected`. See Perrakis et al. (2023) supplementary material for details.
 #'
 #' @returns A numeric value representing fine dead litter moisture content in
 #'   percent.
@@ -388,7 +388,11 @@ t_pCFO <- function(
 #'   numbered crown fire occurrence models presented in Perrakis et al. (2023),
 #'   Table 2. Default when using `mcF` is `10`; default when using `mcsa` is
 #'   `11`.
-#'   * `model_cROS`: An integer in `{1, 2, 3}`. Default is `1`.
+#'   * `model_cROS`: An integer in `{1, 2, 3}`. Default is `1`. Numbers
+#'   correspond to the following active cROS models:
+#'     * `1`: WS10, CBD, mc
+#'     * `2`: (0.084)WS10
+#'     * `3`: (0.1)WS10
 #'   * `CF_thresh`: A single numeric value in `[0, 1]`. Crown fire occurrence
 #'   threshold. Default is 0.5.
 #'
@@ -549,8 +553,19 @@ t_FT <- function(
 #'   Table 2. Default when using `mcF` is `10`; default when using `mcsa` is
 #'   `11`.
 #'   * `model_sROS`: An integer in `{1, 2, 3, 4, 12, 13}`. Default when using
-#'   `mcF` is `12`; default when using `mcsa` is `13`.
-#'   * `model_cROS`: An integer in `{1, 2, 3}`. Default is `1`.
+#'   `mcF` is `12`; default when using `mcsa` is `13`. Numbers correspond to the
+#'   following sROS models:
+#'     * `1`: FBPS aggregated surf. V4
+#'     * `2`: FBPS D-1 (no BE)
+#'     * `3`: FBPS C-6 (surface only, no BE)
+#'     * `4`: ISI2SFC
+#'     * `12`: m12 sl.con.ISI (Perrakis et al., 2026)
+#'     * `13`: m13 sl.con.isim (Perrakis et al., 2026)
+#'   * `model_cROS`: An integer in `{1, 2, 3}`. Default is `1`. Numbers
+#'   correspond to the following active cROS models:
+#'     * `1`: WS10, CBD, mc
+#'     * `2`: (0.084)WS10
+#'     * `3`: (0.1)WS10
 #'   * `CF_thresh`: A single numeric value in `[0, 1]`. Crown fire occurrence
 #'   threshold. Default is 0.5.
 #'   * `ROS_output`: A vector comprising

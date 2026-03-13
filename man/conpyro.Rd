@@ -78,8 +78,10 @@ region; any subsequent transition to active crowning remains abrupt.}
 numbers will be sequentially appended to each scenario to ensure uniqueness
 (e.g., ID_1, ID_2, ..., ID_n).}
 
-\item{plot}{Optional. A character vector to control plotting of output.
-Choose any of the following:
+\item{plot}{Optional. A character vector to control plotting of output. Plots
+ALL scenarios. Not recommended for > 10 scenarios as plots become cluttered
+and difficult to read, and plotting a large number of scenarios can be
+slow. Choose any of the following:
 \itemize{
 \item \code{"pCFO"}: Crown fire occurrence probability.
 \item \code{"CAC"}: Criterion for active crowning.
@@ -91,13 +93,28 @@ functions by advanced users. In \code{\link[=conpyro]{conpyro()}}, the following
 parameters are supported:
 \itemize{
 \item \code{model_mcsa}: One of either \code{original} or \code{corrected}. Default is
-\code{corrected}.
+\code{corrected}. See Perrakis et al. (2023) supplementary material for details.
 \item \code{model_pCFO}: An integer in \verb{\{7, 8, 10, 11\}}, corresponding to the
 numbered crown fire occurrence models presented in Perrakis et al. (2023),
 Table 2. Default for \code{mcF} path is \code{10}; default for \code{mcsa} path is \code{11}.
 \item \code{model_sROS}: An integer in \verb{\{1, 2, 3, 4, 12, 13\}}. Default for \code{mcF}
-path is \code{12}; default for \code{mcsa} path is \code{13}.
-\item \code{model_cROS}: An integer in \verb{\{1, 2, 3\}}. Default is \code{1}.
+path is \code{12}; default for \code{mcsa} path is \code{13}. Numbers correspond to the
+following sROS models:
+\itemize{
+\item \code{1}: FBPS aggregated surf. V4
+\item \code{2}: FBPS D-1 (no BE)
+\item \code{3}: FBPS C-6 (surface only, no BE)
+\item \code{4}: ISI2SFC
+\item \code{12}: m12 sl.con.ISI (Perrakis et al., 2026)
+\item \code{13}: m13 sl.con.isim (Perrakis et al., 2026)
+}
+\item \code{model_cROS}: An integer in \verb{\{1, 2, 3\}}. Default is \code{1}. Numbers
+correspond to the following active cROS models:
+\itemize{
+\item \code{1}: WS10, CBD, mc
+\item \code{2}: (0.084)WS10
+\item \code{3}: (0.1)WS10
+}
 \item \code{CF_thresh}: A single numeric value in \verb{[0, 1]}. Crown fire occurrence
 threshold. Default is 0.5.
 \item \code{ROS_output}: A vector comprising
@@ -140,8 +157,8 @@ Any given input variable may only be supplied by one of these avenues, but
 different variables may be supplied by different methods in any combination.
 For example, attempting to supply \code{FFMC} via both data frame and argument
 will yield an error, but supplying \code{FFMC} via data frame and \code{FSG} via
-argument is supported. The sole exception is \code{WS10}, which can only be
-supplied via argument.
+argument is supported. The only exceptions are \code{WS10} and \code{plot}, which can
+only be supplied via argument.
 
 When supplying input via data frame, the data frame must have at least \code{1}
 row and \code{1} column. Each row defines a ConPyro prediction for a single set of

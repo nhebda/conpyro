@@ -47,8 +47,23 @@ numbered crown fire occurrence models presented in Perrakis et al. (2023),
 Table 2. Default when using \code{mcF} is \code{10}; default when using \code{mcsa} is
 \code{11}.
 \item \code{model_sROS}: An integer in \verb{\{1, 2, 3, 4, 12, 13\}}. Default when using
-\code{mcF} is \code{12}; default when using \code{mcsa} is \code{13}.
-\item \code{model_cROS}: An integer in \verb{\{1, 2, 3\}}. Default is \code{1}.
+\code{mcF} is \code{12}; default when using \code{mcsa} is \code{13}. Numbers correspond to the
+following sROS models:
+\itemize{
+\item \code{1}: FBPS aggregated surf. V4
+\item \code{2}: FBPS D-1 (no BE)
+\item \code{3}: FBPS C-6 (surface only, no BE)
+\item \code{4}: ISI2SFC
+\item \code{12}: m12 sl.con.ISI (Perrakis et al., 2026)
+\item \code{13}: m13 sl.con.isim (Perrakis et al., 2026)
+}
+\item \code{model_cROS}: An integer in \verb{\{1, 2, 3\}}. Default is \code{1}. Numbers
+correspond to the following active cROS models:
+\itemize{
+\item \code{1}: WS10, CBD, mc
+\item \code{2}: (0.084)WS10
+\item \code{3}: (0.1)WS10
+}
 \item \code{CF_thresh}: A single numeric value in \verb{[0, 1]}. Crown fire occurrence
 threshold. Default is 0.5.
 \item \code{ROS_output}: A vector comprising

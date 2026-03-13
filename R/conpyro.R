@@ -10,8 +10,8 @@
 #' different variables may be supplied by different methods in any combination.
 #' For example, attempting to supply `FFMC` via both data frame and argument
 #' will yield an error, but supplying `FFMC` via data frame and `FSG` via
-#' argument is supported. The sole exception is `WS10`, which can only be
-#' supplied via argument.
+#' argument is supported. The only exceptions are `WS10` and `plot`, which can
+#' only be supplied via argument.
 #'
 #' When supplying input via data frame, the data frame must have at least `1`
 #' row and `1` column. Each row defines a ConPyro prediction for a single set of
@@ -70,8 +70,10 @@
 #' @param ID Optional. A vector of unique scenario identifiers. If length `1`,
 #'   numbers will be sequentially appended to each scenario to ensure uniqueness
 #'   (e.g., ID_1, ID_2, ..., ID_n).
-#' @param plot Optional. A character vector to control plotting of output.
-#'   Choose any of the following:
+#' @param plot Optional. A character vector to control plotting of output. Plots
+#'   ALL scenarios. Not recommended for > 10 scenarios as plots become cluttered
+#'   and difficult to read, and plotting a large number of scenarios can be
+#'   slow. Choose any of the following:
 #'   * `"pCFO"`: Crown fire occurrence probability.
 #'   * `"CAC"`: Criterion for active crowning.
 #'   * `"ROS"`: Composite rate of spread plot with crowning thresholds.
@@ -79,13 +81,24 @@
 #'   functions by advanced users. In [conpyro()], the following advanced
 #'   parameters are supported:
 #'   * `model_mcsa`: One of either `original` or `corrected`. Default is
-#'   `corrected`.
+#'   `corrected`. See Perrakis et al. (2023) supplementary material for details.
 #'   * `model_pCFO`: An integer in `{7, 8, 10, 11}`, corresponding to the
 #'   numbered crown fire occurrence models presented in Perrakis et al. (2023),
 #'   Table 2. Default for `mcF` path is `10`; default for `mcsa` path is `11`.
 #'   * `model_sROS`: An integer in `{1, 2, 3, 4, 12, 13}`. Default for `mcF`
-#'   path is `12`; default for `mcsa` path is `13`.
-#'   * `model_cROS`: An integer in `{1, 2, 3}`. Default is `1`.
+#'   path is `12`; default for `mcsa` path is `13`. Numbers correspond to the
+#'   following sROS models:
+#'     * `1`: FBPS aggregated surf. V4
+#'     * `2`: FBPS D-1 (no BE)
+#'     * `3`: FBPS C-6 (surface only, no BE)
+#'     * `4`: ISI2SFC
+#'     * `12`: m12 sl.con.ISI (Perrakis et al., 2026)
+#'     * `13`: m13 sl.con.isim (Perrakis et al., 2026)
+#'   * `model_cROS`: An integer in `{1, 2, 3}`. Default is `1`. Numbers
+#'   correspond to the following active cROS models:
+#'     * `1`: WS10, CBD, mc
+#'     * `2`: (0.084)WS10
+#'     * `3`: (0.1)WS10
 #'   * `CF_thresh`: A single numeric value in `[0, 1]`. Crown fire occurrence
 #'   threshold. Default is 0.5.
 #'   * `ROS_output`: A vector comprising
@@ -167,11 +180,51 @@ conpyro <- function(
 ) {
   # Get and check arguments
   args_list <- introspect_args()
+  extra_args <- list(...)
+  allowed <- c(
+    "model_mcsa",
+    "model_pCFO",
+    "model_sROS",
+    "model_cROS",
+    "CF_thresh",
+    "ROS_output"
+  )
+  unknown <- setdiff(names(extra_args), allowed)
+  if (length(unknown) > 0) {
+    stop(
+      "Unknown argument(s) in ...: ",
+      paste(unknown, collapse = ", "),
+      call. = FALSE
+    )
+  }
 
-  # Check `data` and set names to lowercase
+  # Check `data`, set names to lowercase, and validate column names
   if (!is.null(data)) {
     assert_data_frame(data)
     names(data) <- tolower(names(data))
+    assert_subset(
+      names(data),
+      choices = tolower(c(
+        "FFMC",
+        "FSG",
+        "SFC",
+        "CBD",
+        "DMC",
+        "season",
+        "density",
+        "stand",
+        "smooth_CFO",
+        "ID",
+        "ROS_output",
+        "CF_thresh",
+        "model_mcsa",
+        "model_pCFO",
+        "model_sROS",
+        "model_cROS"
+      )),
+      empty.ok = FALSE,
+      .var.name = "`data` column names"
+    )
   }
 
   # Resolve required inputs

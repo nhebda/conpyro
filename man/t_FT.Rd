@@ -40,7 +40,13 @@ parameters are supported:
 numbered crown fire occurrence models presented in Perrakis et al. (2023),
 Table 2. Default when using \code{mcF} is \code{10}; default when using \code{mcsa} is
 \code{11}.
-\item \code{model_cROS}: An integer in \verb{\{1, 2, 3\}}. Default is \code{1}.
+\item \code{model_cROS}: An integer in \verb{\{1, 2, 3\}}. Default is \code{1}. Numbers
+correspond to the following active cROS models:
+\itemize{
+\item \code{1}: WS10, CBD, mc
+\item \code{2}: (0.084)WS10
+\item \code{3}: (0.1)WS10
+}
 \item \code{CF_thresh}: A single numeric value in \verb{[0, 1]}. Crown fire occurrence
 threshold. Default is 0.5.
 }}
