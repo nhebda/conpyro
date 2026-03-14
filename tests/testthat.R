@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(conpyro.pkg)
+library(conpyro)
 
-test_check("conpyro.pkg")
+test_check("conpyro")

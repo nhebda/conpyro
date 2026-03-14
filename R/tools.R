@@ -1,312 +1,918 @@
-#' Calculate rate of spread (ROS) for a single set of conditions
+#' Determine `season` input for [t_mcsa()]
 #'
-#' `tool_ROS()` calculates rate of spread for a single set of fuel and fire
-#' weather conditions using the Canadian Conifer Pyrometrics (ConPyro) model
-#' system. See Perrakis et al. (2023) for details. Provides a more convenient
-#' single-scenario calculation than using the main [conpyro()] function. If you
-#' want want to run multiple scenarios or plot output, use [conpyro()] instead.
+#' `t_mcSeason()` takes a month and day as input and calculates the `season`
+#' argument to be used in [t_mcsa()].
+#'  * Jan 1 to May 31  = `1 ("spring")`
+#'  * Jun 1 to Jun 15  = `1.5 ("sp-su")`
+#'  * Jun 16 to Aug 31 = `2 ("summer")`
+#'  * Sep 1 to Dec 31  = `3 ("fall")`
+#' A leap year (2024) is used internally so that February 29 is treated as a
+#' valid date.
 #'
-#' @param season One of `spring`, `sp-su`, `summer`, or `fall`.
-#' @param density One of `light`, `moderate`, or `dense`.
-#' @param stand One of `pine`, `spruce`, `Douglas-fir`, `deciduous`, or
-#'   `mixedwood`.
-#' @param FSG A numeric value between `0.5` and `20` (inclusive). Fuel strata
-#'   gap in metres. The vertical distance between the top of the surface fuels
-#'   and the lower limit of the canopy fuels. Analogous to crown base height
-#'   (CBH) in the absence of mid-story ladder fuels.
-#' @param SFC A numeric value between `0.1` and `6` (inclusive). Surface fuel
-#'   consumption in kg/m^2. May be estimated using [tool_SFC_FBP()] or
-#'   [tool_SFC_deGroot()].
-#' @param CBD A numeric value between `0.01` and `0.8` (inclusive). Crown bulk
-#'   density in kg/m^3.
-#' @param smooth_CFO Defines whether crown fire initiation is modeled as a
-#'   smooth transition (`TRUE`) or an instantaneous occurrence (`FALSE`).
-#' @param model_conpyro Choose one of `7`, `8`, `10`, or `11`. The ConPyro model
-#'   form used for calculations (see Perrakis et al., 2023). Models `7` and `10`
-#'   use FFMC-based fine fuel moisture content (MCFFMC) while models `8` and
-#'   `11` use stand-adjusted moisture content (MCSA). Default is `11`.
-#' @param model_SROS Choose one of `1`, `2`, `3`, or `4`. The surface fire ROS
-#'   model used for calculations.
-#'      * `1`: Aggregated FBPS surf. V4 (default)
-#'      * `2`: D-1 FBPS
-#'      * `3`: C-6 (surface only) FBPS
-#'      * `4`: IsaSFC
-#' @param model_CROS Choose one of `1` or `2`. The crown fire ROS model used for
-#'   calculations.
-#'      * `1`: Adapted Cruz, Alexander, & Wakimoto (2005): WS, MC, CBD (default)
-#'      * `2`: Adapted Cruz & Alexander (2019): WS only
-#' @param WS A single integer between `0` and `60` (inclusive). Wind speed in
-#'   km/h
-#' @param FFMC A numeric value between 80 and 99 (inclusive). The Fine Fuel
-#'   Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index System.
-#' @param DMC A numeric value between 5 and 200 (inclusive). The Duff Moisture
-#'   Code (DMC) as per the Canadian Forest Fire Weather Index (FWI) System.
-#' @param CF_thresh A numeric value between `0` and `1` (inclusive). Defines the
-#'   pCFO threshold at which crown fire occurs.
-#' @param ROS_output A character vector to control ROS output. Choose any of the
-#'   following:
-#'   * `SROS`: Surface fire rate of spread.
-#'   * `CROS_P`: Passive crown fire rate of spread.
-#'   * `CROS_A`: Active crown fire rate of spread.
-#'   * `integrated`: Complete composite rate of spread.
+#' @param month Required. An integer in `{1, 2, 3, ..., 12}`.
+#' @param day Required. An integer in `{1, 2, 3, ..., 31}`.
 #'
-#' @returns A list of length 4 consisting of numeric values named:
-#'   * `MCFFMC`
-#'   * `MCSA`
-#'   * `Crown Fire Occurrence Probability (pCFO)`
-#'   * `Integrated Rate of Spread (m/min)`
+#' @returns A number in `{1, 1.5, 2, 3}`, corresponding to `{"spring", "sp-su",
+#'   "summer", "fall"}`. [t_mcsa()] accepts either numeric codes or the
+#'   corresponding labels.
 #' @export
 #'
 #' @examples
-#' # Calculate integrated ROS for a low-density pine stand at WS = 12.
-#' tool_ROS(
-#'   season = "summer",
-#'   density = "light",
-#'   stand = "pine",
-#'   FSG = 6,
-#'   SFC = 2.2,
-#'   CBD = 0.09,
-#'   smooth_CFO = FALSE,
-#'   model_conpyro = 11,
-#'   model_SROS = 1,
-#'   model_CROS = 1,
-#'   WS = 12,
-#'   FFMC = 91,
-#'   DMC = 70,
-#'   CF_thresh = 0.5,
-#'   ROS_output = "integrated"
-#' )
-#' # Calculate SROS for a moderate-density pine stand at WS = 11.
-#' tool_ROS(
-#'   season = "sp-su",
-#'   density = "moderate",
-#'   stand = "pine",
-#'   FSG = 6.5,
-#'   SFC = 2,
-#'   CBD = 0.12,
-#'   smooth_CFO = FALSE,
-#'   model_conpyro = 11,
-#'   model_SROS = 1,
-#'   model_CROS = 1,
-#'   WS = 11,
-#'   FFMC = 90,
-#'   DMC = 65,
-#'   CF_thresh = 0.5,
-#'   ROS_output = "SROS"
-#' )
-tool_ROS <- function(
-    season = "summer",
-    density = "moderate",
-    stand = "pine",
-    FSG = 6,
-    SFC = 2,
-    CBD = 0.16,
-    smooth_CFO = FALSE,
-    model_conpyro = 11,
-    model_SROS = 1,
-    model_CROS = 1,
-    WS = 20,
-    FFMC = 91,
-    DMC = 70,
-    CF_thresh = 0.5,
-    ROS_output = "integrated"
+#' # Basic usage
+#' t_mcSeason(5, 11)   # Spring -> 1
+#' t_mcSeason(6, 7)    # Spring-summer transition -> 1.5
+#' t_mcSeason(8, 16)   # Summer -> 2
+#' t_mcSeason(9, 24)   # Fall -> 3
+#'
+#' # Boundary dates
+#' t_mcSeason(5, 31)   # last day of spring -> 1
+#' t_mcSeason(6, 1)    # first day of sp-su -> 1.5
+#' t_mcSeason(6, 15)   # last day of sp-su -> 1.5
+#' t_mcSeason(6, 16)   # first day of summer -> 2
+#' t_mcSeason(8, 31)   # last day of summer -> 2
+#' t_mcSeason(9, 1)    # first day of fall -> 3
+#'
+#' # Leap-day behavior
+#' t_mcSeason(2, 29)   # valid (leap year used internally) -> 1
+#'
+t_mcSeason <- function(month, day) {
+  # Validate & normalize input
+  validate_input(month = month, day = day)
+  month <- normalize_input(month, "month")
+  day <- normalize_input(day, "day")
+
+  # Validate calendar date using a leap year (allows Feb 29)
+  year <- 2024
+  date <- as.Date(paste(year, month, day, sep = "-"), optional = TRUE)
+  if (is.na(date)) {
+    stop("Invalid month/day combination.", call. = FALSE)
+  }
+
+  # Calculate
+  md <- month * 100L + day
+  out <- if (md < 601L) {
+    1
+  } else if (md < 616L) {
+    1.5
+  } else if (md < 901L) {
+    2
+  } else {
+    3
+  }
+
+  return(out)
+}
+
+#' Determine `density` input for [t_mcsa()]
+#'
+#' `t_mcDensity()` takes a canopy closure value as input and outputs a
+#' categorical `density` value to be used in [t_mcsa()]. Light ≤ 45; Moderate
+#' 46–60; Dense ≥ 61.
+#'
+#' @param canopy_closure Required. An number in `[20, 100]`. Canopy closure in
+#'   percent.
+#'
+#' @returns An integer in `{1, 2, 3}`, corresponding to `{"light", "moderate",
+#'   "dense"}`. [t_mcsa()] accepts either numeric codes or the corresponding
+#'   labels.
+#' @export
+#'
+#' @examples
+#' # Basic usage
+#' t_mcDensity(30)  # Light -> 1
+#' t_mcDensity(50)  # Moderate -> 2
+#' t_mcDensity(70)  # Dense -> 3
+#'
+#' # Boundary conditions
+#' t_mcDensity(45)  # Light upper bound -> 1
+#' t_mcDensity(46)  # Moderate lower bound -> 2
+#' t_mcDensity(60)  # Moderate upper bound -> 2
+#' t_mcDensity(61)  # Dense lower bound -> 3
+#'
+t_mcDensity <- function(canopy_closure) {
+  # Validate & normalize input
+  validate_input(canopy_closure = canopy_closure)
+  canopy_closure <- normalize_input(canopy_closure, "canopy_closure")
+
+  # Calculate
+  out <- if (canopy_closure <= 45) {
+    1L
+  } else if (canopy_closure <= 60) {
+    2L
+  } else {
+    3L
+  }
+
+  return(out)
+}
+
+#' Estimate FFMC-based fine dead litter moisture content
+#'
+#' `t_mcF()` estimates fine dead surface litter moisture content based on the
+#' Fine Fuel Moisture Code (FFMC) of the Canadian Fire Weather Index System.
+#'
+#' @param FFMC Required. A single numeric value in `[80, 99]`. The Fine Fuel
+#'   Moisture Code as per the Canadian Fire Weather Index System.
+#'
+#' @returns A numeric value representing fine dead litter moisture content in
+#'   percent.
+#' @export
+#'
+#' @examples
+#' t_mcF(80)  # Moist
+#' t_mcF(84)  # Moderate
+#' t_mcF(89)  # Dry
+#' t_mcF(92)  # Very dry
+#'
+t_mcF <- function(FFMC) {
+  # Validate inputs
+  validate_input(FFMC = FFMC)
+  check_length(n = 1L, FFMC = FFMC)
+  FFMC <- normalize_input(FFMC, "FFMC")
+
+  # Calculate
+  mcF <- mcFFMC(FFMC)
+  out <- round(mcF, 2)
+
+  return(out)
+}
+
+#' Estimate stand-adjusted fine dead litter moisture content
+#'
+#' `t_mcsa()` estimates fine dead surface litter moisture content using the
+#' stand-adjusted model (mcsa).
+#'
+#' @inheritParams t_mcF
+#' @param DMC Required. A single numeric value in `[5, 250]`. The Duff Moisture
+#'   Code as per the Canadian Fire Weather Index System.
+#' @param season Required. One of `{"spring", "sp-su", "summer", "fall"}` or
+#'   numeric equivalents `{1, 1.5, 2, 3}`. See [t_mcSeason()].
+#' @param density Required. One of `{"light", "moderate", "dense"}` or numeric
+#'   equivalents `{1, 2, 3}`. See [t_mcDensity()].
+#' @param stand Required. One of `{"pine", "spruce", "Douglas-fir", "deciduous",
+#'   "mixedwood"}` or abbreviated equivalents `{"p", "s", "df", "d", "m"}`.
+#' @param ... Optional. Allows additional arguments to be passed to nested
+#'   functions by advanced users. In [t_mcsa()], the following advanced
+#'   parameters are supported:
+#'   * `model_mcsa`: One of either `original` or `corrected`. Default is
+#'   `corrected`. See Perrakis et al. (2023) supplementary material for details.
+#'
+#' @returns A numeric value representing fine dead litter moisture content in
+#'   percent.
+#' @export
+#'
+#' @examples
+#' t_mcsa(FFMC = 80, DMC = 20, season = 1, density = 3, stand = "s") # Moist
+#' t_mcsa(FFMC = 84, DMC = 30, season = 1, density = 3, stand = "p") # Moderate
+#' t_mcsa(FFMC = 89, DMC = 40, season = 2, density = 2, stand = "p") # Dry
+#' t_mcsa(FFMC = 92, DMC = 60, season = 2, density = 1, stand = "p") # Very dry
+#'
+t_mcsa <- function(
+    FFMC,
+    DMC,
+    season,
+    density,
+    stand,
+    ...
 ) {
-  input <- data.frame(
-    id = "",
+  # Validate & normalize required inputs
+  validate_input(
+    FFMC = FFMC,
+    DMC = DMC,
+    season = season,
+    density = density,
+    stand = stand
+  )
+  check_length(
+    n = 1L,
+    FFMC = FFMC,
+    DMC = DMC,
+    season = season,
+    density = density,
+    stand = stand
+  )
+  FFMC <- normalize_input(FFMC, "FFMC")
+  DMC <- normalize_input(DMC, "DMC")
+  season <- normalize_input(season, "season")
+  density <- normalize_input(density, "density")
+  stand <- normalize_input(stand, "stand")
+
+  # Resolve, validate, & normalize optional inputs
+  extra_args <- list(...)
+  allowed <- "model_mcsa"
+  unknown <- setdiff(names(extra_args), allowed)
+  if (length(unknown) > 0) {
+    stop(
+      "Unknown argument(s) in ...: ",
+      paste(unknown, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  if ("model_mcsa" %in% names(extra_args)) {
+    model_mcsa <- extra_args[["model_mcsa"]]
+    validate_input(model_mcsa = model_mcsa)
+    check_length(n = 1L, model_mcsa = model_mcsa)
+    model_mcsa <- normalize_input(model_mcsa, "model_mcsa")
+  } else {
+    model_mcsa <- "corrected"
+  }
+
+  # Calculate
+  coefs_mcsa <- sysdata$coefs_MCSA
+  idx_val <- mcsa_idx(
+    FFMC = FFMC,
     season = season,
     density = density,
     stand = stand,
-    FSG = FSG,
-    SFC = SFC,
-    CBD = CBD,
-    smooth_CFO = smooth_CFO,
-    model_conpyro = model_conpyro,
-    model_SROS = model_SROS,
-    model_CROS = model_CROS
+    model_mcsa = model_mcsa
   )
-  output <- conpyro(
-    input = input,
-    WS = WS,
-    FFMC = FFMC,
-    DMC = DMC,
-    CF_thresh = CF_thresh,
-    ROS_output = ROS_output
+  mcF_val <- mcFFMC(FFMC)
+  mcDMC_val <- mcDMC(DMC)
+  mcsa_val <- mcsa(
+    idx = idx_val,
+    mcFFMC = mcF_val,
+    mcDMC = mcDMC_val,
+    coefs = coefs_mcsa
   )
-  output <- unlist(output, recursive = FALSE)
-  output <- output[-3]
-  return(output)
+  out <- round(mcsa_val, 2)
+
+  return(out)
 }
 
 #' Calculate probability of crown fire occurrence (pCFO) for a single set of
 #' conditions
 #'
-#' `tool_pCFO()` calculates crown fire occurrence probability for a single set
-#' of fuel, wind speed, and stand structure observations using the Canadian
-#' Conifer Pyrometrics (ConPyro) model system. See Perrakis et al. (2023) for
-#' details.
+#' `t_pCFO()` calculates crown fire occurrence probability for a single set of
+#' fuel and fire weather conditions using the Conifer Pyrometrics (ConPyro) fire
+#' behaviour modelling system. See Perrakis et al. (2023) for details.
 #'
-#' @param MC A numeric value between `5` and `20` (inclusive). Fine fuel
-#'   moisture content, either FMC-based (MCFFMC) or stand-adjusted (MCSA). May
-#'   be estimated using [tool_MC()].
-#' @param WS A numeric value between `0` and `60` (inclusive). Wind speed in
-#'   km/h.
-#' @param FSG A numeric value between `0.5` and `20` (inclusive). Fuel strata
-#'   gap in metres. The vertical distance between the top of the surface fuels
-#'   and the lower limit of the canopy fuels. Analogous to crown base height
-#'   (CBH) in the absence of mid-story ladder fuels.
-#' @param SFC A numeric value between `0.1` and `6` (inclusive). Surface fuel
-#'   consumption in kg/m^2. May be estimated using [tool_SFC_FBP()] or
-#'   [tool_SFC_deGroot()].
-#' @param model Choose one of `7`, `8`, `10`, or `11`. The ConPyro model form
-#'   used for calculations (see Perrakis et al., 2023). Models `7` and `10`
-#'   assume that `MC` is FFMC-based (MCFFMC) while models `8` and `11` assume
-#'   `MC` is stand-adjusted (MCSA).
+#' @param WS10 Required. A single numeric value in `[0, 60]`. Standard 10-m open
+#'   wind speed in km/h.
+#' @param mcF Optional. A single numeric value in `[1, 30]`. Fine dead surface
+#'   litter moisture content in percent, calculated using the Fine Fuel Moisture
+#'   Code (FFMC). May be estimated using [t_mcF()]. If `NULL`, `mcsa` will be
+#'   used instead.
+#' @param mcsa Optional. A single numeric value in `[1, 30]`. Fine dead surface
+#'   litter moisture content in percent, calculated using the stand-adjusted
+#'   model. May be estimated using [t_mcsa()]. If `mcF` is anything other than
+#'   `NULL`, it will override `mcsa`.
+#' @param FSG Required. A single numeric value in `[0.5, 20]`. Fuel strata gap
+#'   in metres, representing the vertical distance between the top of the
+#'   surface fuels and the lower limit of the canopy fuels. Analogous to crown
+#'   base height in the absence of mid-story ladder fuels.
+#' @param SFC Required. A single numeric value in `[0.1, 6]`. Surface fuel
+#'   consumption in kg/m^2. May be estimated using [t_SFC_FBP()] or
+#'   [t_SFC_deGroot()].
+#' @param ... Optional. Allows additional arguments to be passed to nested
+#'   functions by advanced users. In [t_pCFO()], the following advanced
+#'   parameters are supported:
+#'   * `model_pCFO`: An integer in `{7, 8, 10, 11}`, corresponding to the
+#'   numbered crown fire occurrence models presented in Perrakis et al. (2023),
+#'   Table 2. Default when using `mcF` is `10`; default when using `mcsa` is
+#'   `11`.
 #'
-#' @returns A list of length `1` consisting of a numeric value named `pCFO`.
+#' @returns A numeric value giving probability of crown fire occurrence in the
+#'   range of `[0, 1]`.
 #' @export
 #'
 #' @examples
-#' # Using `model = 11` (default), MC is assumed to be stand-adjusted (MCSA)
-#' tool_pCFO(MC = 8.3, WS = 15.2, FSG = 6.8, SFC = 1.6, model = 11)
-#' # Using `model = 10`, MC is assumed to be only FFMC-based (MCFFMC)
-#' tool_pCFO(MC = 8.3, WS = 15.2, FSG = 6.8, SFC = 1.6, model = 10)
+#' # Basic usage
+#' t_pCFO(WS10 = 11, mcsa = 10, FSG = 6, SFC = 2)  # Low probability
+#' t_pCFO(WS10 = 12, mcsa = 9, FSG = 6, SFC = 2)   # Moderate probability
+#' t_pCFO(WS10 = 13, mcsa = 8, FSG = 6, SFC = 2)   # High probability
 #'
-#' @importFrom checkmate assert_choice
-tool_pCFO <- function(MC = 7.8, WS = 20, FSG = 9.5, SFC = 1.8, model = 11) {
-  # Check input validity
-  assert_number(MC, lower = 5, upper = 20)
-  assert_number(WS, lower = 0, upper = 60)
-  assert_number(FSG, lower = 0.5, upper = 20)
-  assert_number(SFC, lower = 0.1, upper = 6)
-  assert_choice(model, c(7, 8, 10, 11))
-  # Call pCFO function
-  pCFO <- fn_pCFO(model, WS, FSG, SFC, MC)
-  # Output
-  out  <- list("pCFO" = round(pCFO, 2))
+#' # Using t_mcF()
+#' t_pCFO(WS10 = 13, mcF = t_mcF(89), FSG = 6, SFC = 2)
+#'
+#' # Using t_mcsa()
+#' t_pCFO(
+#'   WS10 = 13,
+#'   mcsa = t_mcsa(
+#'     FFMC = 89,
+#'     DMC = 40,
+#'     season = 2,
+#'     density = 2,
+#'     stand = "p"
+#'   ),
+#'   FSG = 6,
+#'   SFC = 2
+#' )
+#'
+t_pCFO <- function(
+    WS10,
+    mcF = NULL,
+    mcsa = NULL,
+    FSG,
+    SFC,
+    ...
+) {
+  # Resolve, validate, & normalize required inputs
+  if (is.null(mcsa) && is.null(mcF)) {
+    stop("Either `mcsa` or `mcF` must be non-NULL.", call. = FALSE)
+  }
+  if (is.null(mcF)) {
+    mc <- mcsa
+    mc_type <- "mcsa"
+  } else {
+    mc <- mcF
+    mc_type <- "mcF"
+  }
+  validate_input(
+    WS10 = WS10,
+    mc = mc,
+    FSG = FSG,
+    SFC = SFC
+  )
+  check_length(
+    n = 1L,
+    WS10 = WS10,
+    mc = mc,
+    FSG = FSG,
+    SFC = SFC
+  )
+  WS10 <- normalize_input(WS10, "WS10")
+  mc <- normalize_input(mc, "mc")
+  FSG <- normalize_input(FSG, "FSG")
+  SFC <- normalize_input(SFC, "SFC")
+
+  # Resolve, validate, & normalize optional inputs
+  extra_args <- list(...)
+  allowed <- "model_pCFO"
+  unknown <- setdiff(names(extra_args), allowed)
+  if (length(unknown) > 0) {
+    stop(
+      "Unknown argument(s) in ...: ",
+      paste(unknown, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  if ("model_pCFO" %in% names(extra_args)) {
+    model_pCFO <- extra_args[["model_pCFO"]]
+    validate_input(model_pCFO = model_pCFO)
+    check_length(n = 1L, model_pCFO = model_pCFO)
+    model_pCFO <- normalize_input(model_pCFO, "model_pCFO")
+  } else {
+    model_pCFO <- if (mc_type == "mcF") 10L else if (mc_type == "mcsa") 11L
+  }
+
+  # Calculate
+  coefs_pCFO <- sysdata$coefs_pCFO
+  pCFO_val <- pCFO(
+    WS10 = WS10,
+    mc = mc,
+    FSG = FSG,
+    SFC = SFC,
+    model_pCFO = model_pCFO,
+    coefs = coefs_pCFO
+  )
+  out <- round(pCFO_val, 2)
+
   return(out)
 }
 
-#' Estimate fine dead litter moisture content (MC)
+#' Calculate fire type
 #'
-#' `tool_MC()` estimates fine dead surface litter moisture content (MC), both
-#' from the FFMC (MCFFMC) and using the stand-adjusted model (MCSA).
+#' `t_FT()` calculates fire type from a single set of fuel and fire weather
+#' conditions using the Conifer Pyrometrics (ConPyro) fire behaviour modelling
+#' system. See Perrakis et al. (2023) for details.
 #'
-#' @param FFMC A numeric value between `80` and `99` (inclusive). The Fine Fuel
-#'   Moisture Code (FFMC) as per the Canadian Forest Fire Weather Index System.
-#' @param DMC A numeric value between `5` and `200` (inclusive). The Duff
-#'   Moisture Code (DMC) as per the Canadian Forest Fire Weather Index System.
-#' @param season One of `spring`, `sp-su`, `summer`, or `fall`.
-#' @param density One of `light`, `moderate`, or `dense`.
-#' @param stand One of `pine`, `spruce`, `Douglas-fir`, `deciduous`, or
-#'   `mixedwood`.
+#' @inheritParams t_pCFO
+#' @param CBD Required. A single numeric value in `[0.01, 0.8]`. Crown bulk
+#'   density in kg/m^3.
+#' @param ... Optional. Allows additional arguments to be passed to nested
+#'   functions by advanced users. In [t_FT()], the following advanced
+#'   parameters are supported:
+#'   * `model_pCFO`: An integer in `{7, 8, 10, 11}`, corresponding to the
+#'   numbered crown fire occurrence models presented in Perrakis et al. (2023),
+#'   Table 2. Default when using `mcF` is `10`; default when using `mcsa` is
+#'   `11`.
+#'   * `model_cROS`: An integer in `{1, 2, 3}`. Default is `1`. Numbers
+#'   correspond to the following active cROS models:
+#'     * `1`: WS10, CBD, mc
+#'     * `2`: (0.084)WS10
+#'     * `3`: (0.1)WS10
+#'   * `CF_thresh`: A single numeric value in `[0, 1]`. Crown fire occurrence
+#'   threshold. Default is 0.5.
 #'
-#' @returns A list of length `2` consisting of one numeric value named `MCFFMC`
-#'   and one numeric value named `MCSA`.
+#' @returns A single character vector giving the fire type. One of `{"S", "PC",
+#'   "AC"}`, corresponding to surface fire, passive crown fire, or active crown
+#'   fire, respectively.
 #' @export
 #'
 #' @examples
-#' tool_MC(FFMC = 93, DMC = 70, season = "summer", density = "dense", stand =
-#' "spruce")
+#' # Basic usage
+#' t_FT(WS10 = 11, mcsa = 9, FSG = 6, SFC = 2, CBD = 0.1)  # Surface fire
+#' t_FT(WS10 = 11, mcsa = 8, FSG = 6, SFC = 2, CBD = 0.1)  # Passive crown fire
+#' t_FT(WS10 = 11, mcsa = 8, FSG = 6, SFC = 2, CBD = 0.2)  # Active crown fire
 #'
-#' @importFrom checkmate assert_number assert_choice
-tool_MC <- function(
-    FFMC    = 91.2,
-    DMC     = 75,
-    season  = "summer",
-    density = "moderate",
-    stand   = "pine"
+#' # Using t_mcF()
+#' t_FT(WS10 = 11, mcF = t_mcF(91), FSG = 6, SFC = 2, CBD = 0.2)
+#'
+#' # Using t_mcsa()
+#' t_FT(
+#'   WS10 = 13,
+#'   mcsa = t_mcsa(
+#'     FFMC = 91,
+#'     DMC = 60,
+#'     season = 2,
+#'     density = 2,
+#'     stand = "p"
+#'   ),
+#'   FSG = 6,
+#'   SFC = 2,
+#'   CBD = 0.2
+#' )
+#'
+t_FT <- function(
+    WS10,
+    mcF = NULL,
+    mcsa = NULL,
+    FSG,
+    SFC,
+    CBD,
+    ...
 ) {
-  assert_number(FFMC, lower = 80, upper = 99)
-  assert_number(DMC, lower = 5, upper = 200)
-  assert_choice(
-    tolower(season),
-    c("spring","sp-su", "summer", "fall"),
-    .var.name = "season"
+  # Resolve, validate, & normalize required inputs
+  if (is.null(mcsa) && is.null(mcF)) {
+    stop("Either `mcsa` or `mcF` must be non-NULL.", call. = FALSE)
+  }
+  if (is.null(mcF)) {
+    mc <- mcsa
+    mc_type <- "mcsa"
+  } else {
+    mc <- mcF
+    mc_type <- "mcF"
+  }
+  validate_input(
+    WS10 = WS10,
+    mc = mc,
+    FSG = FSG,
+    SFC = SFC,
+    CBD = CBD
   )
-  assert_choice(
-    tolower(density),
-    c("light", "moderate", "dense"),
-    .var.name = "density"
+  check_length(
+    n = 1L,
+    WS10 = WS10,
+    mc = mc,
+    FSG = FSG,
+    SFC = SFC,
+    CBD = CBD
   )
-  assert_choice(
-    tolower(stand),
-    c("deciduous", "douglas-fir", "mixedwood", "pine", "spruce"),
-    .var.name = "stand"
+  WS10 <- normalize_input(WS10, "WS10")
+  mc <- normalize_input(mc, "mc")
+  FSG <- normalize_input(FSG, "FSG")
+  SFC <- normalize_input(SFC, "SFC")
+  CBD <- normalize_input(CBD, "CBD")
+
+  # Resolve, validate, & normalize optional inputs
+  extra_args <- list(...)
+  allowed <- c("model_pCFO", "model_cROS", "CF_thresh")
+  unknown <- setdiff(names(extra_args), allowed)
+  if (length(unknown) > 0) {
+    stop(
+      "Unknown argument(s) in ...: ",
+      paste(unknown, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  if ("model_pCFO" %in% names(extra_args)) {
+    model_pCFO <- extra_args[["model_pCFO"]]
+    validate_input(model_pCFO = model_pCFO)
+    check_length(n = 1L, model_pCFO = model_pCFO)
+    model_pCFO <- normalize_input(model_pCFO, "model_pCFO")
+  } else {
+    model_pCFO <- if (mc_type == "mcF") 10L else if (mc_type == "mcsa") 11L
+  }
+  if ("model_cROS" %in% names(extra_args)) {
+    model_cROS <- extra_args[["model_cROS"]]
+    validate_input(model_cROS = model_cROS)
+    check_length(n = 1L, model_cROS = model_cROS)
+    model_cROS <- normalize_input(model_cROS, "model_cROS")
+  } else {
+    model_cROS <- 1L
+  }
+  if ("CF_thresh" %in% names(extra_args)) {
+    CF_thresh <- extra_args[["CF_thresh"]]
+    validate_input(CF_thresh = CF_thresh)
+    check_length(n = 1L, CF_thresh = CF_thresh)
+    CF_thresh <- normalize_input(CF_thresh, "CF_thresh")
+  } else {
+    CF_thresh <- 0.5
+  }
+
+  # Calculate
+  coefs_pCFO <- sysdata$coefs_pCFO
+  pCFO_val <- pCFO(
+    WS10 = WS10,
+    mc = mc,
+    FSG = FSG,
+    SFC = SFC,
+    model_pCFO = model_pCFO,
+    coefs = coefs_pCFO
   )
-  MCFFMC     <- fn_MCFFMC(FFMC)
-  MCDMC      <- fn_MCDMC(DMC)
-  idx        <- fn_MCSA_idx(tolower(season), tolower(density), tolower(stand))
-  MCSA       <- fn_MCSA(idx, MCFFMC, MCDMC)
-  out        <- list(round(MCFFMC, 2), round(MCSA, 2))
-  names(out) <- c("MCFFMC", "MCSA")
+  cROS_A_val <- cROS_A(
+    WS10 = WS10,
+    mc = mc,
+    CBD = CBD,
+    model_cROS = model_cROS
+  )
+  CAC_val <- CAC(cROS_A = cROS_A_val, CBD = CBD)
+  out <- if (pCFO_val < CF_thresh) {
+    "S"
+  } else if (pCFO_val >= CF_thresh && CAC_val < 1) {
+    "PC"
+  } else {
+    "AC"
+  }
+
+  return(out)
+}
+
+#' Calculate rate of spread (ROS) for a single set of conditions
+#'
+#' `t_ROS()` calculates rate of spread for a single set of fuel and fire weather
+#' conditions using the Conifer Pyrometrics (ConPyro) fire behaviour modelling
+#' system. See Perrakis et al. (2023) for details. Provides a more convenient
+#' single-scenario calculation than the main [conpyro()] function. To run
+#' multiple scenarios or plot output, use [conpyro()] instead.
+#'
+#' @inheritParams t_FT
+#' @param smooth_CFO A single logical value that defines whether crown fire
+#'   occurrence is modeled as a smooth transition (`TRUE`) or an instantaneous
+#'   event (`FALSE`). Default is `FALSE`. If passive crowning occurs at any wind
+#'   speed, smoothing is applied between sROS and cROS_P across the transition
+#'   region; any subsequent transition to active crowning remains abrupt.
+#' @param ... Optional. Allows additional arguments to be passed to nested
+#'   functions by advanced users. In [t_ROS()], the following advanced
+#'   parameters are supported:
+#'   * `model_pCFO`: An integer in `{7, 8, 10, 11}`, corresponding to the
+#'   numbered crown fire occurrence models presented in Perrakis et al. (2023),
+#'   Table 2. Default when using `mcF` is `10`; default when using `mcsa` is
+#'   `11`.
+#'   * `model_sROS`: An integer in `{1, 2, 3, 4, 12, 13}`. Default when using
+#'   `mcF` is `12`; default when using `mcsa` is `13`. Numbers correspond to the
+#'   following sROS models:
+#'     * `1`: FBPS aggregated surf. V4
+#'     * `2`: FBPS D-1 (no BE)
+#'     * `3`: FBPS C-6 (surface only, no BE)
+#'     * `4`: ISI2SFC
+#'     * `12`: m12 sl.con.ISI (Perrakis et al., 2026)
+#'     * `13`: m13 sl.con.isim (Perrakis et al., 2026)
+#'   * `model_cROS`: An integer in `{1, 2, 3}`. Default is `1`. Numbers
+#'   correspond to the following active cROS models:
+#'     * `1`: WS10, CBD, mc
+#'     * `2`: (0.084)WS10
+#'     * `3`: (0.1)WS10
+#'   * `CF_thresh`: A single numeric value in `[0, 1]`. Crown fire occurrence
+#'   threshold. Default is 0.5.
+#'   * `ROS_output`: A vector comprising
+#'   `{"sROS", "cROS_P", "cROS_A", "composite"}`. Determines whether ROS output
+#'   is only sROS, only cROS_P, only cROS_A, or a piecewise composite of all
+#'   three (default). Note that when `ROS_output` is anything other than
+#'   `"composite"`, `smooth_CFO = TRUE` will be ignored.
+#'
+#' @returns A named list of length `2` with the following elements:
+#'   * `Type of Fire`: A single character vector giving the fire type. One of
+#'   `{"S", "PC", "AC"}`, corresponding to surface fire, passive crown fire, or
+#'   active crown fire, respectively.
+#'   * Depending of the value of `ROS_output`:
+#'     * `Composite Rate of Spread (m/min)`
+#'     * `Surface Rate of Spread (m/min)`
+#'     * `Passive Crowning Rate of Spread (m/min)`
+#'     * `Active Crowning Rate of Spread (m/min)`
+#'
+#' @export
+#'
+#' @examples
+#' # Basic usage
+#' t_ROS(WS10 = 11, mcsa = 9, FSG = 6, SFC = 2, CBD = 0.1)  # Surface fire
+#' t_ROS(WS10 = 11, mcsa = 8, FSG = 6, SFC = 2, CBD = 0.1)  # Passive crown fire
+#' t_ROS(WS10 = 11, mcsa = 8, FSG = 6, SFC = 2, CBD = 0.2)  # Active crown fire
+#'
+#' # Active crown fire with smooth occurrence
+#' t_ROS(
+#'   WS10 = 11,
+#'   mcsa = 8,
+#'   FSG = 6,
+#'   SFC = 2,
+#'   CBD = 0.2,
+#'   smooth_CFO = TRUE
+#' )
+#'
+#' # Using t_mcF()
+#' t_ROS(WS10 = 13, mcF = t_mcF(91), FSG = 6, SFC = 2, CBD = 0.2)
+#'
+#' # Using t_mcsa()
+#' t_ROS(
+#'   WS10 = 13,
+#'   mcsa = t_mcsa(
+#'     FFMC = 91,
+#'     DMC = 60,
+#'     season = 2,
+#'     density = 2,
+#'     stand = "p"
+#'   ),
+#'   FSG = 6,
+#'   SFC = 2,
+#'   CBD = 0.2
+#' )
+#'
+t_ROS <- function(
+    WS10,
+    mcF = NULL,
+    mcsa = NULL,
+    FSG,
+    SFC,
+    CBD,
+    smooth_CFO = FALSE,
+    ...
+) {
+  # Resolve, validate, & normalize required inputs
+  if (is.null(mcsa) && is.null(mcF)) {
+    stop("Either `mcsa` or `mcF` must be non-NULL.", call. = FALSE)
+  }
+  if (is.null(mcF)) {
+    mc <- mcsa
+    mc_type <- "mcsa"
+  } else {
+    mc <- mcF
+    mc_type <- "mcF"
+  }
+  validate_input(
+    WS10 = WS10,
+    mc = mc,
+    FSG = FSG,
+    SFC = SFC,
+    CBD = CBD,
+    smooth_CFO = smooth_CFO
+  )
+  check_length(
+    n = 1L,
+    WS10 = WS10,
+    mc = mc,
+    FSG = FSG,
+    SFC = SFC,
+    CBD = CBD,
+    smooth_CFO = smooth_CFO
+  )
+  WS10 <- normalize_input(WS10, "WS10")
+  mc <- normalize_input(mc, "mc")
+  FSG <- normalize_input(FSG, "FSG")
+  SFC <- normalize_input(SFC, "SFC")
+  CBD <- normalize_input(CBD, "CBD")
+  smooth_CFO <- normalize_input(smooth_CFO, "smooth_CFO")
+
+  # Resolve, validate, & normalize optional inputs
+  extra_args <- list(...)
+  allowed <- c(
+    "model_pCFO",
+    "model_sROS",
+    "model_cROS",
+    "CF_thresh",
+    "ROS_output"
+  )
+  unknown <- setdiff(names(extra_args), allowed)
+  if (length(unknown) > 0) {
+    stop(
+      "Unknown argument(s) in ...: ",
+      paste(unknown, collapse = ", "),
+      call. = FALSE
+    )
+  }
+  if ("model_pCFO" %in% names(extra_args)) {
+    model_pCFO <- extra_args[["model_pCFO"]]
+    validate_input(model_pCFO = model_pCFO)
+    check_length(n = 1L, model_pCFO = model_pCFO)
+    model_pCFO <- normalize_input(model_pCFO, "model_pCFO")
+  } else {
+    model_pCFO <- if (mc_type == "mcF") 10L else if (mc_type == "mcsa") 11L
+  }
+  if ("model_sROS" %in% names(extra_args)) {
+    model_sROS <- extra_args[["model_sROS"]]
+    validate_input(model_sROS = model_sROS)
+    check_length(n = 1L, model_sROS = model_sROS)
+    model_sROS <- normalize_input(model_sROS, "model_sROS")
+  } else {
+    model_sROS <- if (mc_type == "mcF") 12L else if (mc_type == "mcsa") 13L
+  }
+  if ("model_cROS" %in% names(extra_args)) {
+    model_cROS <- extra_args[["model_cROS"]]
+    validate_input(model_cROS = model_cROS)
+    check_length(n = 1L, model_cROS = model_cROS)
+    model_cROS <- normalize_input(model_cROS, "model_cROS")
+  } else {
+    model_cROS <- 1L
+  }
+  if ("CF_thresh" %in% names(extra_args)) {
+    CF_thresh <- extra_args[["CF_thresh"]]
+    validate_input(CF_thresh = CF_thresh)
+    check_length(n = 1L, CF_thresh = CF_thresh)
+    CF_thresh <- normalize_input(CF_thresh, "CF_thresh")
+  } else {
+    CF_thresh <- 0.5
+  }
+  if ("ROS_output" %in% names(extra_args)) {
+    ROS_output <- extra_args[["ROS_output"]]
+    validate_input(ROS_output = ROS_output)
+    check_length(n = 1L, ROS_output = ROS_output)
+    ROS_output <- normalize_input(ROS_output, "ROS_output")
+  } else {
+    ROS_output <- "composite"
+  }
+
+  # Calculate
+  coefs_pCFO <- sysdata$coefs_pCFO
+  pCFO_val <- pCFO(
+    WS10 = WS10,
+    mc = mc,
+    FSG = FSG,
+    SFC = SFC,
+    model_pCFO = model_pCFO,
+    coefs = coefs_pCFO
+  )
+  sROS_val <- sROS(
+    WS10 = WS10,
+    mc = mc,
+    SFC = SFC,
+    model_sROS = model_sROS
+  )
+  cROS_A_val <- cROS_A(
+    WS10 = WS10,
+    mc = mc,
+    CBD = CBD,
+    model_cROS = model_cROS
+  )
+  CAC_val <- CAC(cROS_A = cROS_A_val, CBD = CBD)
+  passive_crowning <- pCFO_val >= CF_thresh && CAC_val < 1
+  cROS_P_val <- cROS_P(cROS_A = cROS_A_val, CAC = CAC_val)
+  if (isTRUE(smooth_CFO)) {
+    ROS_smooth_val <- ROS_smooth(
+      pCFO = pCFO_val,
+      passive_crowning = passive_crowning,
+      sROS = sROS_val,
+      cROS_P = cROS_P_val,
+      cROS_A = cROS_A_val
+    )
+  }
+  if (pCFO_val < CF_thresh) {
+    iROS <- if (isTRUE(smooth_CFO)) ROS_smooth_val else sROS_val
+    FT <- "S"
+  } else if (pCFO_val >= CF_thresh && CAC_val < 1) {
+    iROS <- if (isTRUE(smooth_CFO)) ROS_smooth_val else cROS_P_val
+    FT  <- "PC"
+  } else {
+    iROS <- if (isTRUE(smooth_CFO)) ROS_smooth_val else cROS_A_val
+    FT  <- "AC"
+  }
+
+  out <- list("Type of Fire" = FT)
+
+  # Conditional ROS output
+  if (ROS_output == "composite") {
+    out[["Composite Rate of Spread (m/min)"]] <- round(iROS, 1)
+  } else if (ROS_output == tolower("sROS")) {
+    out[["Surface Rate of Spread (m/min)"]] <- round(sROS_val, 1)
+  } else if (ROS_output == tolower("cROS_P")) {
+    out[["Passive Crowning Rate of Spread (m/min)"]] <- round(cROS_P_val, 1)
+  } else if (ROS_output == tolower("cROS_A")) {
+    out[["Active Crowning Rate of Spread (m/min)"]] <- round(cROS_A_val, 1)
+  }
+
   return(out)
 }
 
 #' Estimate foliar moisture content (FMC)
 #'
-#' `tool_FMC()` estimates foliar moisture content as per the Canadian Forest
-#' Fire Behavior Prediction System equations. A simple wrapper for
-#' `cffdrs:::foliar_moisture_content`.
+#' `t_FMC()` estimates foliar moisture content by calling
+#' `cffdrs:::foliar_moisture_content` (a non-exported helper in the `cffdrs`
+#' package). Therefore, `cffdrs` must be installed for this function to work.
 #'
-#' @param LAT A numeric value between `42` and `70` (inclusive). Latitude in
-#'   decimal degrees.
-#' @param LONG A numeric value between `53` and `141` (inclusive). Longitude in
-#'   decimal degrees.
-#' @param ELV A numeric value between `0` and `2500` (inclusive).Elevation in
-#'   metres about sea level.
-#' @param Dj A numeric value between `0` and `365` (inclusive). Julian day.
+#' @param LAT Required. A numeric value in `[41, 70]`. Latitude in decimal
+#'   degrees.
+#' @param LONG Required. A numeric value in `[52, 141]`. Longitude in decimal
+#'   degrees west (positive; e.g., 123.1 for 123.1°W).
+#' @param Dj Required. A single integer in `[1, 366]`. Julian day.
+#' @param ELV Optional. A numeric value in `[0, 2500]` or `NA`. Elevation in
+#'   metres above sea level. If `NA`, elevation is treated as `0` m (i.e.,
+#'   sea-level).
 #'
-#' @returns A list of length `1` consisting of a numeric value named `FMC`.
+#' @returns A numeric value giving an estimate of foliar moisture content in
+#'   percent.
 #' @export
 #'
 #' @examples
-#' tool_FMC(LAT = 54.13, LONG = 116.89, ELV = 1000, Dj = 178)
+#' if (requireNamespace("cffdrs", quietly = TRUE)) {
+#'   # Excluding elevation
+#'   t_FMC(LAT = 54.13, LONG = 116.89, Dj = 178, ELV = NA)
+#'   # Including elevation
+#'   t_FMC(LAT = 54.13, LONG = 116.89, Dj = 178, ELV = 1000)
+#' }
 #'
-#' @importFrom checkmate assert_number
-tool_FMC <- function(LAT = 48, LONG = 83.3, ELV = 100, Dj = 200) {
-  assert_number(LAT, lower = 42, upper = 70)
-  assert_number(LONG, lower = 53, upper = 141)
-  assert_number(ELV, lower = 0, upper = 2500)
-  assert_number(Dj, lower = 0, upper = 365)
-  FMC <- cffdrs:::foliar_moisture_content(LAT, LONG, ELV, Dj, 0)
-  out <- list("FMC" = round(FMC, 2))
+t_FMC <- function(LAT, LONG, Dj, ELV = NA) {
+  # Dependency check (cffdrs is in Suggests)
+  if (!requireNamespace("cffdrs", quietly = TRUE)) {
+    stop(
+      "Package 'cffdrs' must be installed to use t_FMC().",
+      call. = FALSE
+    )
+  }
+
+  # Validate and normalize inputs
+  validate_input(LAT = LAT, LONG = LONG, Dj = Dj, ELV = ELV)
+  check_length(n = 1L, LAT = LAT, LONG = LONG, Dj = Dj, ELV = ELV)
+  LAT <- normalize_input(LAT, "LAT")
+  LONG <- normalize_input(LONG, "LONG")
+  Dj <- normalize_input(Dj, "Dj")
+  ELV <- normalize_input(ELV, "ELV")
+
+  # Calculate
+  ELV <- if (is.na(ELV)) 0 else ELV
+  FMC <- cffdrs:::foliar_moisture_content(
+    LAT = LAT,
+    LONG = LONG,
+    DJ = Dj,
+    ELV = ELV,
+    D0 = 0
+  )
+
+  # Defensive checks: ensures cffdrs:::foliar_moisture_content() output is a
+  # finite numeric scalar
+  if (!is.numeric(FMC) || length(FMC) != 1L || !is.finite(FMC)) {
+    stop(
+      "Unexpected output from cffdrs:::foliar_moisture_content(). ",
+      "Expected a finite numeric scalar.",
+      call. = FALSE
+    )
+  }
+  out <- round(as.numeric(FMC), 2)
+
   return(out)
 }
 
 #' Estimate surface fuel consumption (SFC) using Canadian Forest Fire Behavior
 #' Prediction System (FBPS) equations
 #'
-#' `tool_SFC_FBP()` estimates SFC for all major fuel types as per the FBPS
-#' equations. A simple wrapper for `cffdrs:::surface_fuel_consumption`. An
-#' alternative SFC calculation method is offered by [tool_SFC_deGroot()].
+#' `t_SFC_FBP()` estimates SFC for major FBPS fuel types by calling
+#' `cffdrs:::surface_fuel_consumption` (a non-exported helper in the `cffdrs`
+#' package). Therefore, `cffdrs` must be installed for this function to work.
+#' An alternative SFC calculation method is offered by [t_SFC_deGroot()].
 #'
-#' @inheritParams tool_MC
-#' @param BUI A numeric value between `80` and `200` (inclusive). The Buildup
-#'   Index (BUI) as per the Canadian Forest Fire Weather Index System.
-#' @param PC A numeric value between `0` and `100` (inclusive). Percent conifer
-#'   for M1/M2 fuel types.
+#' @inheritParams t_mcF
+#' @param BUI Required. A numeric value in `[5, 200]`. The Buildup Index (BUI)
+#'   as per the Canadian Forest Fire Weather Index (FWI) System.
+#' @param PC Required. A numeric value in `[0, 100]`. Percent conifer for M1/M2
+#'   fuel types.
 #'
 #' @returns A list of length `10` consisting of named numeric values
 #'   corresponding to the major FBPS fuel types.
 #' @export
 #'
 #' @examples
-#' tool_SFC_FBP(BUI = 81, FFMC = 92, PC = 55)
+#' if (requireNamespace("cffdrs", quietly = TRUE)) {
+#'   t_SFC_FBP(BUI = 81, FFMC = 92, PC = 55)
+#' }
 #'
-#' @importFrom checkmate assert_number
-tool_SFC_FBP <- function(BUI = 85, FFMC = 91, PC = 40) {
-  assert_number(BUI, lower = 0, upper = 200)
-  assert_number(FFMC, lower = 80, upper = 99)
-  assert_number(PC, lower = 0, upper = 100)
+t_SFC_FBP <- function(BUI, FFMC, PC) {
+  # Dependency check (cffdrs is in Suggests)
+  if (!requireNamespace("cffdrs", quietly = TRUE)) {
+    stop(
+      "Package 'cffdrs' must be installed to use t_SFC_FBP().",
+      call. = FALSE
+    )
+  }
+
+  # Validate and normalize inputs
+  validate_input(BUI = BUI, FFMC = FFMC, PC = PC)
+  check_length(n = 1L, FFMC = FFMC)
+  BUI <- normalize_input(BUI, "BUI")
+  FFMC <- normalize_input(FFMC, "FFMC")
+  PC <- normalize_input(PC, "PC")
+
+  # Calculate
   fueltypes <- c("C1", "C2", "C3", "C5", "C7", "D1", "M1", "S1", "S2", "S3")
   out <- lapply(
     fueltypes,
     cffdrs:::surface_fuel_consumption,
-    BUI  = BUI,
+    BUI = BUI,
     FFMC = FFMC,
-    PC   = PC
+    PC = PC
   )
-  out[] <- lapply(out, round, 2)
+
+  # Defensive checks: ensures each element is a finite numeric scalar
+  out <- lapply(out, function(x) {
+    if (!is.numeric(x) || length(x) != 1L || !is.finite(x)) {
+      stop(
+        "Unexpected output from cffdrs:::surface_fuel_consumption(). ",
+        "Expected a finite numeric scalar.",
+        call. = FALSE
+      )
+    }
+    round(as.numeric(x), 2)
+  })
+
   names(out) <- c(
     "C1",
     "C2/M3/M4",
@@ -319,39 +925,45 @@ tool_SFC_FBP <- function(BUI = 85, FFMC = 91, PC = 40) {
     "S2",
     "S3"
   )
+
   return(out)
 }
 
 #' Estimate surface fuel consumption (SFC) using the forest floor equation from
 #' De Groot et al. (2009)
 #'
-#' `tool_SFC_deGroot()` estimates SFC based on fuel load and Buildup Index (BUI)
+#' `t_SFC_deGroot()` estimates SFC based on fuel load and Buildup Index (BUI)
 #' in experimental burns (R2 = 0.787). This equation may give nonsensical
 #' results (e.g., SFC > SFL) for cases of low surface fuel load (SFL) and high
 #' BUI. See De Groot et al. (2009) for details.
 #'
-#' @inheritParams tool_SFC_FBP
-#' @param FFL A numeric value between `1` and `5` (inclusive). Forest floor load
-#'   (litter + duff) in kg/m^2.
-#' @param FWFL A numeric value between `0` and `2` (inclusive). Fine woody fuel
-#'   load (<7 cm diam.) in kg/m^2.
+#' @inheritParams t_SFC_FBP
+#' @param FFL Required. A numeric value in `[1, 5]`. Forest floor load (litter +
+#'   duff) in kg/m^2.
+#' @param FWFL Required. A numeric value in `[0, 2]`. Fine woody fuel load (<7
+#'   cm diam.) in kg/m^2.
 #'
-#' @returns A list of length `2` consisting of one numeric value named
-#'   `Forest Floor Fuel Consumption` and one numeric value named `SFC`.
+#' @returns A list of length `2` consisting of one numeric value named `Forest
+#'   Floor Fuel Consumption` and one numeric value named `SFC`, both in kg/m^2.
+#'   SFC = Fine Woody Fuel Load + Forest Floor Fuel Consumption.
 #' @export
 #'
 #' @examples
-#' tool_SFC_deGroot(BUI = 78, FFL = 2.8, FWFL = 0.4)
+#' t_SFC_deGroot(BUI = 78, FFL = 2.8, FWFL = 0.4)
 #'
-#' @importFrom checkmate assert_number
-tool_SFC_deGroot <- function(BUI = 85, FFL = 3.5, FWFL = 0.3) {
-  assert_number(BUI, lower = 0, upper = 200)
-  assert_number(FFL, lower = 1, upper = 5)
-  assert_number(FWFL, lower = 0, upper = 2)
-  FFFC  <- -0.176 + 0.156 * FFL + 0.015 * BUI
-  SFC   <- FWFL + FFFC
-  out   <- list("Forest Floor Fuel Consumption" = FFFC, "SFC" = SFC)
+t_SFC_deGroot <- function(BUI, FFL, FWFL) {
+  # Validate and normalize inputs
+  validate_input(BUI = BUI, FFL = FFL, FWFL = FWFL)
+  BUI <- normalize_input(BUI, "BUI")
+  FFL <- normalize_input(FFL, "FFL")
+  FWFL <- normalize_input(FWFL, "FWFL")
+
+  # Calculate
+  FFFC <- -0.176 + 0.156 * FFL + 0.015 * BUI
+  SFC <- FWFL + FFFC
+  out <- list("Forest Floor Fuel Consumption" = FFFC, "SFC" = SFC)
   out[] <- lapply(out, round, 2)
+
   return(out)
 }
 
@@ -359,36 +971,40 @@ tool_SFC_deGroot <- function(BUI = 85, FFL = 3.5, FWFL = 0.3) {
 #'
 #' `ladder_standing_dead()` estimates standing dead ladder fuels for midstory
 #' small snags <5 cm DBH, e.g., Jack pine overstory with dense standing dead
-#' pine ladder fuels. Caution: Experimental! These equations are under
+#' pine ladder fuels. CAUTION: Experimental! These equations are under
 #' development and may contain errors.
 #'
-#' @inheritParams tool_pCFO
-#' @param consumption A numeric value between `0.1` and `10` (inclusive).
-#'   Consumption of fine dead elevated wood in kg/m^2. Assumes continuity with
-#'   surface fuels.
-#' @param cl A numeric value between `0.5` and `15` (inclusive). Mean centroid
-#'   height of ladder fuels in metres.
+#' @inheritParams t_pCFO
+#' @param cons Required. A numeric value in `[0.1, 10]`. Consumption of fine
+#'   dead elevated wood in kg/m^2. Assumes continuity with surface fuels.
+#' @param cl Required. A numeric value in `[0.5, 15]`. Mean centroid height of
+#'   ladder fuels in metres.
 #'
 #' @returns A list of length `2` consisting of one numeric value named
-#'   `LFSG [m]` and one numeric value named
-#'   `Scaled SFC contribution, small snags [kg/m^2]`
+#'   `LFSG (m)` and one numeric value named
+#'   `Scaled SFC contribution, small snags (kg/m^2)`
 #' @export
 #'
 #' @examples
-#' ladder_standing_dead(consumption = 1.1, cl = 5.1, FSG = 6.3)
+#' ladder_standing_dead(cons = 1.1, cl = 5.1, FSG = 6.3)
 #'
-#' @importFrom checkmate assert_number
-ladder_standing_dead <- function(consumption = 0.2, cl = 4, FSG = 6) {
-  assert_number(consumption, lower = 0.1, upper = 10)
-  assert_number(cl, lower = 0.5, upper = 15)
-  assert_number(FSG, lower = 0.5, upper = 20)
-  snag_centroid <- if((cl / 2) >= FSG) FSG - 0.5 else cl / 2
-  zl            <- FSG - snag_centroid
-  scaled_SFC    <- (FSG / zl)^1.5 * consumption * 3.1
-  out           <- list(
-    "LFSG [m]" = round(zl, 2),
-    "Scaled SFC contribution, small snags [kg/m^2]" = round(scaled_SFC, 2)
+ladder_standing_dead <- function(cons, cl, FSG) {
+  # Validate and normalize inputs
+  validate_input(cons = cons, cl = cl, FSG = FSG)
+  check_length(n = 1L, cons = cons, cl = cl, FSG = FSG)
+  cons <- normalize_input(cons, "cons")
+  cl <- normalize_input(cl, "cl")
+  FSG <- normalize_input(FSG, "FSG")
+
+  # Calculate
+  snag_centroid <- if ((cl / 2) >= FSG) FSG - 0.5 else cl / 2
+  zl <- FSG - snag_centroid
+  scaled_SFC <- (FSG / zl)^1.5 * cons * 3.1 # zl > 0
+  out <- list(
+    "LFSG (m)" = round(zl, 2),
+    "Scaled SFC contribution, small snags (kg/m^2)" = round(scaled_SFC, 2)
   )
+
   return(out)
 }
 
@@ -400,53 +1016,93 @@ ladder_standing_dead <- function(consumption = 0.2, cl = 4, FSG = 6) {
 #' midstory live black spruce saplings. These equations assume that the fuel
 #' strata gap (FSG) represents the distance from the sapling crown centroid to
 #' the overstory lower crown base height (LCBH). Calculate lower crowning
-#' probability to the sapling cohort separately. Caution: Experimental! These
+#' probability to the sapling cohort separately. CAUTION: Experimental! These
 #' equations are under development and may contain errors.
 #'
-#' @param hs Sapling height in metres.
-#' @param zs Sapling LCBH in metres.
-#' @param zp Overstory LCBH in metres.
-#' @param lnfl Live needle fuel load in kg/m^2.
-#' @param sapling_FMC Sapling foliar moisture content in percent.
-#' @param actual_SFC Actual SFC in kg/m^2.
+#' @param hs Required. A single numeric value in `[0.5, 10]`. Sapling height in
+#'   metres.
+#' @param zs Required. A single numeric value in `[0.5, 9.5]`. Sapling lower
+#'   crown base height (LCBH) in metres. `zs` must always be less than `hs`.
+#' @param zp Required. A single numeric value in `[0.5, 20]`. Overstory lower
+#'   crown base height (LCBH) in metres.
+#' @param lnfl Required. A single numeric value in `[0.1, 2]`. Live needle fuel
+#'   load in kg/m^2.
+#' @param sapling_FMC Required. A single numeric value in `[80, 120]`. Sapling
+#'   foliar moisture content (FMC) in percent.
+#' @param actual_SFC Required. A single numeric value in `[0.1, 6]`. Actual SFC
+#'   in kg/m^2.
 #'
-#' @returns A list of length `5` consisting of numeric values named
-#'   `Sapling crown centroid [m]`, `FSG [m]`, `Sapling false-SFC`,
-#'   `SFC scaled to crown centroid`, and `Total false-SFC`, respectively.
+#' @returns A list of length `5` consisting of numeric values named `Sapling
+#'   crown centroid (m)`, `FSG (m)`, `Sapling false-SFC (kg/m^2)`, `SFC scaled
+#'   to crown centroid (kg/m^2)`, and `Total false-SFC (kg/m^2)`, respectively.
 #' @export
 #'
 #' @examples
-#' ladder_midstory_saplings(hs = 4.5, zs = 1.3, zp = 7, lnfl = 0.4, sapling_FMC
-#' = 120, actual_SFC  = 2.8)
+#' ladder_midstory_saplings(
+#'   hs = 4.5,
+#'   zs = 1.3,
+#'   zp = 7,
+#'   lnfl = 0.4,
+#'   sapling_FMC = 120,
+#'   actual_SFC = 2.8
+#' )
 #'
-#' @importFrom checkmate assert_number
 ladder_midstory_saplings <- function(
-    hs          = 5,
-    zs          = 1,
-    zp          = 6,
-    lnfl        = 0.5,
-    sapling_FMC = 120,
-    actual_SFC  = 2.7
+    hs,
+    zs,
+    zp,
+    lnfl,
+    sapling_FMC,
+    actual_SFC
 ) {
-  assert_number(hs)
-  assert_number(zs)
-  assert_number(zp)
-  assert_number(lnfl)
-  assert_number(sapling_FMC)
-  assert_number(actual_SFC)
-  cs           <- zs + (hs - zs) / 2
-  FSG          <- if((zp - cs) < 0.5) 0.5 else zp - cs
-  deltah       <- (16.52 - 0.057 * sapling_FMC) / 16
-  sapling_SFCF <- deltah * lnfl * 1.5 * 3.1
-  SFC_cs       <- (FSG / zp)^1.5 * actual_SFC
-  total_SFCF   <- sapling_SFCF + SFC_cs
-  out          <- list(
-    "Sapling crown centroid [m]" = cs,
-    "FSG [m]" = FSG,
-    "Sapling false-SFC" = sapling_SFCF,
-    "SFC scaled to crown centroid" = SFC_cs,
-    "Total false-SFC" = total_SFCF
+  # Validate and normalize inputs
+  validate_input(
+    hs = hs,
+    zs = zs,
+    zp = zp,
+    lnfl = lnfl,
+    sapling_FMC = sapling_FMC,
+    actual_SFC = actual_SFC
   )
-  out[]        <- lapply(out, round, 2)
+  check_length(
+    n = 1L,
+    hs = hs,
+    zs = zs,
+    zp = zp,
+    lnfl = lnfl,
+    sapling_FMC = sapling_FMC,
+    actual_SFC = actual_SFC
+  )
+  hs <- normalize_input(hs, "hs")
+  zs <- normalize_input(zs, "zs")
+  zp <- normalize_input(zp, "zp")
+  lnfl <- normalize_input(lnfl, "lnfl")
+  sapling_FMC <- normalize_input(sapling_FMC, "sapling_FMC")
+  actual_SFC <- normalize_input(actual_SFC, "actual_SFC")
+
+  # Check that hs > zs
+  if (zs >= hs) {
+    stop(
+      "Sapling total height (hs) must be greater than sapling LCBH (zs).",
+      call. = FALSE
+    )
+  }
+
+  # Calculate
+  cs <- zs + (hs - zs) / 2
+  FSG <- if((zp - cs) < 0.5) 0.5 else zp - cs
+  deltah <- (16.52 - 0.057 * sapling_FMC) / 16
+  sapling_SFCF <- deltah * lnfl * 1.5 * 3.1
+  SFC_cs <- (FSG / zp)^1.5 * actual_SFC
+  total_SFCF <- sapling_SFCF + SFC_cs
+  out <- list(
+    "Sapling crown centroid (m)" = cs,
+    "FSG (m)" = FSG,
+    "Sapling false-SFC (kg/m^2)" = sapling_SFCF,
+    "SFC scaled to crown centroid (kg/m^2)" = SFC_cs,
+    "Total false-SFC (kg/m^2)" = total_SFCF
+  )
+  out[] <- lapply(out, round, 2)
+
   return(out)
 }

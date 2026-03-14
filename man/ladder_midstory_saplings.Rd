@@ -5,32 +5,29 @@
 \title{Estimate surface fuel consumption (SFC) contribution from a midstory sapling
 cohort}
 \usage{
-ladder_midstory_saplings(
-  hs = 5,
-  zs = 1,
-  zp = 6,
-  lnfl = 0.5,
-  sapling_FMC = 120,
-  actual_SFC = 2.7
-)
+ladder_midstory_saplings(hs, zs, zp, lnfl, sapling_FMC, actual_SFC)
 }
 \arguments{
-\item{hs}{Sapling height in metres.}
+\item{hs}{Required. A single numeric value in \verb{[0.5, 10]}. Sapling height in
+metres.}
 
-\item{zs}{Sapling LCBH in metres.}
+\item{zs}{Required. A single numeric value in \verb{[0.5, 9.5]}. Sapling lower
+crown base height (LCBH) in metres. \code{zs} must always be less than \code{hs}.}
 
-\item{zp}{Overstory LCBH in metres.}
+\item{zp}{Required. A single numeric value in \verb{[0.5, 20]}. Overstory lower
+crown base height (LCBH) in metres.}
 
-\item{lnfl}{Live needle fuel load in kg/m^2.}
+\item{lnfl}{Required. A single numeric value in \verb{[0.1, 2]}. Live needle fuel
+load in kg/m^2.}
 
-\item{sapling_FMC}{Sapling foliar moisture content in percent.}
+\item{sapling_FMC}{Required. A single numeric value in \verb{[80, 120]}. Sapling
+foliar moisture content (FMC) in percent.}
 
-\item{actual_SFC}{Actual SFC in kg/m^2.}
+\item{actual_SFC}{Required. A single numeric value in \verb{[0.1, 6]}. Actual SFC
+in kg/m^2.}
 }
 \value{
-A list of length \code{5} consisting of numeric values named
-\verb{Sapling crown centroid [m]}, \code{FSG [m]}, \verb{Sapling false-SFC},
-\verb{SFC scaled to crown centroid}, and \verb{Total false-SFC}, respectively.
+A list of length \code{5} consisting of numeric values named \verb{Sapling crown centroid (m)}, \code{FSG (m)}, \verb{Sapling false-SFC (kg/m^2)}, \verb{SFC scaled to crown centroid (kg/m^2)}, and \verb{Total false-SFC (kg/m^2)}, respectively.
 }
 \description{
 \code{ladder_midstory_saplings()} estimates the "false-SFC" contribution of a
@@ -38,11 +35,17 @@ midstory sapling cohort (>1.5 m height), e.g., Jack pine overstory with
 midstory live black spruce saplings. These equations assume that the fuel
 strata gap (FSG) represents the distance from the sapling crown centroid to
 the overstory lower crown base height (LCBH). Calculate lower crowning
-probability to the sapling cohort separately. Caution: Experimental! These
+probability to the sapling cohort separately. CAUTION: Experimental! These
 equations are under development and may contain errors.
 }
 \examples{
-ladder_midstory_saplings(hs = 4.5, zs = 1.3, zp = 7, lnfl = 0.4, sapling_FMC
-= 120, actual_SFC  = 2.8)
+ladder_midstory_saplings(
+  hs = 4.5,
+  zs = 1.3,
+  zp = 7,
+  lnfl = 0.4,
+  sapling_FMC = 120,
+  actual_SFC = 2.8
+)
 
 }

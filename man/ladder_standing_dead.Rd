@@ -4,33 +4,32 @@
 \alias{ladder_standing_dead}
 \title{Estimate standing dead ladder fuels for midstory small snags <5 cm DBH}
 \usage{
-ladder_standing_dead(consumption = 0.2, cl = 4, FSG = 6)
+ladder_standing_dead(cons, cl, FSG)
 }
 \arguments{
-\item{consumption}{A numeric value between \code{0.1} and \code{10} (inclusive).
-Consumption of fine dead elevated wood in kg/m^2. Assumes continuity with
-surface fuels.}
+\item{cons}{Required. A numeric value in \verb{[0.1, 10]}. Consumption of fine
+dead elevated wood in kg/m^2. Assumes continuity with surface fuels.}
 
-\item{cl}{A numeric value between \code{0.5} and \code{15} (inclusive). Mean centroid
-height of ladder fuels in metres.}
+\item{cl}{Required. A numeric value in \verb{[0.5, 15]}. Mean centroid height of
+ladder fuels in metres.}
 
-\item{FSG}{A numeric value between \code{0.5} and \code{20} (inclusive). Fuel strata
-gap in metres. The vertical distance between the top of the surface fuels
-and the lower limit of the canopy fuels. Analogous to crown base height
-(CBH) in the absence of mid-story ladder fuels.}
+\item{FSG}{Required. A single numeric value in \verb{[0.5, 20]}. Fuel strata gap
+in metres, representing the vertical distance between the top of the
+surface fuels and the lower limit of the canopy fuels. Analogous to crown
+base height in the absence of mid-story ladder fuels.}
 }
 \value{
 A list of length \code{2} consisting of one numeric value named
-\code{LFSG [m]} and one numeric value named
-\verb{Scaled SFC contribution, small snags [kg/m^2]}
+\code{LFSG (m)} and one numeric value named
+\verb{Scaled SFC contribution, small snags (kg/m^2)}
 }
 \description{
 \code{ladder_standing_dead()} estimates standing dead ladder fuels for midstory
 small snags <5 cm DBH, e.g., Jack pine overstory with dense standing dead
-pine ladder fuels. Caution: Experimental! These equations are under
+pine ladder fuels. CAUTION: Experimental! These equations are under
 development and may contain errors.
 }
 \examples{
-ladder_standing_dead(consumption = 1.1, cl = 5.1, FSG = 6.3)
+ladder_standing_dead(cons = 1.1, cl = 5.1, FSG = 6.3)
 
 }
