@@ -270,8 +270,36 @@ pCFO <- function(
   b2 <- coefs[row, 4L]
   b3 <- coefs[row, 5L]
   b4 <- coefs[row, 6L]
+
   gx <- b0 + b1 * WS10 + b2 * FSG^1.5 + b4 * log(SFC) + b3 * mc * WS10
   out <- exp(gx) / (1 + exp(gx))
+
+  return(out)
+}
+
+#' Precise WS10 crowning threshold
+#'
+#' @keywords internal
+#'
+WS10_CF_thresh <- function(
+    mc,
+    FSG,
+    SFC,
+    CF_thresh,
+    model_pCFO,
+    coefs
+) {
+  row <- match(model_pCFO, coefs[[1L]])
+  if (is.na(row)) stop("Invalid pCFO model: ", model_pCFO, call. = FALSE)
+  b0 <- coefs[row, 2L]
+  b1 <- coefs[row, 3L]
+  b2 <- coefs[row, 4L]
+  b3 <- coefs[row, 5L]
+  b4 <- coefs[row, 6L]
+
+  out <- (
+    log(CF_thresh / (1 - CF_thresh)) - b0 - b2 * FSG^1.5 - b4 * log(SFC)
+  ) / (b1 + b3 * mc)
 
   return(out)
 }
