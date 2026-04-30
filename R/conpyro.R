@@ -187,7 +187,8 @@ conpyro <- function(
     "model_sROS",
     "model_cROS",
     "CF_thresh",
-    "ROS_output"
+    "ROS_output",
+    "output_mode"
   )
   unknown <- setdiff(names(extra_args), allowed)
   if (length(unknown) > 0) {
@@ -558,28 +559,49 @@ conpyro <- function(
     }
     iROS_out <- c(sROS_out, cROS_P_out, cROS_A_out)
 
-    # Add list of results to output list
-    out[[as.character(ID_val)]] <- list(
-      "mcFFMC (%)" = round(mcFFMC_val, 1),
-      "mcsa (%)" = round(mcsa_val, 1),
-      "WS10 (km/h)" = WS10,
-      "Crown Fire Occurrence Probability" = round(pCFO_val, 2),
-      "Passive Crown Fire WS10 Threshold (km/h)" = cROS_P_thresh,
-      "Active Crown Fire WS10 Threshold (km/h)" = cROS_A_thresh
-    )
-    # Conditional ROS output
-    if (ROS_output_val == "composite") {
-      out[[as.character(ID_val)]][["Composite Rate of Spread (m/min)"]] <-
-        round(iROS_out, 1)
-    } else if (ROS_output_val == tolower("sROS")) {
-      out[[as.character(ID_val)]][["Surface Rate of Spread (m/min)"]] <-
-        round(sROS_val, 1)
-    } else if (ROS_output_val == tolower("cROS_P")) {
-      out[[as.character(ID_val)]][["Passive Crowning Rate of Spread (m/min)"]]<-
-        round(cROS_P_val, 1)
-    } else if (ROS_output_val == tolower("cROS_A")) {
-      out[[as.character(ID_val)]][["Active Crowning Rate of Spread (m/min)"]] <-
-        round(cROS_A_val, 1)
+    # Sneaky toggle for use with FuelDash that overrides default output.
+    # Instead, output is a selective list with concise names, raw values, and
+    # piecewise ROS.
+    if (
+      "output_mode" %in% names(extra_args) &&
+      (extra_args$output_mode == "fueldash")
+    ) {
+      out[[as.character(ID_val)]] <- list(
+        "mcffmc" = mcFFMC_val,
+        "mcsa" = mcsa_val,
+        "pcfo" = pCFO_val,
+        "sros" = sROS_out,
+        "cros_p" = cROS_P_out,
+        "cros_a" = cROS_A_out,
+        "cros_p_thresh" = cROS_P_thresh,
+        "cros_a_thresh" = cROS_A_thresh
+      )
+    } else {
+      # Assemble default output
+      # Add list of results to output list
+      id <- as.character(ID_val)
+      out[[id]] <- list(
+        "mcFFMC (%)" = round(mcFFMC_val, 1),
+        "mcsa (%)" = round(mcsa_val, 1),
+        "WS10 (km/h)" = WS10,
+        "Crown Fire Occurrence Probability" = round(pCFO_val, 2),
+        "Passive Crown Fire WS10 Threshold (km/h)" = cROS_P_thresh,
+        "Active Crown Fire WS10 Threshold (km/h)" = cROS_A_thresh
+      )
+      # Conditional ROS output
+      if (ROS_output_val == "composite") {
+        out[[id]][["Composite Rate of Spread (m/min)"]] <-
+          round(iROS_out, 1)
+      } else if (ROS_output_val == tolower("sROS")) {
+        out[[id]][["Surface Rate of Spread (m/min)"]] <-
+          round(sROS_val, 1)
+      } else if (ROS_output_val == tolower("cROS_P")) {
+        out[[id]][["Passive Crowning Rate of Spread (m/min)"]] <-
+          round(cROS_P_val, 1)
+      } else if (ROS_output_val == tolower("cROS_A")) {
+        out[[id]][["Active Crowning Rate of Spread (m/min)"]] <-
+          round(cROS_A_val, 1)
+      }
     }
 
     # Prepare plotting data
