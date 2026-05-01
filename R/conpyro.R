@@ -566,15 +566,26 @@ conpyro <- function(
       "output_mode" %in% names(extra_args) &&
       (extra_args$output_mode == "fueldash")
     ) {
+      fire_type <- character(length(WS10))
+
+      fire_type[surface_fire] <- "s"
+      fire_type[passive_crowning] <- "p"
+      fire_type[active_crowning] <- "a"
+
+      fire_type <- factor(
+        fire_type,
+        levels = c("s", "p", "a")
+      )
+
       out[[as.character(ID_val)]] <- list(
-        "mcffmc" = mcFFMC_val,
-        "mcsa" = mcsa_val,
-        "pcfo" = pCFO_val,
-        "sros" = sROS_out,
-        "cros_p" = cROS_P_out,
-        "cros_a" = cROS_A_out,
-        "cros_p_thresh" = cROS_P_thresh,
-        "cros_a_thresh" = cROS_A_thresh
+        mcsa = mcsa_val,
+        series = data.frame(
+          ws = WS10,
+          pcfo = pCFO_val,
+          fire_type = fire_type,
+          ros = iROS_out,
+          stringsAsFactors = FALSE
+        )
       )
     } else {
       # Assemble default output
