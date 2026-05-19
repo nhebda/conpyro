@@ -997,9 +997,9 @@ ladder_standing_dead <- function(cons, cl, FSG) {
   FSG <- normalize_input(FSG, "FSG")
 
   # Calculate
-  snag_centroid <- if ((cl / 2) >= FSG) FSG - 0.5 else cl / 2
-  zl <- FSG - snag_centroid
-  scaled_SFC <- (FSG / zl)^1.5 * cons * 3.1 # zl > 0
+  effective_cl <- min(cl, FSG - 0.5)
+  zl <- FSG - effective_cl
+  scaled_SFC <- (FSG / zl)^1.5 * cons * 3.1
   out <- list(
     "LFSG (m)" = round(zl, 2),
     "Scaled SFC contribution, small snags (kg/m^2)" = round(scaled_SFC, 2)

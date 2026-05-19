@@ -1277,13 +1277,12 @@ test_that("ladder_standing_dead returns a named list of length 2", {
 })
 
 test_that("ladder_standing_dead behaves sensibly in key branches", {
-  # Branch: cl/2 < FSG -> snag_centroid = cl/2 -> zl = FSG - cl/2
+  # Branch: cl < FSG - 0.5 -> effective_cl = cl -> zl = FSG - cl
   out1 <- ladder_standing_dead(cons = 1, cl = 4, FSG = 6)
-  expect_equal(out1[["LFSG (m)"]], round(6 - 2, 2))
+  expect_equal(out1[["LFSG (m)"]], round(6 - 4, 2))
 
-  # Branch: cl/2 >= FSG -> snag_centroid = FSG - 0.5 -> zl = 0.5
-  # Choose values within allowed ranges where cl/2 >= FSG holds:
-  # cl = 15 => cl/2 = 7.5, so pick FSG <= 7.5 (and >= 0.5)
+  # Branch: cl >= FSG - 0.5 -> effective_cl = FSG - 0.5
+  # Therefore zl = 0.5
   out2 <- ladder_standing_dead(cons = 1, cl = 15, FSG = 6)
   expect_equal(out2[["LFSG (m)"]], 0.5)
 })

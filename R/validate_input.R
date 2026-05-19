@@ -1,9 +1,11 @@
 #' Centralized input validation function
 #'
 #' @keywords internal
-#' @importFrom checkmate assert assert_character assert_choice assert_integerish
-#'   assert_logical assert_number assert_numeric assert_subset check_character
-#'   check_numeric makeAssertCollection reportAssertions
+#' @importFrom checkmate assert assert_character assert_choice
+#' @importFrom checkmate assert_integerish assert_logical assert_number
+#' @importFrom checkmate assert_numeric assert_subset check_character
+#' @importFrom checkmate check_numeric makeAssertCollection
+#' @importFrom checkmate reportAssertions
 #'
 validate_input <- function(...) {
   input <- list(...)
