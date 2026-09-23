@@ -311,22 +311,43 @@ WS10_CF_thresh <- function(
 #' @keywords internal
 #'
 sROS <- function(WS10, mc, SFC, model_sROS) {
+  m <- 0.15
+  i <- 10
+  j <- 13
+  PPDF = 0
+  DECID = 0
+
   ISI <- ISI(WS10 = WS10, mc = mc)
 
   out <- switch(
     as.character(model_sROS),
     # FBPS aggregated surf. V4
-    "1" = 25 * (1 - exp(-0.035177 * ISI))^1.9875, # ST-X-3 Eq. 26
+    "1"   = 25 * (1 - exp(-0.035177 * ISI))^1.9875, # ST-X-3 Eq. 26
     # FBPS D-1 (no BE)
-    "2" = 30 * (1 - exp(-0.0232 * ISI))^1.6, # ST-X-3 Eq. 26 & Tbl. 6
+    "2"   = 30 * (1 - exp(-0.0232 * ISI))^1.6, # ST-X-3 Eq. 26 & Tbl. 6
     # FBPS C-6 (surface only, no BE)
-    "3" = 30 * (1 - exp(-0.08 * ISI))^3, # ST-X-3 Eq. 62
-    # ISI2SFC
-    "4" = 0.015822 * ISI^2 + 0.344379 * SFC,
-    # m12 sl.con.ISI (Perrakis et al., 2026): default for mcFFMC
-    "12" = (0.15 * ISI + 13) * (1-exp(-0.13498 * ISI))^5.773107, # Tbls. 1 & A2
-    # m13 sl.con.isim (Perrakis et al., 2026): default for mcsa
-    "13" = (0.15 * ISI + 13) * (1-exp(-0.101379 * ISI))^4.164469 # Tbls. 1 & A2
+    "3"   = 30 * (1 - exp(-0.08 * ISI))^3, # ST-X-3 Eq. 62
+    # ISI^2 * SFC
+    "4"   = 0.015822 * ISI^2 + 0.344379 * SFC,
+    # m9c
+    "9c"  = 0.01473 * ISI^2 + 0.59430 * sqrt(SFC),
+    # m11c
+    "11c" = (m * ISI + i) * (1 - exp(-0.06680 * ISI))^2.20254,
+    # m12 - default for mcFFMC
+    "12"  = (m * ISI + j) * (1 - exp(-0.12832 * ISI))^5.24622,
+    # m13 - default for mcsa
+    "13"  = (m * ISI + j) * (1 - exp(-0.09661 * ISI))^3.84172,
+    # m16
+    "16"  = 0.39813 * WS10^1.91399 * exp(-0.31551 * mc),
+    # m17
+    "17"  = 0.29629 * WS10^1.69839 * exp(-0.23260 * mc),
+    # m18c
+    "18c" = (m * ISI + i) * (1 - exp(-0.07207 * ISI))^2.28189 +
+      (2.69568 * PPDF) + (-0.76090 * DECID),
+    # m19
+    "19"  = 0.11771 * ISI,
+    # m20
+    "20"  = 0.2 * WS10
   )
 
   return(out)
