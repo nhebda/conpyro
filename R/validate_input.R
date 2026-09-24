@@ -195,8 +195,8 @@ validate_input <- function(...) {
     },
     "model_sROS" = function(name, coll) {
       assert_subset(
-        name,
-        choices = c(1L, 2L, 3L, 4L, 12L, 13L, NA),
+        tolower(name),
+        choices = c(1, 2, 3, 4, "9c", "11c", 12, 13, 16, 17, "18c", 19, 20, NA),
         .var.name = "model_sROS",
         add = coll
       )

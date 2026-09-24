@@ -19,7 +19,7 @@ normalize_input <- function(x, name) {
     "CF_thresh" = function(x) as.numeric(x),
     "model_mcsa" = function(x) tolower(as.character(x)),
     "model_pCFO" = function(x) as.integer(x),
-    "model_sROS" = function(x) as.integer(x),
+    "model_sROS" = function(x) tolower(as.character(x)),
     "model_cROS" = function(x) as.integer(x),
     "month" = function(x) as.integer(x),
     "day" = function(x) as.integer(x),
