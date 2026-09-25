@@ -552,15 +552,52 @@ t_FT <- function(
 #'   numbered crown fire occurrence models presented in Perrakis et al. (2023),
 #'   Table 2. Default when using `mcF` is `10`; default when using `mcsa` is
 #'   `11`.
-#'   * `model_sROS`: An integer in `{1, 2, 3, 4, 12, 13}`. Default when using
-#'   `mcF` is `12`; default when using `mcsa` is `13`. Numbers correspond to the
-#'   following sROS models:
-#'     * `1`: FBPS aggregated surf. V4
-#'     * `2`: FBPS D-1 (no BE)
-#'     * `3`: FBPS C-6 (surface only, no BE)
-#'     * `4`: ISI2SFC
-#'     * `12`: m12 sl.con.ISI (Perrakis et al., 2026)
-#'     * `13`: m13 sl.con.isim (Perrakis et al., 2026)
+#'   * `model_sROS`: One of
+#'   `{1, 2, 3, 4, "9c", "11c", 12, 13, 16, 17, "18c", 19, 20}`.
+#'   Default when using `mcF` is `12`; default when using `mcsa` is `13`. Note
+#'   that when overriding defaults, it is possible to force inappropriate
+#'   model-moisture-fuel combinations. Numbers correspond to the following sROS
+#'   models:
+#'     * `1`: FBPS aggregated surf. V4.
+#'     * `2`: FBPS D-1 (no BE).
+#'     * `3`: FBPS C-6 (surface only, no BE).
+#'     * `4`: `ISI^2 * SFC`.
+#'     * `"9c"`: Contrast stand structure across fuel types. May overpredict
+#'     under high-danger conditions. Requires `mcsa` input.
+#'     * `"11c"`: General stand-adjusted ROS prediction across various fuel
+#'     types. Requires `mcsa` input.
+#'     * `12`: Simple model for boreal conifer fuels. No stand structure
+#'     influence.
+#'     * `13`: Simple stand-adjusted model for boreal conifer fuels. Requires
+#'     `mcsa` input.
+#'     * `16`: Most accurate model for conifer stands in low–moderate-danger
+#'     conditions. May overpredict under high-danger conditions. No stand
+#'     structure influence.
+#'     * `17`: Most accurate stand-adjusted model for conifer stands in
+#'     low–moderate-danger conditions. May overpredict under high-danger
+#'     conditions. Requires `mcsa` input.
+#'     * `"18c"`: Contrast between conifer, deciduous, cured
+#'     Ponderosa pine - Douglas-fir (PPDF) fuels. Cured PPDF predictions based
+#'     on untested assumptions. No stand structure influence other than fuel
+#'     type.
+#'     * `19`: Simple linear model for moist-condition PPDF stands. Based on a
+#'     small dataset; likely to underpredict under high-danger conditions. No
+#'     stand structure influence.
+#'     * `20`: Simple heuristic model for rapid field use. May overpredict
+#'     under moist fuel conditions and underpredict under dry fuel conditions.
+#'     No stand structure influence.
+#'
+#'     See Perrakis et al. (2026) for further details.
+#'   * `stand`: One of
+#'   `{"pine", "spruce", "Douglas-fir", "deciduous", "mixedwood"}` or
+#'   abbreviated equivalents `{"p", "s", "df", "d", "m"}`. Default is `"p"`.
+#'   Only used when `model_sROS` = `"18c"`; sets the values of `PPDF` and
+#'   `DECID` variables according to fuel type as follows:
+#'     * Conifer stand (`"p"` or `"s"`): PPDF = 0, DECID = 0
+#'     * Cured condition PPDF stand (`"df"`): PPDF = 1, DECID = 0
+#'     * Deciduous stand (`"d"` or `"m"`): PPDF = 0, DECID = 1
+#'
+#'     See Perrakis et al. (2026) for further details.
 #'   * `model_cROS`: An integer in `{1, 2, 3}`. Default is `1`. Numbers
 #'   correspond to the following active cROS models:
 #'     * `1`: WS10, CBD, mc
@@ -670,6 +707,7 @@ t_ROS <- function(
   allowed <- c(
     "model_pCFO",
     "model_sROS",
+    "stand",
     "model_cROS",
     "CF_thresh",
     "ROS_output"
@@ -697,6 +735,14 @@ t_ROS <- function(
     model_sROS <- normalize_input(model_sROS, "model_sROS")
   } else {
     model_sROS <- if (mc_type == "mcF") 12L else if (mc_type == "mcsa") 13L
+  }
+  if ("stand" %in% names(extra_args)) {
+    stand <- extra_args[["stand"]]
+    validate_input(stand = stand)
+    check_length(n = 1L, stand = stand)
+    stand <- normalize_input(stand, "stand")
+  } else {
+    stand <- "p" # Default for sROS m18c
   }
   if ("model_cROS" %in% names(extra_args)) {
     model_cROS <- extra_args[["model_cROS"]]
@@ -737,7 +783,8 @@ t_ROS <- function(
     WS10 = WS10,
     mc = mc,
     SFC = SFC,
-    model_sROS = model_sROS
+    model_sROS = model_sROS,
+    stand = stand
   )
   cROS_A_val <- cROS_A(
     WS10 = WS10,

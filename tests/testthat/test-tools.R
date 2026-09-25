@@ -852,7 +852,7 @@ test_that("t_ROS matches documented example fire types", {
 test_that("t_ROS uses expected ROS component when smooth_CFO is FALSE", {
   # Surface: ROS == sROS
   out_s <- t_ROS(WS10 = 11, mcsa = 9, FSG = 6, SFC = 2, CBD = 0.1)
-  sros <- sROS(WS10 = 11, mc = 9, SFC = 2, model_sROS = 13L)
+  sros <- sROS(WS10 = 11, mc = 9, SFC = 2, model_sROS = 13L, stand = "p")
 
   expect_identical(out_s[["Type of Fire"]], "S")
   expect_equal(out_s[["Composite Rate of Spread (m/min)"]], round(sros, 1))
@@ -875,13 +875,13 @@ test_that("t_ROS uses expected ROS component when smooth_CFO is FALSE", {
 })
 
 test_that("mcF overrides mcsa and changes default model_sROS", {
-  out_mcsa <- t_ROS(WS10 = 13, mcsa = 12.3, FSG = 6, SFC = 2, CBD = 0.2)
+  out_mcsa <- t_ROS(WS10 = 13, mcsa = 10.3, FSG = 6, SFC = 2, CBD = 0.2)
 
-  out_mcf <- t_ROS(WS10 = 13, mcF = 12.3, FSG = 6, SFC = 2, CBD = 0.2)
+  out_mcf <- t_ROS(WS10 = 13, mcF = 10.3, FSG = 6, SFC = 2, CBD = 0.2)
 
   out_both <- t_ROS(
     WS10 = 13,
-    mcF = 12.3,
+    mcF = 10.3,
     mcsa = 8,
     FSG = 6,
     SFC = 2,
@@ -951,7 +951,8 @@ test_that("t_ROS uses ROS_smooth when smooth_CFO is TRUE", {
     WS10 = 11,
     mc = 8,
     SFC = 2,
-    model_sROS = 13L
+    model_sROS = 13L,
+    stand = "p"
   )
 
   crosa <- cROS_A(

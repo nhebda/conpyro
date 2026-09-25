@@ -97,17 +97,56 @@ parameters are supported:
 \item \code{model_pCFO}: An integer in \verb{\{7, 8, 10, 11\}}, corresponding to the
 numbered crown fire occurrence models presented in Perrakis et al. (2023),
 Table 2. Default for \code{mcF} path is \code{10}; default for \code{mcsa} path is \code{11}.
-\item \code{model_sROS}: An integer in \verb{\{1, 2, 3, 4, 12, 13\}}. Default for \code{mcF}
-path is \code{12}; default for \code{mcsa} path is \code{13}. Numbers correspond to the
-following sROS models:
+\item \code{model_sROS}: One of
+\verb{\{1, 2, 3, 4, "9c", "11c", 12, 13, 16, 17, "18c", 19, 20\}}.
+Default when using \code{mcF} is \code{12}; default when using \code{mcsa} is \code{13}. Note
+that when overriding defaults, it is possible to force inappropriate
+model-moisture-fuel combinations. Numbers correspond to the following sROS
+models:
 \itemize{
-\item \code{1}: FBPS aggregated surf. V4
-\item \code{2}: FBPS D-1 (no BE)
-\item \code{3}: FBPS C-6 (surface only, no BE)
-\item \code{4}: ISI2SFC
-\item \code{12}: m12 sl.con.ISI (Perrakis et al., 2026)
-\item \code{13}: m13 sl.con.isim (Perrakis et al., 2026)
+\item \code{1}: FBPS aggregated surf. V4.
+\item \code{2}: FBPS D-1 (no BE).
+\item \code{3}: FBPS C-6 (surface only, no BE).
+\item \code{4}: \code{ISI^2 * SFC}.
+\item \code{"9c"}: Contrast stand structure across fuel types. May overpredict
+under high-danger conditions. Requires \code{mcsa} input.
+\item \code{"11c"}: General stand-adjusted ROS prediction across various fuel
+types. Requires \code{mcsa} input.
+\item \code{12}: Simple model for boreal conifer fuels. No stand structure
+influence.
+\item \code{13}: Simple stand-adjusted model for boreal conifer fuels. Requires
+\code{mcsa} input.
+\item \code{16}: Most accurate model for conifer stands in low–moderate-danger
+conditions. May overpredict under high-danger conditions. No stand
+structure influence.
+\item \code{17}: Most accurate stand-adjusted model for conifer stands in
+low–moderate-danger conditions. May overpredict under high-danger
+conditions. Requires \code{mcsa} input.
+\item \code{"18c"}: Contrast between conifer, deciduous, cured
+Ponderosa pine - Douglas-fir (PPDF) fuels. Cured PPDF predictions based
+on untested assumptions. No stand structure influence other than fuel
+type.
+\item \code{19}: Simple linear model for moist-condition PPDF stands. Based on a
+small dataset; likely to underpredict under high-danger conditions. No
+stand structure influence.
+\item \code{20}: Simple heuristic model for rapid field use. May overpredict
+under moist fuel conditions and underpredict under dry fuel conditions.
+No stand structure influence.
 }
+
+See Perrakis et al. (2026) for further details.
+\item \code{stand}: One of
+\verb{\{"pine", "spruce", "Douglas-fir", "deciduous", "mixedwood"\}} or
+abbreviated equivalents \verb{\{"p", "s", "df", "d", "m"\}}. Default is \code{"p"}.
+Only used when \code{model_sROS} = \code{"18c"}; sets the values of \code{PPDF} and
+\code{DECID} variables according to fuel type as follows:
+\itemize{
+\item Conifer stand (\code{"p"} or \code{"s"}): PPDF = 0, DECID = 0
+\item Cured condition PPDF stand (\code{"df"}): PPDF = 1, DECID = 0
+\item Deciduous stand (\code{"d"} or \code{"m"}): PPDF = 0, DECID = 1
+}
+
+See Perrakis et al. (2026) for further details.
 \item \code{model_cROS}: An integer in \verb{\{1, 2, 3\}}. Default is \code{1}. Numbers
 correspond to the following active cROS models:
 \itemize{
@@ -173,12 +212,6 @@ case-sensitive but input values themselves are case-insensitive.
 }
 \examples{
 # Basic usage
-conpyro(
-  data = default_input,
-  WS10 = 0:40,
-  FFMC = 91,
-  DMC = 85
-)
 
 # Smooth crown fire occurrence for all scenarios
 conpyro(

@@ -310,12 +310,12 @@ WS10_CF_thresh <- function(
 #'
 #' @keywords internal
 #'
-sROS <- function(WS10, mc, SFC, model_sROS) {
+sROS <- function(WS10, mc, SFC, model_sROS, stand) {
   m <- 0.15
   i <- 10
   j <- 13
-  PPDF = 0
-  DECID = 0
+  PPDF = if (stand %in% c("Douglas-fir", "df")) 1 else 0
+  DECID = if (stand %in% c("deciduous", "mixedwood", "d", "m")) 1 else 0
 
   ISI <- ISI(WS10 = WS10, mc = mc)
 
