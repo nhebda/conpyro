@@ -309,7 +309,14 @@ t_pCFO <- function(
 ) {
   # Resolve, validate, & normalize required inputs
   if (is.null(mcsa) && is.null(mcF)) {
-    stop("Either `mcsa` or `mcF` must be non-NULL.", call. = FALSE)
+    stop(
+      "Supply either `mcsa` or `mcF` as a fuel-moisture value, ",
+      "or calculate it within the call using `mcsa = t_mcsa(...)` ",
+      "or `mcF = t_mcF(...)`.\n",
+      "Raw moisture inputs such as `FFMC` are not used directly here. ",
+      "Use `conpyro()` for an all-in-one calculation.",
+      call. = FALSE
+    )
   }
   if (is.null(mcF)) {
     mc <- mcsa
@@ -337,16 +344,11 @@ t_pCFO <- function(
   SFC <- normalize_input(SFC, "SFC")
 
   # Resolve, validate, & normalize optional inputs
-  extra_args <- list(...)
-  allowed <- "model_pCFO"
-  unknown <- setdiff(names(extra_args), allowed)
-  if (length(unknown) > 0) {
-    stop(
-      "Unknown argument(s) in ...: ",
-      paste(unknown, collapse = ", "),
-      call. = FALSE
-    )
-  }
+  extra_args <- check_fire_dots(
+    extra_args = list(...),
+    allowed = "model_pCFO",
+    caller = "t_pCFO"
+  )
 
   if ("model_pCFO" %in% names(extra_args)) {
     model_pCFO <- extra_args[["model_pCFO"]]
@@ -436,7 +438,14 @@ t_FT <- function(
 ) {
   # Resolve, validate, & normalize required inputs
   if (is.null(mcsa) && is.null(mcF)) {
-    stop("Either `mcsa` or `mcF` must be non-NULL.", call. = FALSE)
+    stop(
+      "Supply either `mcsa` or `mcF` as a fuel-moisture value, ",
+      "or calculate it within the call using `mcsa = t_mcsa(...)` ",
+      "or `mcF = t_mcF(...)`.\n",
+      "Raw moisture inputs such as `FFMC` are not used directly here. ",
+      "Use `conpyro()` for an all-in-one calculation.",
+      call. = FALSE
+    )
   }
   if (is.null(mcF)) {
     mc <- mcsa
@@ -467,16 +476,11 @@ t_FT <- function(
   CBD <- normalize_input(CBD, "CBD")
 
   # Resolve, validate, & normalize optional inputs
-  extra_args <- list(...)
-  allowed <- c("model_pCFO", "model_cROS", "CF_thresh")
-  unknown <- setdiff(names(extra_args), allowed)
-  if (length(unknown) > 0) {
-    stop(
-      "Unknown argument(s) in ...: ",
-      paste(unknown, collapse = ", "),
-      call. = FALSE
-    )
-  }
+  extra_args <- check_fire_dots(
+    extra_args = list(...),
+    allowed = c("model_pCFO", "model_cROS", "CF_thresh"),
+    caller = "t_FT"
+  )
 
   if ("model_pCFO" %in% names(extra_args)) {
     model_pCFO <- extra_args[["model_pCFO"]]
@@ -669,7 +673,14 @@ t_ROS <- function(
 ) {
   # Resolve, validate, & normalize required inputs
   if (is.null(mcsa) && is.null(mcF)) {
-    stop("Either `mcsa` or `mcF` must be non-NULL.", call. = FALSE)
+    stop(
+      "Supply either `mcsa` or `mcF` as a fuel-moisture value, ",
+      "or calculate it within the call using `mcsa = t_mcsa(...)` ",
+      "or `mcF = t_mcF(...)`.\n",
+      "Raw moisture inputs such as `FFMC` are not used directly here. ",
+      "Use `conpyro()` for an all-in-one calculation.",
+      call. = FALSE
+    )
   }
   if (is.null(mcF)) {
     mc <- mcsa
@@ -703,23 +714,19 @@ t_ROS <- function(
   smooth_CFO <- normalize_input(smooth_CFO, "smooth_CFO")
 
   # Resolve, validate, & normalize optional inputs
-  extra_args <- list(...)
-  allowed <- c(
-    "model_pCFO",
-    "model_sROS",
-    "stand",
-    "model_cROS",
-    "CF_thresh",
-    "ROS_output"
+  extra_args <- check_fire_dots(
+    extra_args = list(...),
+    allowed = c(
+      "model_pCFO",
+      "model_sROS",
+      "model_cROS",
+      "CF_thresh",
+      "ROS_output",
+      "stand"
+    ),
+    caller = "t_ROS"
   )
-  unknown <- setdiff(names(extra_args), allowed)
-  if (length(unknown) > 0) {
-    stop(
-      "Unknown argument(s) in ...: ",
-      paste(unknown, collapse = ", "),
-      call. = FALSE
-    )
-  }
+
   if ("model_pCFO" %in% names(extra_args)) {
     model_pCFO <- extra_args[["model_pCFO"]]
     validate_input(model_pCFO = model_pCFO)

@@ -480,8 +480,8 @@ test_that("t_pCFO returns a scalar numeric probability in [0, 1]", {
 test_that("t_pCFO errors if both mcF and mcsa are NULL", {
   expect_error(
     t_pCFO(WS10 = 11, FSG = 6, SFC = 2),
-    regexp = "Either `mcsa` or `mcF` must be non-NULL",
-    fixed = FALSE
+    regexp = "Supply either `mcsa` or `mcF`",
+    fixed = TRUE
   )
 })
 
@@ -581,8 +581,8 @@ test_that("t_pCFO errors on unknown ... argument names", {
       SFC = 2,
       model_pCFOO = 11L
     ),
-    regexp = "Unknown argument\\(s\\) in \\.\\.\\.",
-    fixed = FALSE
+    regexp = "unknown argument(s) in `...`:",
+    fixed = TRUE
   )
 })
 
@@ -702,8 +702,8 @@ test_that("t_FT errors on unknown ... argument names", {
       CBD = 0.1,
       model_cROs = 1L
     ),
-    regexp = "Unknown argument\\(s\\) in \\.\\.\\.",
-    fixed = FALSE
+    regexp = "unknown argument(s) in `...`:",
+    fixed = TRUE
   )
 })
 
@@ -902,9 +902,27 @@ test_that("t_ROS errors on unknown ... argument names", {
       CBD = 0.1,
       model_sROs = 13L
     ),
-    regexp = "Unknown argument\\(s\\) in \\.\\.\\.",
-    fixed = FALSE
+    regexp = "unknown argument(s) in `...`:",
+    fixed = TRUE
   )
+})
+
+test_that("t_ROS accepts stand for surface ROS models", {
+  args <- list(
+    WS10 = 11, mcsa = 9, FSG = 6, SFC = 2, CBD = 0.1,
+    model_sROS = "18c", ROS_output = "sROS"
+  )
+
+  expect_warning(
+    out_p <- do.call(t_ROS, c(args, list(stand = "p"))),
+    regexp = NA
+  )
+  expect_warning(
+    out_df <- do.call(t_ROS, c(args, list(stand = "df"))),
+    regexp = NA
+  )
+
+  expect_false(identical(out_p, out_df))
 })
 
 test_that("t_ROS enforces strict numeric types and scalar inputs", {
@@ -1004,6 +1022,66 @@ test_that("smooth_CFO changes ROS relative to instantaneous selection", {
       )
     )
   )
+})
+
+# Shared fire-tool argument handling ----
+test_that("fire tools warn and ignore misplaced moisture arguments", {
+  tools <- list(t_pCFO = t_pCFO, t_FT = t_FT, t_ROS = t_ROS)
+
+  for (tool in names(tools)) {
+    misplaced <- list(
+      FFMC = 89,
+      DMC = 40,
+      season = 2,
+      density = 2,
+      stand = "p",
+      model_mcsa = "corrected"
+    )
+
+    # t_ROS supports stand directly for surface ROS calculations.
+    if (tool == "t_ROS") misplaced$stand <- NULL
+
+    for (mc_type in c("mcsa", "mcF")) {
+      args <- list(WS10 = 11, FSG = 6, SFC = 2)
+      args[[mc_type]] <- 9
+      if (tool != "t_pCFO") args$CBD <- 0.1
+
+      expected <- do.call(tools[[tool]], args)
+
+      # Check each argument separately, then all together.
+      cases <- c(
+        lapply(names(misplaced), function(nm) misplaced[nm]),
+        list(misplaced)
+      )
+
+      for (extra in cases) {
+        expect_warning(
+          out <- do.call(tools[[tool]], c(args, extra)),
+          regexp = paste0(
+            tool, "(): ignoring misplaced fuel-moisture argument(s): ",
+            paste(names(extra), collapse = ", "), "."
+          ),
+          fixed = TRUE
+        )
+        expect_identical(out, expected)
+      }
+    }
+  }
+})
+
+test_that("raw moisture inputs cannot replace mcsa or mcF", {
+  tools <- list(t_pCFO = t_pCFO, t_FT = t_FT, t_ROS = t_ROS)
+
+  for (tool in names(tools)) {
+    args <- list(WS10 = 11, FSG = 6, SFC = 2, FFMC = 89)
+    if (tool != "t_pCFO") args$CBD <- 0.1
+
+    expect_error(
+      do.call(tools[[tool]], args),
+      regexp = "Supply either `mcsa` or `mcF`",
+      fixed = TRUE
+    )
+  }
 })
 
 # t_FMC() ----

@@ -111,6 +111,61 @@ check_length <- function(n, ...) {
   }
 }
 
+#' Check t_* function calls for extra dots arguments. Stop on unknown args and
+#' warn on unsupported moisture-function args.
+#'
+#' @keywords internal
+#'
+check_fire_dots <- function(extra_args, allowed, caller) {
+  # Collect moisture-function arguments automatically.
+  # model_mcsa is supported through t_mcsa's dots, so add it explicitly.
+  moisture_args <- setdiff(
+    union(names(formals(t_mcsa)), names(formals(t_mcF))),
+    "..."
+  )
+  moisture_args <- union(moisture_args, "model_mcsa")
+
+  # Require names so unnamed arguments cannot be silently ignored.
+  arg_names <- names(extra_args)
+  if (length(extra_args) > 0L &&
+      (is.null(arg_names) || any(!nzchar(arg_names)))) {
+    stop(
+      caller, "(): all arguments in `...` must be named.",
+      call. = FALSE
+    )
+  }
+
+  # Supported arguments take precedence.
+  ignored <- intersect(
+    arg_names,
+    setdiff(moisture_args, allowed)
+  )
+  unknown <- setdiff(arg_names, c(allowed, ignored))
+
+  if (length(unknown) > 0L) {
+    stop(
+      caller, "(): unknown argument(s) in `...`: ",
+      paste(unknown, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+
+  if (length(ignored) > 0L) {
+    warning(
+      caller, "(): ignoring misplaced fuel-moisture argument(s): ",
+      paste(ignored, collapse = ", "), ".\n",
+      "Supply fuel moisture through `mcsa` or `mcF`. ",
+      "Pass these arguments inside `mcsa = t_mcsa(...)` or ",
+      "`mcF = t_mcF(...)`, as appropriate, ",
+      "or use `conpyro()` for an all-in-one calculation.",
+      call. = FALSE
+    )
+  }
+
+  extra_args[!arg_names %in% ignored]
+}
+
 #' Follows the FWI System ISI formulation (Van Wagner, 1987) with the addition
 #' of the FBP System modification for WS > 40 (ST-X-3 Eq. 53a)
 #'
