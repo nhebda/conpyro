@@ -4,7 +4,7 @@
 \alias{sROS}
 \title{Surface fire rate of spread}
 \usage{
-sROS(WS10, mc, SFC, model_sROS)
+sROS(WS10, mc, SFC, model_sROS, stand)
 }
 \description{
 Surface fire rate of spread
