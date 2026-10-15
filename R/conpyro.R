@@ -614,6 +614,7 @@ conpyro <- function(
       )
 
       out[[as.character(ID_val)]] <- list(
+        mcF = mcFFMC_val,
         mcsa = mcsa_val,
         series = data.frame(
           ws = WS10,
