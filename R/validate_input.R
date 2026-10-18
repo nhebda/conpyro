@@ -351,7 +351,7 @@ validate_input <- function(...) {
       assert_number(
         name,
         lower = 0.5,
-        upper = 9,
+        upper = 9.5,
         .var.name = "zs",
         add = coll
       )

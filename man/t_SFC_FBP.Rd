@@ -19,7 +19,8 @@ fuel types.}
 }
 \value{
 A list of length \code{10} consisting of named numeric values
-corresponding to the major FBPS fuel types.
+corresponding to the major FBPS fuel types. Surface fuel consumption values
+are in kg/m^2.
 }
 \description{
 \code{t_SFC_FBP()} estimates SFC for major FBPS fuel types by calling

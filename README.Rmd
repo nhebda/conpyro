@@ -14,25 +14,31 @@ output: github_document
 
 ## Overview
 
-`conpyro` is an R package implementing the **Conifer Pyrometrics (ConPyro)** fire behaviour modelling system described in:
+`conpyro` is an R package implementing the **Conifer Pyrometrics (ConPyro)**
+fire behaviour modelling system introduced by Perrakis et al. (2020).
+Subsequent developments include crown fire occurrence models
+(Perrakis et al., 2023) and surface fire spread models
+(Perrakis et al., 2026). See [References](#references) below.
 
-> Perrakis, D. D. B., Cruz, M. G., Alexander, M. E., Hanes, C. C., Thompson, D. K., Taylor, S. W., & Stocks, B. J. (2023). Improved logistic models of crown fire probability in Canadian conifer forests. International Journal of Wildland Fire, 32(10), 1455–1473. <https://doi.org/10.1071/WF23074>
+> **Prefer a graphical interface?**
+>
+> [FuelDash](https://pfcfire.shinyapps.io/FuelDash/) provides a user-friendly
+> web interface to conpyro, with interactive calculators and plots for
+> exploring fire behaviour without writing R code.
 
-The package provides tools for estimating:
+This package provides tools for estimating:
 
--   Fine fuel moisture content using a stand-adjusted model
+-   Stand-adjusted and FFMC-based fine fuel moisture content
 -   Crown fire occurrence probability
 -   Passive and active crown fire wind speed thresholds
 -   Surface and crown fire rate of spread
 
-The package is designed for both:
-
--   **Single-scenario exploratory modelling**, and
--   **Large multi-scenario workflows**, including modeling driven by spatial datasets, allowing users to evaluate fire behaviour across many fuel and fire weather configurations.
+It is designed for both **single-scenario exploratory modelling**, and **large multi-scenario workflows**, including modeling driven by spatial datasets, allowing users to evaluate fire behaviour across many fuel and fire weather configurations.
 
 This GitHub release is a **beta version intended for testing and feedback prior to CRAN submission.**
 
-**Note:** Both this software and the underlying ConPyro models are still under active development. Model outputs are estimates intended for informational and exploratory purposes only and should not be interpreted as definitive predictions of fire behaviour.
+**Note:** Both this software and the underlying ConPyro models are still under active development. Model outputs are estimates intended for informational and exploratory purposes only and should not be interpreted as definitive
+predictions of fire behaviour.
 
 ## Installation & Dependencies
 
@@ -60,6 +66,8 @@ install.packages("ggplot2")
 The main modelling function is `conpyro()`, which calculates crown fire occurrence probability, crowning thresholds, and rate of spread across a vector of 10-m open wind speeds.
 
 ```{r eval=FALSE}
+library(conpyro)
+
 conpyro(
   data = default_input,
   WS10 = 0:40,
@@ -68,7 +76,8 @@ conpyro(
 )
 ```
 
-This calculates fire behaviour metrics for each scenario defined in `data` across wind speeds from **0–40 km/h**.
+This calculates fire behaviour metrics for each scenario defined in `data`
+across wind speeds from **0–40 km/h**.
 
 ## Input Methods
 
@@ -76,7 +85,10 @@ Inputs can be supplied in two ways:
 
 ### 1. Data frame input (recommended for many scenarios)
 
-Each row in `data` represents a scenario – a single fuel and fire weather configuration. Thousands of scenarios can be quickly processed this way.
+Each row in `data` represents a scenario: a single fuel and fire weather
+configuration. The example below assumes `my_scenarios` contains the required
+`FFMC`, `FSG`, `SFC`, and `CBD` columns, plus any optional scenario inputs.
+Wind speeds are supplied separately and shared across scenarios.
 
 ```{r eval=FALSE}
 conpyro(
@@ -87,7 +99,8 @@ conpyro(
 
 ### 2. Direct arguments
 
-Inputs may also be supplied by direct arguments, which can be be length `1` or the **common length of all scenarios**.
+Inputs may also be supplied directly as arguments, with length `1` or the
+**common number of scenarios**.
 
 ```{r eval=FALSE}
 conpyro(
@@ -103,7 +116,41 @@ conpyro(
 )
 ```
 
-Length `1` arguments will be recycled across all scenarios.
+Length `1` scenario inputs are recycled across all scenarios. `WS10` is a
+shared wind-speed vector, rather than a scenario input. Data-frame columns
+and direct arguments can be combined, provided the same input is not
+supplied through both methods.
+
+## Moisture and Model Selection
+
+`conpyro()` calculates stand-adjusted moisture (`mcsa`) when `DMC`, `season`,
+`density`, and `stand` are all available for a scenario. Otherwise, it uses
+FFMC-based moisture (`mcF`).
+
+Default crown fire occurrence and surface ROS models follow that moisture
+selection:
+
+| Moisture | `model_pCFO` | `model_sROS` |
+|---|---:|---:|
+| FFMC-based (`mcF`) | 10 | 12 |
+| Stand-adjusted (`mcsa`) | 11 | 13 |
+
+Advanced users can select alternative models through arguments such as
+`model_pCFO`, `model_sROS`, and `model_cROS`.
+
+Model overrides do not enforce compatibility with the selected moisture or
+fuel type. Consult the function documentation and relevant papers before
+choosing alternatives:
+
+```{r eval=FALSE}
+help("conpyro", package = "conpyro")
+help("t_ROS", package = "conpyro")
+```
+
+Crowning thresholds are the lowest supplied wind speeds classified in each
+crown-fire regime. Their resolution depends on the spacing of values in the
+supplied wind-speed vector; `NA` means that regime was absent from those
+values.
 
 ## Plotting Results
 
@@ -135,6 +182,8 @@ The package includes a number of helper functions for calculating model inputs a
 
 -   `t_mcF()` – FFMC-based fine fuel moisture content
 -   `t_mcsa()` – Stand-adjusted fine fuel moisture
+-   `t_mcSeason()` – Season category from month and day
+-   `t_mcDensity()` – Density category from canopy closure
 
 ### Fire modelling
 
@@ -170,6 +219,39 @@ During this phase we aim to:
 -   Evaluate performance for large-scale modelling workflows
 
 The package interface may evolve prior to a future CRAN release.
+
+## References
+
+**Modelling framework**
+
+Perrakis, D. D. B., Cruz, M. G., Alexander, M. E., Taylor, S. W., and
+Beverly, J. L. (2020). Linking Dynamic Empirical Fire Spread Models:
+Introducing Canadian Conifer Pyrometrics. In *Proceedings for the 6th
+International Fire Behavior and Fuels Conference*, pp. 67–72.
+International Association of Wildland Fire.
+[Conference paper][conpyro-framework].
+
+**Crown fire occurrence**
+
+Perrakis, D. D. B., Cruz, M. G., Alexander, M. E., Hanes, C. C.,
+Thompson, D. K., Taylor, S. W., and Stocks, B. J. (2023).
+Improved logistic models of crown fire probability in Canadian conifer
+forests. *International Journal of Wildland Fire*, 32(10), 1455–1473.
+<https://doi.org/10.1071/WF23074>
+
+**Surface fire spread**
+
+Perrakis, D. D. B., Hebda, N. J. R., and Taylor, S. W. (2026).
+Simple Spread Models for Understory Surface Fires.
+*Fire*, 9(7), 302.
+<https://doi.org/10.3390/fire9070302>
+
+The system also incorporates FWI moisture relationships and selected FBP
+equations, alongside stand-adjusted fuel moisture and crown fire spread
+models from other sources. See the function documentation and these papers
+for further attribution.
+
+[conpyro-framework]: https://fireresearch.ca/wp-content/uploads/2020/12/perrakis-et-al-2020-linking-dynamic-empirical-spread-models-conpyro-proc-6th-int-fire-b-and-fuels.pdf
 
 ## License
 

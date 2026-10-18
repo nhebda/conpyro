@@ -66,8 +66,9 @@ t_mcSeason <- function(month, day) {
 #' Determine `density` input for [t_mcsa()]
 #'
 #' `t_mcDensity()` takes a canopy closure value as input and outputs a
-#' categorical `density` value to be used in [t_mcsa()]. Light ≤ 45; Moderate
-#' 46–60; Dense ≥ 61.
+#' categorical `density` value to be used in [t_mcsa()]. Light: at most 45%;
+#' moderate: greater than 45% and at most 60%; dense: greater than 60%.
+#' Fractional canopy closure values are accepted.
 #'
 #' @param canopy_closure Required. An number in `[20, 100]`. Canopy closure in
 #'   percent.
@@ -84,10 +85,10 @@ t_mcSeason <- function(month, day) {
 #' t_mcDensity(70)  # Dense -> 3
 #'
 #' # Boundary conditions
-#' t_mcDensity(45)  # Light upper bound -> 1
-#' t_mcDensity(46)  # Moderate lower bound -> 2
-#' t_mcDensity(60)  # Moderate upper bound -> 2
-#' t_mcDensity(61)  # Dense lower bound -> 3
+#' t_mcDensity(45)    # Light upper bound -> 1
+#' t_mcDensity(45.5)  # Moderate -> 2
+#' t_mcDensity(60)    # Moderate upper bound -> 2
+#' t_mcDensity(60.5)  # Dense -> 3
 #'
 t_mcDensity <- function(canopy_closure) {
   # Validate & normalize input
@@ -245,7 +246,8 @@ t_mcsa <- function(
 #'
 #' `t_pCFO()` calculates crown fire occurrence probability for a single set of
 #' fuel and fire weather conditions using the Conifer Pyrometrics (ConPyro) fire
-#' behaviour modelling system. See Perrakis et al. (2023) for details.
+#' behaviour modelling system. See [conpyro-package] for the framework and model
+#' references.
 #'
 #' @param WS10 Required. A single numeric value in `[0, 60]`. Standard 10-m open
 #'   wind speed in km/h.
@@ -378,7 +380,7 @@ t_pCFO <- function(
 #'
 #' `t_FT()` calculates fire type from a single set of fuel and fire weather
 #' conditions using the Conifer Pyrometrics (ConPyro) fire behaviour modelling
-#' system. See Perrakis et al. (2023) for details.
+#' system. See [conpyro-package] for the framework and model references.
 #'
 #' @inheritParams t_pCFO
 #' @param CBD Required. A single numeric value in `[0.01, 0.8]`. Crown bulk
@@ -539,9 +541,10 @@ t_FT <- function(
 #'
 #' `t_ROS()` calculates rate of spread for a single set of fuel and fire weather
 #' conditions using the Conifer Pyrometrics (ConPyro) fire behaviour modelling
-#' system. See Perrakis et al. (2023) for details. Provides a more convenient
-#' single-scenario calculation than the main [conpyro()] function. To run
-#' multiple scenarios or plot output, use [conpyro()] instead.
+#' system. See [conpyro-package] for the framework and model references.
+#' Provides a more convenient single-scenario calculation than the main
+#' [conpyro()] function. To run multiple scenarios or plot output, use
+#' [conpyro()] instead.
 #'
 #' @inheritParams t_FT
 #' @param smooth_CFO A single logical value that defines whether crown fire
@@ -565,25 +568,26 @@ t_FT <- function(
 #'     * `1`: FBPS aggregated surf. V4.
 #'     * `2`: FBPS D-1 (no BE).
 #'     * `3`: FBPS C-6 (surface only, no BE).
-#'     * `4`: `ISI^2 * SFC`.
+#'     * `4`: Additive model of squared ISI and SFC.
 #'     * `"9c"`: Contrast stand structure across fuel types. May overpredict
-#'     under high-danger conditions. Requires `mcsa` input.
+#'     under high-danger conditions. Intended for `mcsa` input.
 #'     * `"11c"`: General stand-adjusted ROS prediction across various fuel
-#'     types. Requires `mcsa` input.
+#'     types. Intended for `mcsa` input.
 #'     * `12`: Simple model for boreal conifer fuels. No stand structure
 #'     influence.
-#'     * `13`: Simple stand-adjusted model for boreal conifer fuels. Requires
-#'     `mcsa` input.
+#'     * `13`: Simple stand-adjusted model for boreal conifer fuels. Intended
+#'     for `mcsa` input.
 #'     * `16`: Most accurate model for conifer stands in low–moderate-danger
 #'     conditions. May overpredict under high-danger conditions. No stand
 #'     structure influence.
 #'     * `17`: Most accurate stand-adjusted model for conifer stands in
 #'     low–moderate-danger conditions. May overpredict under high-danger
-#'     conditions. Requires `mcsa` input.
+#'     conditions. Intended for `mcsa` input.
 #'     * `"18c"`: Contrast between conifer, deciduous, cured
 #'     Ponderosa pine - Douglas-fir (PPDF) fuels. Cured PPDF predictions based
 #'     on untested assumptions. No stand structure influence other than fuel
-#'     type.
+#'     type. Negative surface ROS predictions are bounded at zero before
+#'     composite ROS selection or crown fire occurrence smoothing.
 #'     * `19`: Simple linear model for moist-condition PPDF stands. Based on a
 #'     small dataset; likely to underpredict under high-danger conditions. No
 #'     stand structure influence.
@@ -609,11 +613,21 @@ t_FT <- function(
 #'     * `3`: (0.1)WS10
 #'   * `CF_thresh`: A single numeric value in `[0, 1]`. Crown fire occurrence
 #'   threshold. Default is 0.5.
-#'   * `ROS_output`: A vector comprising
+#'   * `ROS_output`: A single value from
 #'   `{"sROS", "cROS_P", "cROS_A", "composite"}`. Determines whether ROS output
 #'   is only sROS, only cROS_P, only cROS_A, or a piecewise composite of all
 #'   three (default). Note that when `ROS_output` is anything other than
-#'   `"composite"`, `smooth_CFO = TRUE` will be ignored.
+#'   `"composite"`, `smooth_CFO = TRUE` will be ignored. Explicit component
+#'   outputs are calculated at every supplied wind speed, regardless of whether
+#'   that fire regime occurs. In particular, `cROS_P` can be returned even when
+#'   passive crowning is absent.
+#'
+#' @details
+#' Model descriptions indicate intended applicability. Overriding a model
+#' does not enforce compatibility with the supplied moisture or fuel type.
+#' With `smooth_CFO = TRUE`, the smoothing branch is selected using this
+#' call's single wind speed. A [conpyro()] wind sweep may select a different
+#' branch if passive crowning occurs elsewhere in that sweep.
 #'
 #' @returns A named list of length `2` with the following elements:
 #'   * `Type of Fire`: A single character vector giving the fire type. One of
@@ -921,7 +935,8 @@ t_FMC <- function(LAT, LONG, Dj, ELV = NA) {
 #'   fuel types.
 #'
 #' @returns A list of length `10` consisting of named numeric values
-#'   corresponding to the major FBPS fuel types.
+#'   corresponding to the major FBPS fuel types. Surface fuel consumption values
+#'   are in kg/m^2.
 #' @export
 #'
 #' @examples

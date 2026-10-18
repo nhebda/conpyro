@@ -925,6 +925,32 @@ test_that("t_ROS accepts stand for surface ROS models", {
   expect_false(identical(out_p, out_df))
 })
 
+test_that("t_ROS recognizes Douglas-fir aliases for m18c", {
+  args <- list(
+    WS10 = 11,
+    mcsa = 9,
+    FSG = 6,
+    SFC = 2,
+    CBD = 0.1,
+    model_sROS = "18c",
+    ROS_output = "sROS"
+  )
+
+  reference <- do.call(
+    what = t_ROS,
+    args = c(args, list(stand = "df"))
+  )
+
+  for (stand_value in c("Douglas-fir", "douglas-fir", "DOUGLAS-FIR", "DF")) {
+    actual <- do.call(
+      what = t_ROS,
+      args = c(args, list(stand = stand_value))
+    )
+
+    expect_equal(actual, reference)
+  }
+})
+
 test_that("t_ROS enforces strict numeric types and scalar inputs", {
   expect_error(
     t_ROS(WS10 = "11", mcsa = 9, FSG = 6, SFC = 2, CBD = 0.1),
@@ -1566,4 +1592,71 @@ test_that("ladder_midstory_saplings errors on invalid ranges", {
     regexp = "sapling_FMC|upper|120|Must be",
     fixed = FALSE
   )
+})
+
+test_that("m18c bounds negative ROS and preserves positive predictions", {
+  ws <- c(0, 60)
+  mc <- 20
+
+  isi <- conpyro:::ISI(WS10 = ws, mc = mc)
+  base_ros <- (0.15 * isi + 10) *
+    (1 - exp(-0.07207 * isi))^2.28189
+
+  raw_deciduous <- base_ros - 0.76090
+  expect_lt(raw_deciduous[[1]], 0)
+  expect_gt(raw_deciduous[[2]], 0)
+
+  for (stand_value in c("deciduous", "mixedwood", "d", "m")) {
+    actual <- conpyro:::sROS(
+      WS10 = ws,
+      mc = mc,
+      SFC = 2,
+      model_sROS = "18c",
+      stand = stand_value
+    )
+
+    expect_equal(actual, pmax(raw_deciduous, 0))
+    expect_equal(actual[[1]], 0)
+    expect_equal(actual[[2]], raw_deciduous[[2]])
+  }
+
+  for (stand_value in c("p", "s", "df")) {
+    adjustment <- if (stand_value == "df") 2.69568 else 0
+
+    actual <- conpyro:::sROS(
+      WS10 = ws,
+      mc = mc,
+      SFC = 2,
+      model_sROS = "18c",
+      stand = stand_value
+    )
+
+    expect_equal(actual, base_ros + adjustment)
+  }
+})
+
+test_that("t_ROS uses bounded m18c in component and composite outputs", {
+  for (smooth in c(FALSE, TRUE)) {
+    for (output in c("sROS", "composite")) {
+      actual <- t_ROS(
+        WS10 = 0,
+        mcF = 20,
+        FSG = 6,
+        SFC = 2,
+        CBD = 0.1,
+        smooth_CFO = smooth,
+        model_sROS = "18c",
+        stand = "d",
+        ROS_output = output
+      )
+
+      ros_name <- if (output == "sROS") {
+        "Surface Rate of Spread (m/min)"
+      } else {
+        "Composite Rate of Spread (m/min)"
+      }
+
+      expect_equal(actual[[ros_name]], 0)
+    }
+  }
 })

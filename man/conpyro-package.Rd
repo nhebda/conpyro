@@ -5,7 +5,7 @@
 \alias{conpyro-package}
 \title{conpyro: Conifer Pyrometrics Fire Behaviour Modelling System}
 \description{
-An R package implementation of the Conifer Pyrometrics (ConPyro) fire behaviour modelling system. See Perrakis et al. (2023) for details.
+Implements the Conifer Pyrometrics (ConPyro) fire behaviour modelling system introduced by Perrakis et al. (2020). Calculates fuel moisture, crown fire occurrence probability, crowning thresholds, and surface and crown fire rates of spread from weather and stand attributes. Includes crown fire occurrence models developed by Perrakis et al. (2023) \url{https://doi.org/10.1071/WF23074} and surface fire spread models developed by Perrakis et al. (2026) \url{https://doi.org/10.3390/fire9070302}. See the package documentation for full references and model applicability.
 }
 \details{
 Available functions (click for details):
@@ -24,6 +24,37 @@ Available functions (click for details):
 \item \code{\link[=ladder_standing_dead]{ladder_standing_dead()}}
 \item \code{\link[=ladder_midstory_saplings]{ladder_midstory_saplings()}}
 }
+}
+\section{Scientific basis}{
+
+Perrakis et al. (2020) introduced the linked ConPyro modelling framework.
+Perrakis et al. (2023) developed the crown fire occurrence models.
+Perrakis et al. (2026) developed the newer surface fire spread models.
+The system also incorporates FWI moisture relationships and selected FBP
+equations, alongside stand-adjusted fuel moisture and crown fire spread
+models from other sources.
+}
+
+\references{
+Perrakis, D. D. B., Cruz, M. G., Alexander, M. E., Taylor, S. W.,
+and Beverly, J. L. (2020).
+Linking Dynamic Empirical Fire Spread Models: Introducing Canadian
+Conifer Pyrometrics. In Proceedings for the 6th International Fire
+Behavior and Fuels Conference, pp. 67-72.
+International Association of Wildland Fire.
+\href{https://fireresearch.ca/wp-content/uploads/2020/12/perrakis-et-al-2020-linking-dynamic-empirical-spread-models-conpyro-proc-6th-int-fire-b-and-fuels.pdf}{Conference paper}.
+
+Perrakis, D. D. B., Cruz, M. G., Alexander, M. E., Hanes, C. C.,
+Thompson, D. K., Taylor, S. W., and Stocks, B. J. (2023).
+Improved logistic models of crown fire probability in Canadian
+conifer forests. International Journal of Wildland Fire,
+32(10), 1455-1473.
+\href{https://doi.org/10.1071/WF23074}{doi:10.1071/WF23074}.
+
+Perrakis, D. D. B., Hebda, N. J. R., and Taylor, S. W. (2026).
+Simple Spread Models for Understory Surface Fires.
+Fire, 9(7), 302.
+\href{https://doi.org/10.3390/fire9070302}{doi:10.3390/fire9070302}.
 }
 \author{
 \strong{Maintainer}: Nicholas Hebda \email{nicholas.hebda@nrcan-rncan.gc.ca}

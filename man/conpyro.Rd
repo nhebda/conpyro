@@ -65,18 +65,28 @@ calculating stand-adjusted fine dead surface litter moisture content
 will fall back on the FFMC-based model.}
 
 \item{stand}{Optional. A vector comprising \verb{\{"pine", "spruce", "Douglas-fir", "deciduous", "mixedwood"\}} or abbreviated equivalents \verb{\{"p", "s", "df", "d", "m"\}}. Used in calculating stand-adjusted fine dead surface litter
-moisture content (\code{mcsa}). If \code{stand} is not supplied, fine fuel moisture
-calculations will fall back on the FFMC-based model.}
+moisture (\code{mcsa}) and the stand adjustment in surface ROS model \code{"18c"}.
+For \code{"18c"}, pine and spruce use the conifer baseline (PPDF = 0, DECID =
+0); Douglas-fir sets PPDF = 1 and DECID = 0; deciduous and mixedwood set
+PPDF = 0 and DECID = 1. See Perrakis et al. (2026) for details. If \code{stand}
+is missing, moisture calculations use FFMC-based moisture rather than
+\code{mcsa}, and surface ROS model \code{"18c"} uses the conifer baseline.}
 
-\item{smooth_CFO}{Optional. A logical vector that defines whether crown fire
-occurrence is modeled as a smooth transition (\code{TRUE}) or an instantaneous
-event (\code{FALSE}). Default is \code{FALSE}. If passive crowning occurs at any wind
-speed, smoothing is applied between sROS and cROS_P across the transition
-region; any subsequent transition to active crowning remains abrupt.}
+\item{smooth_CFO}{Optional. A logical vector controlling whether crown fire
+occurrence is smoothed. Default is \code{FALSE}. When \code{TRUE}, the presence of
+passive crowning anywhere in the supplied \code{WS10} vector selects blending
+between surface and passive crown ROS for surface and passive regimes;
+active crowning uses active crown ROS. If passive crowning is absent,
+surface and active crown ROS are blended instead. Consequently, a
+single-wind call and a broader wind sweep can give different smoothed
+predictions at the same wind speed. Explicit component outputs are not
+smoothed.}
 
-\item{ID}{Optional. A vector of unique scenario identifiers. If length \code{1},
-numbers will be sequentially appended to each scenario to ensure uniqueness
-(e.g., ID_1, ID_2, ..., ID_n).}
+\item{ID}{Optional. A vector of unique scenario identifiers. If omitted,
+identifiers are generated as \code{"1"}, \code{"2"}, and so on. A single supplied
+identifier is retained for one scenario; when expanded across multiple
+scenarios, sequential suffixes are appended, such as \code{"site_1"} and
+\code{"site_2"}.}
 
 \item{plot}{Optional. A character vector to control plotting of output. Plots
 ALL scenarios. Not recommended for > 10 scenarios as plots become cluttered
@@ -107,43 +117,32 @@ models:
 \item \code{1}: FBPS aggregated surf. V4.
 \item \code{2}: FBPS D-1 (no BE).
 \item \code{3}: FBPS C-6 (surface only, no BE).
-\item \code{4}: \code{ISI^2 * SFC}.
+\item \code{4}: Additive model of squared ISI and SFC.
 \item \code{"9c"}: Contrast stand structure across fuel types. May overpredict
-under high-danger conditions. Requires \code{mcsa} input.
+under high-danger conditions. Intended for \code{mcsa} input.
 \item \code{"11c"}: General stand-adjusted ROS prediction across various fuel
-types. Requires \code{mcsa} input.
+types. Intended for \code{mcsa} input.
 \item \code{12}: Simple model for boreal conifer fuels. No stand structure
 influence.
-\item \code{13}: Simple stand-adjusted model for boreal conifer fuels. Requires
-\code{mcsa} input.
+\item \code{13}: Simple stand-adjusted model for boreal conifer fuels. Intended
+for \code{mcsa} input.
 \item \code{16}: Most accurate model for conifer stands in low–moderate-danger
 conditions. May overpredict under high-danger conditions. No stand
 structure influence.
 \item \code{17}: Most accurate stand-adjusted model for conifer stands in
 low–moderate-danger conditions. May overpredict under high-danger
-conditions. Requires \code{mcsa} input.
+conditions. Intended for \code{mcsa} input.
 \item \code{"18c"}: Contrast between conifer, deciduous, cured
 Ponderosa pine - Douglas-fir (PPDF) fuels. Cured PPDF predictions based
 on untested assumptions. No stand structure influence other than fuel
-type.
+type. Negative surface ROS predictions are bounded at zero before
+composite ROS selection or crown fire occurrence smoothing.
 \item \code{19}: Simple linear model for moist-condition PPDF stands. Based on a
 small dataset; likely to underpredict under high-danger conditions. No
 stand structure influence.
 \item \code{20}: Simple heuristic model for rapid field use. May overpredict
 under moist fuel conditions and underpredict under dry fuel conditions.
 No stand structure influence.
-}
-
-See Perrakis et al. (2026) for further details.
-\item \code{stand}: One of
-\verb{\{"pine", "spruce", "Douglas-fir", "deciduous", "mixedwood"\}} or
-abbreviated equivalents \verb{\{"p", "s", "df", "d", "m"\}}. Default is \code{"p"}.
-Only used when \code{model_sROS} = \code{"18c"}; sets the values of \code{PPDF} and
-\code{DECID} variables according to fuel type as follows:
-\itemize{
-\item Conifer stand (\code{"p"} or \code{"s"}): PPDF = 0, DECID = 0
-\item Cured condition PPDF stand (\code{"df"}): PPDF = 1, DECID = 0
-\item Deciduous stand (\code{"d"} or \code{"m"}): PPDF = 0, DECID = 1
 }
 
 See Perrakis et al. (2026) for further details.
@@ -160,7 +159,10 @@ threshold. Default is 0.5.
 \verb{\{"sROS", "cROS_P", "cROS_A", "composite"\}}. Determines whether ROS output
 is only sROS, only cROS_P, only cROS_A, or a piecewise composite of all
 three (default). Note that when \code{ROS_output} is anything other than
-\code{"composite"}, \code{smooth_CFO = TRUE} will be ignored.
+\code{"composite"}, \code{smooth_CFO = TRUE} will be ignored. Explicit component
+outputs are calculated at every supplied wind speed, regardless of whether
+that fire regime occurs. In particular, \code{cROS_P} can be returned even when
+passive crowning is absent.
 }}
 }
 \value{
@@ -188,7 +190,10 @@ Optionally plots output.
 \description{
 \code{conpyro()} calculates pCFO, crowning thresholds, and ROS for any number of
 fuel and fire weather configurations using the Conifer Pyrometrics (ConPyro)
-fire behaviour modelling system. See Perrakis et al. (2023) for details.
+fire behaviour modelling system introduced by Perrakis et al. (2020).
+Crown fire occurrence and surface fire spread models were further developed
+by Perrakis et al. (2023) and Perrakis et al. (2026), respectively.
+See \link{conpyro-package} for the core references.
 }
 \details{
 Input can be supplied in two ways: either via data frame or via arguments.
@@ -209,9 +214,41 @@ When using arguments, inputs must either be of length \code{1} or of the common
 length among all inputs. Length \code{1} inputs will be automatically recycled to
 the common length, thus applying to all scenarios. Function parameters are
 case-sensitive but input values themselves are case-insensitive.
+\subsection{Moisture selection and model applicability}{
+
+Stand-adjusted moisture is used only when DMC, season, density, and stand
+are all available for a scenario. Otherwise, FFMC-based moisture is used.
+Default models follow this moisture selection. Model descriptions indicate
+intended applicability; overriding a model does not enforce compatibility
+between that model and the selected moisture or fuel type.
+}
+
+\subsection{Sampled crowning thresholds}{
+
+Each threshold is the lowest supplied wind speed classified in that regime.
+These are sampled values, not analytic solutions. Their resolution depends on
+the spacing of values in the supplied wind-speed vector. A threshold is \code{NA}
+when its regime is absent from the supplied wind-speed vector; this does not
+establish that the regime is absent at all other wind speeds.
+}
+
+\subsection{Precision}{
+
+Calculations use unrounded intermediate values. Ordinary output rounds
+moisture and ROS to one decimal place and pCFO to two decimal places.
+The moisture tools return two decimal places, so chaining their outputs
+into other tools need not exactly reproduce the internal calculations.
+Wind speeds retain their input order, including repeated values.
+}
 }
 \examples{
 # Basic usage
+conpyro(
+  data = default_input,
+  WS10 = 0:40,
+  FFMC = 91,
+  DMC = 85
+)
 
 # Smooth crown fire occurrence for all scenarios
 conpyro(

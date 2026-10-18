@@ -3,8 +3,12 @@
 #'
 #' `conpyro()` calculates pCFO, crowning thresholds, and ROS for any number of
 #' fuel and fire weather configurations using the Conifer Pyrometrics (ConPyro)
-#' fire behaviour modelling system. See Perrakis et al. (2023) for details.
+#' fire behaviour modelling system introduced by Perrakis et al. (2020).
+#' Crown fire occurrence and surface fire spread models were further developed
+#' by Perrakis et al. (2023) and Perrakis et al. (2026), respectively.
+#' See [conpyro-package] for the core references.
 #'
+#' @details
 #' Input can be supplied in two ways: either via data frame or via arguments.
 #' Any given input variable may only be supplied by one of these avenues, but
 #' different variables may be supplied by different methods in any combination.
@@ -23,6 +27,27 @@
 #' length among all inputs. Length `1` inputs will be automatically recycled to
 #' the common length, thus applying to all scenarios. Function parameters are
 #' case-sensitive but input values themselves are case-insensitive.
+#'
+#' ## Moisture selection and model applicability
+#' Stand-adjusted moisture is used only when DMC, season, density, and stand
+#' are all available for a scenario. Otherwise, FFMC-based moisture is used.
+#' Default models follow this moisture selection. Model descriptions indicate
+#' intended applicability; overriding a model does not enforce compatibility
+#' between that model and the selected moisture or fuel type.
+#'
+#' ## Sampled crowning thresholds
+#' Each threshold is the lowest supplied wind speed classified in that regime.
+#' These are sampled values, not analytic solutions. Their resolution depends on
+#' the spacing of values in the supplied wind-speed vector. A threshold is `NA`
+#' when its regime is absent from the supplied wind-speed vector; this does not
+#' establish that the regime is absent at all other wind speeds.
+#'
+#' ## Precision
+#' Calculations use unrounded intermediate values. Ordinary output rounds
+#' moisture and ROS to one decimal place and pCFO to two decimal places.
+#' The moisture tools return two decimal places, so chaining their outputs
+#' into other tools need not exactly reproduce the internal calculations.
+#' Wind speeds retain their input order, including repeated values.
 #'
 #' @param data Optional. A data frame of at least `1` row and `1` column.
 #'   Columns must be named according to the parameter they supply.
@@ -60,16 +85,26 @@
 #' @param stand Optional. A vector comprising `{"pine", "spruce", "Douglas-fir",
 #'   "deciduous", "mixedwood"}` or abbreviated equivalents `{"p", "s", "df",
 #'   "d", "m"}`. Used in calculating stand-adjusted fine dead surface litter
-#'   moisture content (`mcsa`). If `stand` is not supplied, fine fuel moisture
-#'   calculations will fall back on the FFMC-based model.
-#' @param smooth_CFO Optional. A logical vector that defines whether crown fire
-#'   occurrence is modeled as a smooth transition (`TRUE`) or an instantaneous
-#'   event (`FALSE`). Default is `FALSE`. If passive crowning occurs at any wind
-#'   speed, smoothing is applied between sROS and cROS_P across the transition
-#'   region; any subsequent transition to active crowning remains abrupt.
-#' @param ID Optional. A vector of unique scenario identifiers. If length `1`,
-#'   numbers will be sequentially appended to each scenario to ensure uniqueness
-#'   (e.g., ID_1, ID_2, ..., ID_n).
+#'   moisture (`mcsa`) and the stand adjustment in surface ROS model `"18c"`.
+#'   For `"18c"`, pine and spruce use the conifer baseline (PPDF = 0, DECID =
+#'   0); Douglas-fir sets PPDF = 1 and DECID = 0; deciduous and mixedwood set
+#'   PPDF = 0 and DECID = 1. See Perrakis et al. (2026) for details. If `stand`
+#'   is missing, moisture calculations use FFMC-based moisture rather than
+#'   `mcsa`, and surface ROS model `"18c"` uses the conifer baseline.
+#' @param smooth_CFO Optional. A logical vector controlling whether crown fire
+#'   occurrence is smoothed. Default is `FALSE`. When `TRUE`, the presence of
+#'   passive crowning anywhere in the supplied `WS10` vector selects blending
+#'   between surface and passive crown ROS for surface and passive regimes;
+#'   active crowning uses active crown ROS. If passive crowning is absent,
+#'   surface and active crown ROS are blended instead. Consequently, a
+#'   single-wind call and a broader wind sweep can give different smoothed
+#'   predictions at the same wind speed. Explicit component outputs are not
+#'   smoothed.
+#' @param ID Optional. A vector of unique scenario identifiers. If omitted,
+#'   identifiers are generated as `"1"`, `"2"`, and so on. A single supplied
+#'   identifier is retained for one scenario; when expanded across multiple
+#'   scenarios, sequential suffixes are appended, such as `"site_1"` and
+#'   `"site_2"`.
 #' @param plot Optional. A character vector to control plotting of output. Plots
 #'   ALL scenarios. Not recommended for > 10 scenarios as plots become cluttered
 #'   and difficult to read, and plotting a large number of scenarios can be
@@ -94,41 +129,32 @@
 #'     * `1`: FBPS aggregated surf. V4.
 #'     * `2`: FBPS D-1 (no BE).
 #'     * `3`: FBPS C-6 (surface only, no BE).
-#'     * `4`: `ISI^2 * SFC`.
+#'     * `4`: Additive model of squared ISI and SFC.
 #'     * `"9c"`: Contrast stand structure across fuel types. May overpredict
-#'     under high-danger conditions. Requires `mcsa` input.
+#'     under high-danger conditions. Intended for `mcsa` input.
 #'     * `"11c"`: General stand-adjusted ROS prediction across various fuel
-#'     types. Requires `mcsa` input.
+#'     types. Intended for `mcsa` input.
 #'     * `12`: Simple model for boreal conifer fuels. No stand structure
 #'     influence.
-#'     * `13`: Simple stand-adjusted model for boreal conifer fuels. Requires
-#'     `mcsa` input.
+#'     * `13`: Simple stand-adjusted model for boreal conifer fuels. Intended
+#'     for `mcsa` input.
 #'     * `16`: Most accurate model for conifer stands in low–moderate-danger
 #'     conditions. May overpredict under high-danger conditions. No stand
 #'     structure influence.
 #'     * `17`: Most accurate stand-adjusted model for conifer stands in
 #'     low–moderate-danger conditions. May overpredict under high-danger
-#'     conditions. Requires `mcsa` input.
+#'     conditions. Intended for `mcsa` input.
 #'     * `"18c"`: Contrast between conifer, deciduous, cured
 #'     Ponderosa pine - Douglas-fir (PPDF) fuels. Cured PPDF predictions based
 #'     on untested assumptions. No stand structure influence other than fuel
-#'     type.
+#'     type. Negative surface ROS predictions are bounded at zero before
+#'     composite ROS selection or crown fire occurrence smoothing.
 #'     * `19`: Simple linear model for moist-condition PPDF stands. Based on a
 #'     small dataset; likely to underpredict under high-danger conditions. No
 #'     stand structure influence.
 #'     * `20`: Simple heuristic model for rapid field use. May overpredict
 #'     under moist fuel conditions and underpredict under dry fuel conditions.
 #'     No stand structure influence.
-#'
-#'     See Perrakis et al. (2026) for further details.
-#'   * `stand`: One of
-#'   `{"pine", "spruce", "Douglas-fir", "deciduous", "mixedwood"}` or
-#'   abbreviated equivalents `{"p", "s", "df", "d", "m"}`. Default is `"p"`.
-#'   Only used when `model_sROS` = `"18c"`; sets the values of `PPDF` and
-#'   `DECID` variables according to fuel type as follows:
-#'     * Conifer stand (`"p"` or `"s"`): PPDF = 0, DECID = 0
-#'     * Cured condition PPDF stand (`"df"`): PPDF = 1, DECID = 0
-#'     * Deciduous stand (`"d"` or `"m"`): PPDF = 0, DECID = 1
 #'
 #'     See Perrakis et al. (2026) for further details.
 #'   * `model_cROS`: An integer in `{1, 2, 3}`. Default is `1`. Numbers
@@ -142,7 +168,10 @@
 #'   `{"sROS", "cROS_P", "cROS_A", "composite"}`. Determines whether ROS output
 #'   is only sROS, only cROS_P, only cROS_A, or a piecewise composite of all
 #'   three (default). Note that when `ROS_output` is anything other than
-#'   `"composite"`, `smooth_CFO = TRUE` will be ignored.
+#'   `"composite"`, `smooth_CFO = TRUE` will be ignored. Explicit component
+#'   outputs are calculated at every supplied wind speed, regardless of whether
+#'   that fire regime occurs. In particular, `cROS_P` can be returned even when
+#'   passive crowning is absent.
 #'
 #' @returns A list of lists, with each sub-list containing outputs for a single
 #'   ConPyro scenario. The outer list is named by scenario `ID`. Each scenario
@@ -165,12 +194,12 @@
 #'
 #' @examples
 #' # Basic usage
-# conpyro(
-#   data = default_input,
-#   WS10 = 0:40,
-#   FFMC = 91,
-#   DMC = 85
-# )
+#' conpyro(
+#'   data = default_input,
+#'   WS10 = 0:40,
+#'   FFMC = 91,
+#'   DMC = 85
+#' )
 #'
 #' # Smooth crown fire occurrence for all scenarios
 #' conpyro(
@@ -232,6 +261,25 @@ conpyro <- function(
     stop(
       "Unknown argument(s) in ...: ",
       paste(unknown, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  # Internal integration interface; one output mode applies to all scenarios
+  output_mode <- if ("output_mode" %in% names(extra_args)) {
+    extra_args[["output_mode"]]
+  } else {
+    "default"
+  }
+
+  if (
+    !is.character(output_mode) ||
+    length(output_mode) != 1L ||
+    is.na(output_mode) ||
+    !output_mode %in% c("default", "fueldash")
+  ) {
+    stop(
+      "`output_mode` must be either \"default\" or \"fueldash\".",
       call. = FALSE
     )
   }
@@ -550,21 +598,20 @@ conpyro <- function(
     )
     passive_crowning <- pCFO_val >= CF_thresh_val & CAC_val < 1
     active_crowning <- pCFO_val >= CF_thresh_val & CAC_val >= 1
-    cROS_P_val <- if (any(passive_crowning)) {
-      cROS_P(
-        cROS_A = cROS_A_val,
-        CAC = CAC_val
-      )
-    } else {
-      NA
-    }
+    # Calculate the passive component at every wind speed, even when its regime
+    # is absent. Composite ROS still follows the fire-regime masks.
+    cROS_P_val <- cROS_P(
+      cROS_A = cROS_A_val,
+      CAC = CAC_val
+    )
+    # Thresholds are the lowest supplied wind speeds in each regime
     cROS_P_thresh <- if (any(passive_crowning)) {
-      WS10[match(TRUE, passive_crowning)]
+      min(WS10[passive_crowning])
     } else {
       NA
     }
     cROS_A_thresh <- if (any(active_crowning)) {
-      WS10[match(TRUE, active_crowning)]
+      min(WS10[active_crowning])
     } else {
       NA
     }
@@ -593,15 +640,20 @@ conpyro <- function(
       cROS_P_out <- cROS_P_val[passive_crowning]
       cROS_A_out <- cROS_A_val[active_crowning]
     }
-    iROS_out <- c(sROS_out, cROS_P_out, cROS_A_out)
+    # Match each ROS value to its original wind-speed position
+    iROS_out <- rep(NA_real_, times = length(WS10))
+    iROS_out[surface_fire] <- sROS_out
+    if (any(passive_crowning)) {
+      iROS_out[passive_crowning] <- cROS_P_out
+    }
+    iROS_out[active_crowning] <- cROS_A_out
 
-    # Sneaky toggle for use with FuelDash that overrides default output.
-    # Instead, output is a selective list with concise names, raw values, and
-    # piecewise ROS.
-    if (
-      "output_mode" %in% names(extra_args) &&
-      (extra_args$output_mode == "fueldash")
-    ) {
+    # Internal FuelDash contract:
+    # - Full-precision mcF and mcsa or NA when unavailable
+    # - Series columns: ws, pcfo, fire_type, ros, in input wind order
+    # - Fire-type factor levels: s, p, a
+    # - Composite ROS regardless of ROS_output; smooth_CFO is respected
+    if (output_mode == "fueldash") {
       fire_type <- character(length(WS10))
 
       fire_type[surface_fire] <- "s"
@@ -695,22 +747,38 @@ conpyro <- function(
           WS10 = WS10[active_crowning],
           data = cROS_A_out
         )
+
+        # Locate transition endpoints by wind speed, not input order.
+        surface_idx <- which(surface_fire)
+        passive_idx <- which(passive_crowning)
+        active_idx <- which(active_crowning)
+
+        surface_last <- surface_idx[
+          which.max(WS10[surface_idx])
+        ]
+        passive_first <- passive_idx[
+          which.min(WS10[passive_idx])
+        ]
+        passive_last <- passive_idx[
+          which.max(WS10[passive_idx])
+        ]
+        active_first <- active_idx[
+          which.min(WS10[active_idx])
+        ]
+
         # sROS to cROS_P transition
         if (any(surface_fire) && any(passive_crowning)) {
           ggdata_sROS_cROS_P <- data.frame(
             ID = c(ID_val, ID_val),
             name = rep("sROS_cROS_P", times = 2),
-            WS10 = WS10[c(
-              max(which(surface_fire)),
-              min(which(passive_crowning))
-            )],
-            val = c(max(sROS_out), min(cROS_P_out))
+            WS10 = WS10[c(surface_last, passive_first)],
+            val = iROS_out[c(surface_last, passive_first)]
           )
           ggdata_cf_pt_scp <- data.frame(
             ID = ID_val,
             name = "cf_pt_scp",
-            WS10 = WS10[min(which(passive_crowning))],
-            val = cROS_P_out[[1]]
+            WS10 = WS10[passive_first],
+            val = iROS_out[passive_first]
           )
         } else {
           ggdata_sROS_cROS_P <- NULL
@@ -725,17 +793,14 @@ conpyro <- function(
           ggdata_sROS_cROS_A <- data.frame(
             ID = c(ID_val, ID_val),
             name = rep("sROS_cROS_A", times = 2),
-            WS10 = WS10[c(
-              max(which(surface_fire)),
-              min(which(active_crowning))
-            )],
-            val = c(max(sROS_out), min(cROS_A_out))
+            WS10 = WS10[c(surface_last, active_first)],
+            val = iROS_out[c(surface_last, active_first)]
           )
           ggdata_cf_pt_sca <- data.frame(
             ID = ID_val,
             name = "cf_pt_sca",
-            WS10 = WS10[min(which(active_crowning))],
-            val = cROS_A_out[[1]]
+            WS10 = WS10[active_first],
+            val = iROS_out[active_first]
           )
         } else {
           ggdata_sROS_cROS_A <- NULL
@@ -746,17 +811,14 @@ conpyro <- function(
           ggdata_cROS_P_cROS_A <- data.frame(
             ID = c(ID_val, ID_val),
             name = rep("cROS_P_cROS_A", times = 2),
-            WS10 = WS10[c(
-              max(which(passive_crowning)),
-              min(which(active_crowning))
-            )],
-            val = c(max(cROS_P_out), min(cROS_A_out))
+            WS10 = WS10[c(passive_last, active_first)],
+            val = iROS_out[c(passive_last, active_first)]
           )
           ggdata_cf_pt_cpca <- data.frame(
             ID = ID_val,
             name = "cf_pt_cpca",
-            WS10 = WS10[min(which(active_crowning))],
-            val = cROS_A_out[[1]]
+            WS10 = WS10[active_first],
+            val = iROS_out[active_first]
           )
         } else {
           ggdata_cROS_P_cROS_A <- NULL

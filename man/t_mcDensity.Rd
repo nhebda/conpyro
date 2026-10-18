@@ -16,8 +16,9 @@ labels.
 }
 \description{
 \code{t_mcDensity()} takes a canopy closure value as input and outputs a
-categorical \code{density} value to be used in \code{\link[=t_mcsa]{t_mcsa()}}. Light ≤ 45; Moderate
-46–60; Dense ≥ 61.
+categorical \code{density} value to be used in \code{\link[=t_mcsa]{t_mcsa()}}. Light: at most 45\%;
+moderate: greater than 45\% and at most 60\%; dense: greater than 60\%.
+Fractional canopy closure values are accepted.
 }
 \examples{
 # Basic usage
@@ -26,9 +27,9 @@ t_mcDensity(50)  # Moderate -> 2
 t_mcDensity(70)  # Dense -> 3
 
 # Boundary conditions
-t_mcDensity(45)  # Light upper bound -> 1
-t_mcDensity(46)  # Moderate lower bound -> 2
-t_mcDensity(60)  # Moderate upper bound -> 2
-t_mcDensity(61)  # Dense lower bound -> 3
+t_mcDensity(45)    # Light upper bound -> 1
+t_mcDensity(45.5)  # Moderate -> 2
+t_mcDensity(60)    # Moderate upper bound -> 2
+t_mcDensity(60.5)  # Dense -> 3
 
 }

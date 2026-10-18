@@ -369,7 +369,7 @@ sROS <- function(WS10, mc, SFC, model_sROS, stand) {
   m <- 0.15
   i <- 10
   j <- 13
-  PPDF = if (stand %in% c("Douglas-fir", "df")) 1 else 0
+  PPDF = if (stand %in% c("douglas-fir", "df")) 1 else 0
   DECID = if (stand %in% c("deciduous", "mixedwood", "d", "m")) 1 else 0
 
   ISI <- ISI(WS10 = WS10, mc = mc)
@@ -382,7 +382,7 @@ sROS <- function(WS10, mc, SFC, model_sROS, stand) {
     "2"   = 30 * (1 - exp(-0.0232 * ISI))^1.6, # ST-X-3 Eq. 26 & Tbl. 6
     # FBPS C-6 (surface only, no BE)
     "3"   = 30 * (1 - exp(-0.08 * ISI))^3, # ST-X-3 Eq. 62
-    # ISI^2 * SFC
+    # Additive model of squared ISI and SFC
     "4"   = 0.015822 * ISI^2 + 0.344379 * SFC,
     # m9c
     "9c"  = 0.01473 * ISI^2 + 0.59430 * sqrt(SFC),
@@ -404,6 +404,12 @@ sROS <- function(WS10, mc, SFC, model_sROS, stand) {
     # m20
     "20"  = 0.2 * WS10
   )
+
+  # Prevent negative surface ROS from the m18c stand adjustment.
+  # Apply this before composite ROS selection or CFO smoothing.
+  if (as.character(model_sROS) == "18c") {
+    out <- pmax(out, 0)
+  }
 
   return(out)
 }

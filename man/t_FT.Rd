@@ -58,7 +58,7 @@ fire, respectively.
 \description{
 \code{t_FT()} calculates fire type from a single set of fuel and fire weather
 conditions using the Conifer Pyrometrics (ConPyro) fire behaviour modelling
-system. See Perrakis et al. (2023) for details.
+system. See \link{conpyro-package} for the framework and model references.
 }
 \examples{
 # Basic usage

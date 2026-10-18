@@ -48,3 +48,9 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 .positai
+
+# Generated R graphics
+Rplots.pdf
+
+# Readme html preview
+/README.html

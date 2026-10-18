@@ -47,7 +47,8 @@ range of \verb{[0, 1]}.
 \description{
 \code{t_pCFO()} calculates crown fire occurrence probability for a single set of
 fuel and fire weather conditions using the Conifer Pyrometrics (ConPyro) fire
-behaviour modelling system. See Perrakis et al. (2023) for details.
+behaviour modelling system. See \link{conpyro-package} for the framework and model
+references.
 }
 \examples{
 # Basic usage

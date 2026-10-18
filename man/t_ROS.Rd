@@ -56,25 +56,26 @@ models:
 \item \code{1}: FBPS aggregated surf. V4.
 \item \code{2}: FBPS D-1 (no BE).
 \item \code{3}: FBPS C-6 (surface only, no BE).
-\item \code{4}: \code{ISI^2 * SFC}.
+\item \code{4}: Additive model of squared ISI and SFC.
 \item \code{"9c"}: Contrast stand structure across fuel types. May overpredict
-under high-danger conditions. Requires \code{mcsa} input.
+under high-danger conditions. Intended for \code{mcsa} input.
 \item \code{"11c"}: General stand-adjusted ROS prediction across various fuel
-types. Requires \code{mcsa} input.
+types. Intended for \code{mcsa} input.
 \item \code{12}: Simple model for boreal conifer fuels. No stand structure
 influence.
-\item \code{13}: Simple stand-adjusted model for boreal conifer fuels. Requires
-\code{mcsa} input.
+\item \code{13}: Simple stand-adjusted model for boreal conifer fuels. Intended
+for \code{mcsa} input.
 \item \code{16}: Most accurate model for conifer stands in low–moderate-danger
 conditions. May overpredict under high-danger conditions. No stand
 structure influence.
 \item \code{17}: Most accurate stand-adjusted model for conifer stands in
 low–moderate-danger conditions. May overpredict under high-danger
-conditions. Requires \code{mcsa} input.
+conditions. Intended for \code{mcsa} input.
 \item \code{"18c"}: Contrast between conifer, deciduous, cured
 Ponderosa pine - Douglas-fir (PPDF) fuels. Cured PPDF predictions based
 on untested assumptions. No stand structure influence other than fuel
-type.
+type. Negative surface ROS predictions are bounded at zero before
+composite ROS selection or crown fire occurrence smoothing.
 \item \code{19}: Simple linear model for moist-condition PPDF stands. Based on a
 small dataset; likely to underpredict under high-danger conditions. No
 stand structure influence.
@@ -105,11 +106,14 @@ correspond to the following active cROS models:
 }
 \item \code{CF_thresh}: A single numeric value in \verb{[0, 1]}. Crown fire occurrence
 threshold. Default is 0.5.
-\item \code{ROS_output}: A vector comprising
+\item \code{ROS_output}: A single value from
 \verb{\{"sROS", "cROS_P", "cROS_A", "composite"\}}. Determines whether ROS output
 is only sROS, only cROS_P, only cROS_A, or a piecewise composite of all
 three (default). Note that when \code{ROS_output} is anything other than
-\code{"composite"}, \code{smooth_CFO = TRUE} will be ignored.
+\code{"composite"}, \code{smooth_CFO = TRUE} will be ignored. Explicit component
+outputs are calculated at every supplied wind speed, regardless of whether
+that fire regime occurs. In particular, \code{cROS_P} can be returned even when
+passive crowning is absent.
 }}
 }
 \value{
@@ -130,9 +134,17 @@ active crown fire, respectively.
 \description{
 \code{t_ROS()} calculates rate of spread for a single set of fuel and fire weather
 conditions using the Conifer Pyrometrics (ConPyro) fire behaviour modelling
-system. See Perrakis et al. (2023) for details. Provides a more convenient
-single-scenario calculation than the main \code{\link[=conpyro]{conpyro()}} function. To run
-multiple scenarios or plot output, use \code{\link[=conpyro]{conpyro()}} instead.
+system. See \link{conpyro-package} for the framework and model references.
+Provides a more convenient single-scenario calculation than the main
+\code{\link[=conpyro]{conpyro()}} function. To run multiple scenarios or plot output, use
+\code{\link[=conpyro]{conpyro()}} instead.
+}
+\details{
+Model descriptions indicate intended applicability. Overriding a model
+does not enforce compatibility with the supplied moisture or fuel type.
+With \code{smooth_CFO = TRUE}, the smoothing branch is selected using this
+call's single wind speed. A \code{\link[=conpyro]{conpyro()}} wind sweep may select a different
+branch if passive crowning occurs elsewhere in that sweep.
 }
 \examples{
 # Basic usage
